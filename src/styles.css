@@ -1,0 +1,702 @@
+:root {
+  --ink: #22201d;
+  --muted: #706b62;
+  --line: #ded6ca;
+  --paper: #fbf7ef;
+  --panel: #fffdf8;
+  --teal: #12656b;
+  --teal-soft: #d9eff0;
+  --coral: #b85243;
+  --gold: #c38b2d;
+  --shadow: 0 14px 36px rgba(38, 31, 24, 0.11);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-header {
+  position: relative;
+  min-height: 300px;
+  overflow: hidden;
+  background: #151f20;
+  color: #fffaf0;
+}
+
+.header-media {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  transform: scale(1.02);
+}
+
+.header-content {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 390px);
+  gap: 32px;
+  width: min(1180px, calc(100% - 32px));
+  min-height: 300px;
+  margin: 0 auto;
+  padding: 48px 0 42px;
+  align-items: end;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-header .eyebrow {
+  color: #9ed8d7;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 780px;
+  margin-bottom: 14px;
+  font-size: clamp(2.4rem, 6vw, 4.9rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 1.22rem;
+}
+
+.lead {
+  max-width: 720px;
+  margin-bottom: 0;
+  color: rgba(255, 250, 240, 0.86);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+
+.app-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(255, 250, 240, 0.2);
+  background: rgba(255, 250, 240, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.app-nav button {
+  min-height: 42px;
+  border: 1px solid rgba(255, 250, 240, 0.24);
+  border-radius: 6px;
+  color: rgba(255, 250, 240, 0.84);
+  background: rgba(255, 250, 240, 0.08);
+  font-weight: 800;
+}
+
+.app-nav button[data-active="true"] {
+  color: #102528;
+  background: #fffaf0;
+}
+
+.storage-badge {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 250, 240, 0.22);
+  border-radius: 999px;
+  color: rgba(255, 250, 240, 0.78);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.storage-badge[data-mode="sqlite"] {
+  color: #9ed8d7;
+}
+
+.name-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 10px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  background: #fffdf8;
+}
+
+input,
+select {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+textarea {
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.name-row button,
+.ghost-button,
+.primary-button,
+.ratio-button {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+.name-row button {
+  color: #fff;
+  background: var(--coral);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.08fr) minmax(360px, 1fr);
+  gap: 18px;
+  width: min(1180px, calc(100% - 32px));
+  margin: 22px auto 42px;
+}
+
+.workspace.single-page {
+  grid-template-columns: 1fr;
+}
+
+.panel {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.builder-panel {
+  grid-row: span 3;
+}
+
+.recipe-name-panel {
+  grid-column: 1 / -1;
+}
+
+.master-panel {
+  grid-column: 1 / -1;
+}
+
+.brew-master-panel {
+  grid-column: 1 / -1;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.recipe-name-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(210px, 0.9fr) minmax(240px, 1fr) 92px;
+  gap: 14px;
+  align-items: end;
+}
+
+.recipe-name-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.recipe-name-form button {
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--coral);
+  font-weight: 800;
+}
+
+.save-toast {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid #bdd9d7;
+  border-radius: 8px;
+  color: var(--teal);
+  background: #f1fbfa;
+  font-weight: 900;
+}
+
+.ghost-button {
+  min-width: 64px;
+  padding: 0 12px;
+  border-color: var(--line);
+  color: var(--teal);
+  background: #fff;
+}
+
+.primary-button {
+  min-width: 72px;
+  padding: 0 14px;
+  color: #fff;
+  background: var(--teal);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.bean-list,
+.metrics,
+.dose-summary,
+.recipe-list,
+.master-list,
+.brew-master-list {
+  display: grid;
+  gap: 12px;
+}
+
+.master-save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -4px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.master-save-status {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.master-save-status[data-dirty="true"] {
+  color: var(--gold);
+}
+
+.master-save-status[data-status="error"] {
+  color: var(--coral);
+}
+
+.bean-item,
+.recipe-item,
+.recipe-series-item,
+.master-row,
+.brew-master-row {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.bean-item {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.bean-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.swatch {
+  width: 14px;
+  height: 42px;
+  border-radius: 999px;
+}
+
+.bean-name {
+  margin: 0 0 4px;
+  font-weight: 800;
+}
+
+.bean-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.ratio-output {
+  width: 64px;
+  text-align: right;
+  color: var(--teal);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 10px;
+  align-items: center;
+}
+
+.ratio-button {
+  width: 36px;
+  padding: 0;
+  color: var(--ink);
+  background: var(--teal-soft);
+}
+
+input[type="range"] {
+  height: 36px;
+  padding: 0;
+  accent-color: var(--teal);
+}
+
+.inline-warning {
+  margin: 14px 0 0;
+  color: var(--coral);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.control-grid,
+.sensory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.control-grid label,
+.sensory-grid label,
+.memo-field,
+.master-row label,
+.brew-master-row label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.dose-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.dose-line strong {
+  color: var(--ink);
+}
+
+.brew-schedule {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.brew-step {
+  display: grid;
+  gap: 4px;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.brew-step span,
+.brew-step small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.brew-step strong {
+  color: var(--teal);
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(190px, 0.75fr);
+  gap: 16px;
+  align-items: center;
+}
+
+canvas {
+  width: 100%;
+  max-height: 300px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.total-output {
+  color: var(--coral);
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.total-output[data-ok="true"] {
+  color: var(--teal);
+}
+
+.metric {
+  display: grid;
+  gap: 6px;
+}
+
+.metric-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.meter {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ece4d8;
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+}
+
+.recommendation {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--gold);
+  background: #fff7e6;
+  color: #514634;
+  line-height: 1.65;
+}
+
+.memo-field {
+  margin-top: 14px;
+}
+
+.recipe-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+}
+
+.recipe-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.recipe-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.recipe-item .recipe-brew-method {
+  margin-top: 4px;
+  color: #5d4f3f;
+  font-weight: 700;
+}
+
+.recipe-item button,
+.recipe-series-item button,
+.delete-bean {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--teal);
+  background: #fff;
+  font-weight: 800;
+}
+
+.recipe-series-item {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.recipe-series-head,
+.version-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.recipe-series-head strong,
+.version-row strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.recipe-series-head span,
+.version-row span,
+.version-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.version-list {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.version-row {
+  min-height: 46px;
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.master-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.35fr minmax(92px, 0.6fr) repeat(5, minmax(68px, 0.55fr)) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+}
+
+.brew-master-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.35fr repeat(5, minmax(76px, 0.55fr)) 64px auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+}
+
+.master-row input[type="number"],
+.brew-master-row input[type="number"] {
+  min-width: 0;
+}
+
+.brew-total {
+  display: grid;
+  place-items: center;
+  min-height: 42px;
+  border: 1px solid #ebc5bd;
+  border-radius: 6px;
+  color: var(--coral);
+  background: #fff7f5;
+  font-weight: 900;
+}
+
+.brew-total[data-ok="true"] {
+  border-color: #bdd9d7;
+  color: var(--teal);
+  background: #f1fbfa;
+}
+
+.delete-bean {
+  min-height: 42px;
+  border-color: #ebc5bd;
+  color: var(--coral);
+  background: #fff7f5;
+}
+
+@media (max-width: 920px) {
+  .header-content,
+  .workspace,
+  .profile-grid,
+  .recipe-name-form,
+  .master-row,
+  .brew-master-row {
+    grid-template-columns: 1fr;
+  }
+
+  .builder-panel {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .header-content,
+  .workspace {
+    width: min(100% - 20px, 1180px);
+  }
+
+  .header-content {
+    padding: 34px 0 26px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .bean-top,
+  .app-nav,
+  .control-grid,
+  .sensory-grid,
+  .brew-schedule,
+  .recipe-series-head,
+  .version-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ratio-output {
+    width: auto;
+    text-align: left;
+  }
+}
