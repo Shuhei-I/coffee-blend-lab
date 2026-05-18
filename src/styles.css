@@ -566,10 +566,62 @@ canvas {
   font-weight: 800;
 }
 
+.recipe-series-item .archive-button {
+  border-color: #e3c783;
+  color: #7a5614;
+  background: #fff7df;
+}
+
+.recipe-series-item .restore-button {
+  border-color: #bdd9d7;
+  color: var(--teal);
+  background: #f1fbfa;
+}
+
+.recipe-series-item .danger-button {
+  border-color: #ebc5bd;
+  color: var(--coral);
+  background: #fff7f5;
+}
+
+.recipe-series-item .toggle-versions-button {
+  position: relative;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.recipe-series-item .toggle-versions-button::before {
+  content: "";
+  position: absolute;
+  inset: 9px 10px 11px 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.recipe-series-item .toggle-versions-button[aria-expanded="true"]::before {
+  inset: 11px 10px 9px 10px;
+  transform: rotate(225deg);
+}
+
+.recipe-series-item button[aria-expanded="true"] {
+  border-color: #bdd9d7;
+  color: var(--teal);
+  background: #f1fbfa;
+}
+
 .recipe-series-item {
   display: grid;
   gap: 12px;
   padding: 14px;
+}
+
+.recipe-series-item[data-archived="true"] {
+  background: #f7f2ea;
 }
 
 .recipe-series-head,
@@ -580,10 +632,39 @@ canvas {
   align-items: center;
 }
 
+.recipe-series-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.recipe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .recipe-series-head strong,
 .version-row strong {
   display: block;
   margin-bottom: 4px;
+}
+
+.status-pill {
+  display: inline-grid;
+  place-items: center;
+  min-height: 22px;
+  margin-left: 8px;
+  padding: 0 8px;
+  border: 1px solid #d8c7ad;
+  border-radius: 999px;
+  color: #77614b;
+  background: #fff8ec;
+  font-size: 0.72rem;
+  font-weight: 900;
+  vertical-align: middle;
 }
 
 .recipe-series-head span,
@@ -592,6 +673,12 @@ canvas {
   display: block;
   color: var(--muted);
   font-size: 0.84rem;
+}
+
+.recipe-series-head .status-pill {
+  display: inline-grid;
+  color: #77614b;
+  font-size: 0.72rem;
 }
 
 .version-list {

@@ -122,6 +122,10 @@ function snapshotHasId(snapshot, id) {
   return parseSnapshot(snapshot, []).some((item) => item.id === id);
 }
 
+function confirmDeleteItem(label) {
+  return window.confirm(`「${label}」を削除しますか？この操作は元に戻せません。`);
+}
+
 function emptyRatios(beans) {
   return Object.fromEntries(beans.map((bean) => [bean.id, 0]));
 }
@@ -347,6 +351,8 @@ function App() {
 
   function deleteBean(id) {
     if (beans.length <= 1) return;
+    const bean = beans.find((item) => item.id === id);
+    if (!bean || !confirmDeleteItem(bean.name)) return;
     setBeans((current) => current.filter((bean) => bean.id !== id));
     setBlendRatios((current) => {
       const next = { ...current };
@@ -379,6 +385,8 @@ function App() {
 
   function deleteBrewMethod(id) {
     if (brewMethods.length <= 1) return;
+    const method = brewMethods.find((item) => item.id === id);
+    if (!method || !confirmDeleteItem(method.name)) return;
     setBrewMethods((current) => {
       const next = current.filter((method) => method.id !== id);
       if (selectedBrewMethodId === id) setSelectedBrewMethodId(next[0].id);
@@ -466,8 +474,50 @@ function App() {
     setRecipeSaveMessage("");
   }
 
-  function clearRecipes() {
-    setRecipeSeries([]);
+  function archiveRecipeSeries(seriesId) {
+    const series = recipeSeries.find((item) => item.id === seriesId);
+    if (!series) return;
+    const shouldArchive = window.confirm(`「${series.name}」をアーカイブしますか？`);
+    if (!shouldArchive) return;
+    setRecipeSeries((current) =>
+      current.map((item) =>
+        item.id === seriesId
+          ? { ...item, status: "archived", updatedAt: new Date().toISOString() }
+          : item,
+      ),
+    );
+  }
+
+  function restoreRecipeSeries(seriesId) {
+    setRecipeSeries((current) =>
+      current.map((series) =>
+        series.id === seriesId
+          ? { ...series, status: "active", updatedAt: new Date().toISOString() }
+          : series,
+      ),
+    );
+  }
+
+  function deleteRecipeVersion(seriesId, versionId) {
+    const series = recipeSeries.find((item) => item.id === seriesId);
+    const version = series?.versions.find((item) => item.id === versionId);
+    if (!series || !version || series.versions.length <= 1) return;
+    if (!confirmDeleteItem(`${series.name} v${version.version}`)) return;
+
+    setRecipeSeries((current) =>
+      current.map((item) => {
+        if (item.id !== seriesId) return item;
+
+        const versions = sortVersions(item.versions.filter((recipe) => recipe.id !== versionId));
+        const latest = versions[0];
+        return {
+          ...item,
+          currentVersionId: item.currentVersionId === versionId ? latest.id : item.currentVersionId,
+          updatedAt: new Date().toISOString(),
+          versions,
+        };
+      }),
+    );
   }
 
   function exportRecipes(format) {
@@ -591,7 +641,19 @@ function App() {
             <SensoryPanel sensory={sensory} memo={memo} onSensoryChange={setSensory} onMemoChange={setMemo} />
           </>
         )}
-        {activePage === "recipes" && <RecipeLibrary recipeSeries={recipeSeries} beans={beans} brewMethods={brewMethods} onLoad={loadRecipe} onClear={clearRecipes} onExport={exportRecipes} onLoaded={() => setActivePage("blend")} />}
+        {activePage === "recipes" && (
+          <RecipeLibrary
+            recipeSeries={recipeSeries}
+            beans={beans}
+            brewMethods={brewMethods}
+            onLoad={loadRecipe}
+            onArchive={archiveRecipeSeries}
+            onRestore={restoreRecipeSeries}
+            onDeleteVersion={deleteRecipeVersion}
+            onExport={exportRecipes}
+            onLoaded={() => setActivePage("blend")}
+          />
+        )}
         {activePage === "beans" && <BeanMaster beans={beans} dirty={beansDirty} saveStatus={masterSaveStatus.beans} onAdd={addBean} onDelete={deleteBean} onUpdate={updateMaster} onProfileUpdate={updateProfile} onSave={saveBeansMaster} onRevert={revertBeansMaster} />}
         {activePage === "brew" && <BrewMethodMaster methods={brewMethods} dirty={brewMethodsDirty} saveStatus={masterSaveStatus.brewMethods} onAdd={addBrewMethod} onDelete={deleteBrewMethod} onUpdate={updateBrewMethod} onSave={saveBrewMethodsMaster} onRevert={revertBrewMethodsMaster} />}
       </main>
@@ -796,10 +858,27 @@ function SensoryPanel({ sensory, memo, onSensoryChange, onMemoChange }) {
   );
 }
 
-function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onClear, onExport, onLoaded }) {
+function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onArchive, onRestore, onDeleteVersion, onExport, onLoaded }) {
+  const [showArchived, setShowArchived] = useState(false);
+  const [expandedSeriesIds, setExpandedSeriesIds] = useState(() => new Set());
+  const visibleSeries = recipeSeries.filter((series) => showArchived || series.status !== "archived");
+  const archivedCount = recipeSeries.filter((series) => series.status === "archived").length;
+
   function handleLoad(recipe, series) {
     onLoad(recipe, series);
     onLoaded?.();
+  }
+
+  function toggleSeries(seriesId) {
+    setExpandedSeriesIds((current) => {
+      const next = new Set(current);
+      if (next.has(seriesId)) {
+        next.delete(seriesId);
+      } else {
+        next.add(seriesId);
+      }
+      return next;
+    });
   }
 
   return (
@@ -810,41 +889,77 @@ function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onClear, onEx
           <h2 id="libraryTitle">保存済み</h2>
         </div>
         <div className="button-row">
+          <button className="ghost-button" type="button" title="アーカイブ済みの表示を切り替える" aria-pressed={showArchived} onClick={() => setShowArchived((current) => !current)}>
+            {showArchived ? "Hide archived" : `Archived${archivedCount ? ` ${archivedCount}` : ""}`}
+          </button>
           <button className="ghost-button" type="button" title="JSONで出力" onClick={() => onExport("json")}>JSON</button>
           <button className="ghost-button" type="button" title="CSVで出力" onClick={() => onExport("csv")}>CSV</button>
-          <button className="ghost-button" type="button" title="保存済みを消去" onClick={onClear}>Clear</button>
         </div>
       </div>
       <div className="recipe-list">
         {recipeSeries.length === 0 ? (
           <p className="empty-state">保存したブレンドシリーズがここに並びます。比率を決めたら Save を押してください。</p>
+        ) : visibleSeries.length === 0 ? (
+          <p className="empty-state">表示中のレシピはありません。Archived を押すとアーカイブ済みを確認できます。</p>
         ) : (
-          recipeSeries.map((series) => {
+          visibleSeries.map((series) => {
             const latest = getLatestVersion(series);
             const brewMethod = latest ? getRecipeBrewMethod(latest, brewMethods) : null;
+            const archived = series.status === "archived";
+            const expanded = expandedSeriesIds.has(series.id);
 
             return (
-              <article className="recipe-series-item" key={series.id}>
+              <article className="recipe-series-item" data-archived={archived} key={series.id}>
                 <div className="recipe-series-head">
-                  <div>
-                    <strong>{series.name}</strong>
-                    {latest && <span>{summarizeRecipe(latest, beans)} / v{latest.version}</span>}
-                    {brewMethod && <span className="recipe-brew-method">{summarizeBrewMethod(brewMethod)}</span>}
-                  </div>
-                  {latest && <button type="button" title="最新版を読み込む" onClick={() => handleLoad(latest, series)}>Latest</button>}
-                </div>
-                <div className="version-list">
-                  {series.versions.map((recipe) => (
-                    <div className="version-row" key={recipe.id}>
-                      <div>
-                        <strong>v{recipe.version}</strong>
-                        <span>{recipe.changeNote || "変更メモなし"}</span>
-                        <small>{formatSavedAt(recipe.savedAt)}</small>
-                      </div>
-                      <button type="button" title="このバージョンを読み込む" onClick={() => handleLoad(recipe, series)}>Load</button>
+                  <div className="recipe-series-summary">
+                    <button
+                      className="toggle-versions-button"
+                      type="button"
+                      title={expanded ? "バージョン一覧を閉じる" : "バージョン一覧を開く"}
+                      aria-label={expanded ? "バージョン一覧を閉じる" : `バージョン一覧を開く。${series.versions.length}件あります。`}
+                      aria-expanded={expanded}
+                      onClick={() => toggleSeries(series.id)}
+                    />
+                    <div>
+                      <strong>{series.name}{archived && <span className="status-pill">Archived</span>}</strong>
+                      {latest && <span>{summarizeRecipe(latest, beans)} / v{latest.version}</span>}
+                      {brewMethod && <span className="recipe-brew-method">{summarizeBrewMethod(brewMethod)}</span>}
                     </div>
-                  ))}
+                  </div>
+                  <div className="recipe-actions">
+                    {latest && <button type="button" title="最新版を読み込む" onClick={() => handleLoad(latest, series)}>Latest</button>}
+                    {archived ? (
+                      <button className="restore-button" type="button" title="アーカイブから戻す" onClick={() => onRestore(series.id)}>Restore</button>
+                    ) : (
+                      <button className="archive-button" type="button" title="このシリーズをアーカイブ" onClick={() => onArchive(series.id)}>Archive</button>
+                    )}
+                  </div>
                 </div>
+                {expanded && (
+                  <div className="version-list">
+                    {series.versions.map((recipe) => (
+                      <div className="version-row" key={recipe.id}>
+                        <div>
+                          <strong>v{recipe.version}</strong>
+                          <span>{recipe.changeNote || "変更メモなし"}</span>
+                          <small>{formatSavedAt(recipe.savedAt)}</small>
+                        </div>
+                        <div className="recipe-actions">
+                          <button type="button" title="このバージョンを読み込む" onClick={() => handleLoad(recipe, series)}>Load</button>
+                          <button
+                            className="danger-button"
+                            type="button"
+                            title={series.versions.length <= 1 ? "最後のバージョンは削除できません。シリーズをアーカイブしてください。" : "このバージョンを削除"}
+                            disabled={series.versions.length <= 1}
+                            onClick={() => onDeleteVersion(series.id, recipe.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </article>
             );
           })
@@ -965,6 +1080,7 @@ function normalizeRecipeSeries(seriesList, legacyRecipes = []) {
   if (Array.isArray(seriesList) && seriesList.length > 0) {
     return seriesList.map((series) => ({
       ...series,
+      status: series.status || "active",
       versions: sortVersions((series.versions || []).map((version) => ({
         ...version,
         seriesId: version.seriesId || series.id,
@@ -1018,6 +1134,7 @@ function saveRecipeVersion(seriesList, currentSeries, recipe, savedAt) {
       ? {
           ...series,
           name: recipe.name || series.name,
+          status: "active",
           currentVersionId: recipe.id,
           updatedAt: savedAt,
           versions: sortVersions([recipe, ...series.versions]),
