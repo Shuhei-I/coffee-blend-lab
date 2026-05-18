@@ -337,59 +337,63 @@ button:disabled {
 
 .bean-item {
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: 8px;
+  padding: 12px 14px;
 }
 
 .bean-top {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: 10px;
   align-items: center;
 }
 
 .swatch {
-  width: 14px;
-  height: 42px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
 }
 
 .bean-name {
-  margin: 0 0 4px;
+  margin: 0;
   font-weight: 800;
 }
 
 .bean-note {
   margin: 0;
   color: var(--muted);
-  font-size: 0.86rem;
-  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .ratio-output {
-  width: 64px;
+  width: 54px;
   text-align: right;
   color: var(--teal);
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 900;
 }
 
 .slider-row {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 36px;
-  gap: 10px;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  gap: 8px;
   align-items: center;
 }
 
 .ratio-button {
-  width: 36px;
+  width: 32px;
+  min-height: 32px;
   padding: 0;
   color: var(--ink);
   background: var(--teal-soft);
 }
 
 input[type="range"] {
-  height: 36px;
+  height: 30px;
   padding: 0;
   accent-color: var(--teal);
 }

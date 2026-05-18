@@ -674,8 +674,8 @@ function RecipeNamePanel({ blendName, changeNote, saveMessage, editingRecipeSour
           <input value={blendName} maxLength={28} onChange={(event) => onNameChange(event.target.value)} />
         </label>
         <label>
-          変更メモ
-          <input value={changeNote} maxLength={64} placeholder={editingRecipeSource ? "前版から変えたこと" : "初回の狙い"} onChange={(event) => onChangeNoteChange(event.target.value)} />
+          メモ
+          <input value={changeNote} maxLength={64} onChange={(event) => onChangeNoteChange(event.target.value)} />
         </label>
         <button type="submit" title="保存">Save</button>
       </form>
@@ -701,7 +701,7 @@ function BlendBuilder({ beans, total, onRatioChange, onNormalize }) {
               <span className="swatch" style={{ background: bean.color }} />
               <div>
                 <p className="bean-name">{bean.name}</p>
-                <p className="bean-note">{bean.note}</p>
+                <p className="bean-note" title={bean.note}>{bean.note}</p>
               </div>
               <output className="ratio-output">{bean.ratio ? `${bean.ratio}%` : ""}</output>
             </div>
