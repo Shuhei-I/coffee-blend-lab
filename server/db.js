@@ -79,6 +79,7 @@ db.exec(`
     note TEXT NOT NULL DEFAULT '',
     color TEXT NOT NULL DEFAULT '#12656b',
     ratio INTEGER NOT NULL DEFAULT 0,
+    visible_in_recipes INTEGER NOT NULL DEFAULT 1,
     cost_per_kg REAL NOT NULL DEFAULT 0,
     acidity INTEGER NOT NULL DEFAULT 50,
     sweetness INTEGER NOT NULL DEFAULT 50,
@@ -172,6 +173,7 @@ db.exec(`
   );
 `);
 
+ensureBeanColumns();
 ensureBlendRecipeColumns();
 migrateRecipesToSeries();
 seedDefaults();
@@ -245,6 +247,19 @@ function seedDefaults() {
   }
 }
 
+function ensureBeanColumns() {
+  const columns = new Set(db.prepare("PRAGMA table_info(beans)").all().map((column) => column.name));
+  const requiredColumns = [
+    ["visible_in_recipes", "INTEGER NOT NULL DEFAULT 1"],
+  ];
+
+  requiredColumns.forEach(([name, definition]) => {
+    if (!columns.has(name)) {
+      db.exec(`ALTER TABLE beans ADD COLUMN ${name} ${definition}`);
+    }
+  });
+}
+
 function ensureBlendRecipeColumns() {
   const columns = new Set(db.prepare("PRAGMA table_info(blend_recipes)").all().map((column) => column.name));
   const requiredColumns = [
@@ -286,6 +301,7 @@ export function getBeans() {
       note: row.note,
       color: row.color,
       ratio: row.ratio,
+      visibleInRecipes: row.visible_in_recipes !== 0,
       costPerKg: row.cost_per_kg,
       profile: {
         acidity: row.acidity,
@@ -299,13 +315,14 @@ export function getBeans() {
 
 export function saveBeans(beans) {
   const replace = db.prepare(`
-    INSERT INTO beans (id, name, note, color, ratio, cost_per_kg, acidity, sweetness, bitterness, body, aroma, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    INSERT INTO beans (id, name, note, color, ratio, visible_in_recipes, cost_per_kg, acidity, sweetness, bitterness, body, aroma, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
       name = excluded.name,
       note = excluded.note,
       color = excluded.color,
       ratio = excluded.ratio,
+      visible_in_recipes = excluded.visible_in_recipes,
       cost_per_kg = excluded.cost_per_kg,
       acidity = excluded.acidity,
       sweetness = excluded.sweetness,
@@ -325,6 +342,7 @@ export function saveBeans(beans) {
         bean.note,
         bean.color,
         Number(bean.ratio) || 0,
+        bean.visibleInRecipes === false ? 0 : 1,
         Number(bean.costPerKg) || 0,
         Number(bean.profile?.acidity) || 0,
         Number(bean.profile?.sweetness) || 0,
@@ -586,6 +604,7 @@ function snapshotBean(bean) {
     name: bean.name,
     note: bean.note,
     color: bean.color,
+    visibleInRecipes: bean.visibleInRecipes !== false,
     costPerKg: bean.costPerKg,
     profile: bean.profile,
   };

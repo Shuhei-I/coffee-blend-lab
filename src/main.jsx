@@ -102,6 +102,7 @@ function readStorage(key, fallback) {
 function normalizeBeans(beans) {
   return beans.map((bean) => ({
     ...bean,
+    visibleInRecipes: bean.visibleInRecipes !== false,
     costPerKg: Number(bean.costPerKg ?? Number(bean.costPerGram || 0) * 1000) || 0,
   }));
 }
@@ -161,7 +162,11 @@ function App() {
   const savedBeansSnapshot = useRef(serializeMaster(normalizeBeans(readStorage("coffeeBeansMaster", defaultBeans))));
   const savedBrewMethodsSnapshot = useRef(serializeMaster(readStorage("coffeeBrewMethodsMaster", defaultBrewMethods)));
 
-  const blendBeans = useMemo(() => beansWithRatios(beans, blendRatios), [beans, blendRatios]);
+  const recipeBeans = useMemo(
+    () => beans.filter((bean) => bean.visibleInRecipes !== false || Number(blendRatios[bean.id]) > 0),
+    [beans, blendRatios],
+  );
+  const blendBeans = useMemo(() => beansWithRatios(recipeBeans, blendRatios), [recipeBeans, blendRatios]);
   const total = useMemo(() => blendBeans.reduce((sum, bean) => sum + bean.ratio, 0), [blendBeans]);
   const profile = useMemo(() => buildProfile(blendBeans, total), [blendBeans, total]);
   const targetBrewGram = Math.round(doseGram * brewRatio);
@@ -295,11 +300,13 @@ function App() {
   }
 
   function normalizeRatios() {
+    if (!blendBeans.length) return;
+
     if (!total) {
-      const equal = Math.floor(100 / beans.length);
-      setBlendRatios(Object.fromEntries(beans.map((bean, index) => [
+      const equal = Math.floor(100 / blendBeans.length);
+      setBlendRatios(Object.fromEntries(blendBeans.map((bean, index) => [
         bean.id,
-        index === beans.length - 1 ? 100 - equal * (beans.length - 1) : equal,
+        index === blendBeans.length - 1 ? 100 - equal * (blendBeans.length - 1) : equal,
       ])));
       return;
     }
@@ -342,6 +349,7 @@ function App() {
         note: "特徴を入力",
         color: colors[current.length % colors.length],
         ratio: 0,
+        visibleInRecipes: true,
         costPerKg: 0,
         profile: { acidity: 50, sweetness: 50, bitterness: 50, body: 50, aroma: 50 },
       },
@@ -692,15 +700,20 @@ function BlendBuilder({ beans, total, onRatioChange, onNormalize }) {
           <p className="eyebrow">Blend Builder</p>
           <h2 id="builderTitle">配合</h2>
         </div>
-        <button className="ghost-button" type="button" title="合計を100%に調整" onClick={onNormalize}>100%</button>
+        <button className="ghost-button" type="button" title="合計を100%に調整" disabled={!beans.length} onClick={onNormalize}>100%</button>
       </div>
       <div className="bean-list">
-        {beans.map((bean) => (
+        {beans.length === 0 ? (
+          <p className="empty-state">レシピ表示がONの豆はありません。</p>
+        ) : beans.map((bean) => (
           <article className="bean-item" key={bean.id}>
             <div className="bean-top">
               <span className="swatch" style={{ background: bean.color }} />
               <div>
-                <p className="bean-name">{bean.name}</p>
+                <p className="bean-name">
+                  {bean.name}
+                  {bean.visibleInRecipes === false && <span className="status-pill">非表示中</span>}
+                </p>
                 <p className="bean-note" title={bean.note}>{bean.note}</p>
               </div>
               <output className="ratio-output">{bean.ratio ? `${bean.ratio}%` : ""}</output>
@@ -737,6 +750,7 @@ function Dosing({ beans, total, doseGram, brewRatio, targetBrewGram, blendCost, 
         <label>
           抽出比率
           <select value={brewRatio} onChange={(event) => onRatioChange(Number(event.target.value))}>
+            <option value="12">1:12 水出し標準</option>
             <option value="14">1:14 濃いめ</option>
             <option value="15">1:15 バランス</option>
             <option value="16">1:16 標準</option>
@@ -1006,6 +1020,7 @@ function BeanMaster({ beans, dirty, saveStatus, onAdd, onDelete, onUpdate, onPro
           <article className="master-row" key={bean.id}>
             <label>豆名<input value={bean.name} onChange={(event) => onUpdate(bean.id, { name: event.target.value })} /></label>
             <label>メモ<input value={bean.note} onChange={(event) => onUpdate(bean.id, { note: event.target.value })} /></label>
+            <label className="checkbox-field">レシピ表示<input type="checkbox" checked={bean.visibleInRecipes !== false} onChange={(event) => onUpdate(bean.id, { visibleInRecipes: event.target.checked })} /></label>
             <label>原価 円/kg<input type="number" min="0" step="1" value={bean.costPerKg} onChange={(event) => onUpdate(bean.id, { costPerKg: Math.max(0, Number(event.target.value) || 0) })} /></label>
             {profileLabels.map(([key, label]) => (
               <label key={key}>{label}<input type="number" min="0" max="100" step="1" value={bean.profile[key]} onChange={(event) => onProfileUpdate(bean.id, key, event.target.value)} /></label>
@@ -1190,6 +1205,7 @@ function snapshotBean(bean) {
     name: bean.name,
     note: bean.note,
     color: bean.color,
+    visibleInRecipes: bean.visibleInRecipes !== false,
     costPerKg: bean.costPerKg,
     profile: bean.profile,
   };
