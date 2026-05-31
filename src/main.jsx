@@ -750,6 +750,7 @@ function Dosing({ beans, total, doseGram, brewRatio, targetBrewGram, blendCost, 
         <label>
           抽出比率
           <select value={brewRatio} onChange={(event) => onRatioChange(Number(event.target.value))}>
+            <option value="11">1:11 水出し濃いめ</option>
             <option value="12">1:12 水出し標準</option>
             <option value="14">1:14 濃いめ</option>
             <option value="15">1:15 バランス</option>
