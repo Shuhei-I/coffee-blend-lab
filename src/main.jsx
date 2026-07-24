@@ -1,6 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import heroImage from "../assets/coffee-blend-workbench.png";
+import {
+  buildBlendCost,
+  buildProfile,
+  calculateBeanDoseGram,
+  calculateBlendTotal,
+  calculatePourSchedule,
+  calculateTargetBrewGram,
+  getPourTotal,
+  normalizeBlendRatios,
+  normalizePercent,
+} from "./domain/coffee/calculations.js";
 import "./styles.css";
 
 const apiBase = "http://127.0.0.1:4174";
@@ -51,6 +62,7 @@ const profileLabels = [
   ["body", "ボディ"],
   ["aroma", "香り"],
 ];
+const profileMetricKeys = profileLabels.map(([key]) => key);
 
 const sensoryFields = [
   ["fragrance", "香り"],
@@ -167,9 +179,9 @@ function App() {
     [beans, blendRatios],
   );
   const blendBeans = useMemo(() => beansWithRatios(recipeBeans, blendRatios), [recipeBeans, blendRatios]);
-  const total = useMemo(() => blendBeans.reduce((sum, bean) => sum + bean.ratio, 0), [blendBeans]);
-  const profile = useMemo(() => buildProfile(blendBeans, total), [blendBeans, total]);
-  const targetBrewGram = Math.round(doseGram * brewRatio);
+  const total = useMemo(() => calculateBlendTotal(blendBeans), [blendBeans]);
+  const profile = useMemo(() => buildProfile(blendBeans, total, profileMetricKeys), [blendBeans, total]);
+  const targetBrewGram = calculateTargetBrewGram(doseGram, brewRatio);
   const blendCost = useMemo(() => buildBlendCost(blendBeans, total, doseGram), [blendBeans, total, doseGram]);
   const brewMethodOptions = useMemo(
     () => (savedRecipeBrewMethod ? [savedRecipeBrewMethod, ...brewMethods] : brewMethods),
@@ -301,24 +313,7 @@ function App() {
 
   function normalizeRatios() {
     if (!blendBeans.length) return;
-
-    if (!total) {
-      const equal = Math.floor(100 / blendBeans.length);
-      setBlendRatios(Object.fromEntries(blendBeans.map((bean, index) => [
-        bean.id,
-        index === blendBeans.length - 1 ? 100 - equal * (blendBeans.length - 1) : equal,
-      ])));
-      return;
-    }
-
-    let running = 0;
-    setBlendRatios(Object.fromEntries(
-      blendBeans.map((bean, index) => {
-        const ratio = index === blendBeans.length - 1 ? 100 - running : Math.round((bean.ratio / total) * 100);
-        running += ratio;
-        return [bean.id, ratio];
-      }),
-    ));
+    setBlendRatios(normalizeBlendRatios(blendBeans, total));
   }
 
   function updateMaster(id, patch) {
@@ -732,7 +727,6 @@ function BlendBuilder({ beans, total, onRatioChange, onNormalize }) {
 }
 
 function Dosing({ beans, total, doseGram, brewRatio, targetBrewGram, blendCost, brewMethodOptions, selectedBrewMethod, selectedBrewMethodId, onDoseChange, onRatioChange, onMethodChange }) {
-  const divisor = total || 1;
   const pourTotal = getPourTotal(selectedBrewMethod);
   return (
     <section className="panel dosing-panel" aria-labelledby="dosingTitle">
@@ -774,7 +768,7 @@ function Dosing({ beans, total, doseGram, brewRatio, targetBrewGram, blendCost, 
         {beans.filter((bean) => bean.ratio > 0).map((bean) => (
           <div className="dose-line" key={bean.id}>
             <span>{bean.name}</span>
-            <strong>{((doseGram * bean.ratio) / divisor).toFixed(1)} g</strong>
+            <strong>{calculateBeanDoseGram(bean, total, doseGram).toFixed(1)} g</strong>
           </div>
         ))}
       </div>
@@ -786,28 +780,17 @@ function Dosing({ beans, total, doseGram, brewRatio, targetBrewGram, blendCost, 
 function BrewSchedule({ method, targetBrewGram }) {
   if (!method) return null;
 
-  const steps = [
-    ["蒸らし", method.bloomPercent, `${method.bloomSeconds}秒`],
-    ["1投目", method.pour1Percent, ""],
-    ["2投目", method.pour2Percent, ""],
-    ["3投目", method.pour3Percent, ""],
-  ];
-  let cumulativeGram = 0;
+  const steps = calculatePourSchedule(method, targetBrewGram);
 
   return (
     <div className="brew-schedule">
-      {steps.map(([label, percent, sub]) => {
-        const stepGram = Math.round((targetBrewGram * (Number(percent) || 0)) / 100);
-        cumulativeGram += stepGram;
-
-        return (
-          <div className="brew-step" key={label}>
-            <span>{label}</span>
-            <strong>{cumulativeGram} g</strong>
-            <small>+{stepGram} g / {percent}% {sub}</small>
-          </div>
-        );
-      })}
+      {steps.map(({ label, percent, sub, stepGram, cumulativeGram }) => (
+        <div className="brew-step" key={label}>
+          <span>{label}</span>
+          <strong>{cumulativeGram} g</strong>
+          <small>+{stepGram} g / {percent}% {sub}</small>
+        </div>
+      ))}
     </div>
   );
 }
@@ -1062,34 +1045,6 @@ function BrewMethodMaster({ methods, dirty, saveStatus, onAdd, onDelete, onUpdat
       </div>
     </section>
   );
-}
-
-function buildProfile(beans, total) {
-  const divisor = total || 1;
-  return profileLabels.reduce((profile, [key]) => {
-    profile[key] = Math.round(beans.reduce((sum, bean) => sum + bean.profile[key] * (bean.ratio / divisor), 0));
-    return profile;
-  }, {});
-}
-
-function buildBlendCost(beans, total, doseGram) {
-  const divisor = total || 1;
-  return beans.reduce((sum, bean) => {
-    const beanGram = (doseGram * bean.ratio) / divisor;
-    return sum + beanGram * ((Number(bean.costPerKg) || 0) / 1000);
-  }, 0);
-}
-
-function getPourTotal(method) {
-  if (!method) return 0;
-  return ["bloomPercent", "pour1Percent", "pour2Percent", "pour3Percent"].reduce(
-    (sum, key) => sum + (Number(method[key]) || 0),
-    0,
-  );
-}
-
-function normalizePercent(value) {
-  return Math.max(0, Math.min(100, Number(value) || 0));
 }
 
 function normalizeRecipeSeries(seriesList, legacyRecipes = []) {
