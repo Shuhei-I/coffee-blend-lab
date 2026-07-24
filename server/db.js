@@ -2,10 +2,25 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-const dbPath = join(process.cwd(), "data", "coffee-manager.sqlite");
-mkdirSync(dirname(dbPath), { recursive: true });
+export let db;
 
-export const db = new DatabaseSync(dbPath);
+export function getDefaultDbPath() {
+  return process.env.COFFEE_MANAGER_DB_PATH || join(process.cwd(), "data", "coffee-manager.sqlite");
+}
+
+export function configureDb(dbPath = getDefaultDbPath()) {
+  closeDb();
+  mkdirSync(dirname(dbPath), { recursive: true });
+  db = new DatabaseSync(dbPath);
+  initializeDb();
+  return db;
+}
+
+export function closeDb() {
+  if (!db) return;
+  db.close();
+  db = undefined;
+}
 
 export const defaultBeans = [
   {
@@ -69,114 +84,118 @@ export const defaultBrewMethods = [
   },
 ];
 
-db.exec(`
-  PRAGMA journal_mode = WAL;
-  PRAGMA foreign_keys = ON;
+function initializeDb() {
+  db.exec(`
+    PRAGMA journal_mode = WAL;
+    PRAGMA foreign_keys = ON;
 
-  CREATE TABLE IF NOT EXISTS beans (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    note TEXT NOT NULL DEFAULT '',
-    color TEXT NOT NULL DEFAULT '#12656b',
-    ratio INTEGER NOT NULL DEFAULT 0,
-    visible_in_recipes INTEGER NOT NULL DEFAULT 1,
-    cost_per_kg REAL NOT NULL DEFAULT 0,
-    acidity INTEGER NOT NULL DEFAULT 50,
-    sweetness INTEGER NOT NULL DEFAULT 50,
-    bitterness INTEGER NOT NULL DEFAULT 50,
-    body INTEGER NOT NULL DEFAULT 50,
-    aroma INTEGER NOT NULL DEFAULT 50,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+    CREATE TABLE IF NOT EXISTS beans (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      color TEXT NOT NULL DEFAULT '#12656b',
+      ratio INTEGER NOT NULL DEFAULT 0,
+      visible_in_recipes INTEGER NOT NULL DEFAULT 1,
+      cost_per_kg REAL NOT NULL DEFAULT 0,
+      acidity INTEGER NOT NULL DEFAULT 50,
+      sweetness INTEGER NOT NULL DEFAULT 50,
+      bitterness INTEGER NOT NULL DEFAULT 50,
+      body INTEGER NOT NULL DEFAULT 50,
+      aroma INTEGER NOT NULL DEFAULT 50,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
 
-  CREATE TABLE IF NOT EXISTS brew_methods (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    note TEXT NOT NULL DEFAULT '',
-    bloom_percent INTEGER NOT NULL DEFAULT 0,
-    pour1_percent INTEGER NOT NULL DEFAULT 0,
-    pour2_percent INTEGER NOT NULL DEFAULT 0,
-    pour3_percent INTEGER NOT NULL DEFAULT 0,
-    bloom_seconds INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+    CREATE TABLE IF NOT EXISTS brew_methods (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      bloom_percent INTEGER NOT NULL DEFAULT 0,
+      pour1_percent INTEGER NOT NULL DEFAULT 0,
+      pour2_percent INTEGER NOT NULL DEFAULT 0,
+      pour3_percent INTEGER NOT NULL DEFAULT 0,
+      bloom_seconds INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
 
-  CREATE TABLE IF NOT EXISTS blend_recipes (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    dose_gram REAL NOT NULL DEFAULT 0,
-    brew_ratio REAL NOT NULL DEFAULT 0,
-    target_brew_gram REAL NOT NULL DEFAULT 0,
-    blend_cost REAL NOT NULL DEFAULT 0,
-    brew_method_id TEXT,
-    brew_method_snapshot TEXT,
-    sensory TEXT,
-    memo TEXT NOT NULL DEFAULT '',
-    saved_at TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+    CREATE TABLE IF NOT EXISTS blend_recipes (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      dose_gram REAL NOT NULL DEFAULT 0,
+      brew_ratio REAL NOT NULL DEFAULT 0,
+      target_brew_gram REAL NOT NULL DEFAULT 0,
+      blend_cost REAL NOT NULL DEFAULT 0,
+      brew_method_id TEXT,
+      brew_method_snapshot TEXT,
+      sensory TEXT,
+      memo TEXT NOT NULL DEFAULT '',
+      saved_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
 
-  CREATE TABLE IF NOT EXISTS blend_recipe_beans (
-    recipe_id TEXT NOT NULL,
-    bean_id TEXT NOT NULL,
-    ratio REAL NOT NULL DEFAULT 0,
-    PRIMARY KEY (recipe_id, bean_id),
-    FOREIGN KEY (recipe_id) REFERENCES blend_recipes(id) ON DELETE CASCADE
-  );
+    CREATE TABLE IF NOT EXISTS blend_recipe_beans (
+      recipe_id TEXT NOT NULL,
+      bean_id TEXT NOT NULL,
+      ratio REAL NOT NULL DEFAULT 0,
+      PRIMARY KEY (recipe_id, bean_id),
+      FOREIGN KEY (recipe_id) REFERENCES blend_recipes(id) ON DELETE CASCADE
+    );
 
-  CREATE TABLE IF NOT EXISTS recipe_series (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    goal TEXT NOT NULL DEFAULT '',
-    status TEXT NOT NULL DEFAULT 'active',
-    current_version_id TEXT,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
+    CREATE TABLE IF NOT EXISTS recipe_series (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      goal TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'active',
+      current_version_id TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
 
-  CREATE TABLE IF NOT EXISTS recipe_versions (
-    id TEXT PRIMARY KEY,
-    series_id TEXT NOT NULL,
-    version INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    change_note TEXT NOT NULL DEFAULT '',
-    tasting_note TEXT NOT NULL DEFAULT '',
-    dose_gram REAL NOT NULL DEFAULT 0,
-    brew_ratio REAL NOT NULL DEFAULT 0,
-    target_brew_gram REAL NOT NULL DEFAULT 0,
-    blend_cost REAL NOT NULL DEFAULT 0,
-    brew_method_id TEXT,
-    brew_method_snapshot TEXT,
-    sensory TEXT,
-    saved_at TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(series_id, version),
-    FOREIGN KEY (series_id) REFERENCES recipe_series(id) ON DELETE CASCADE
-  );
+    CREATE TABLE IF NOT EXISTS recipe_versions (
+      id TEXT PRIMARY KEY,
+      series_id TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      change_note TEXT NOT NULL DEFAULT '',
+      tasting_note TEXT NOT NULL DEFAULT '',
+      dose_gram REAL NOT NULL DEFAULT 0,
+      brew_ratio REAL NOT NULL DEFAULT 0,
+      target_brew_gram REAL NOT NULL DEFAULT 0,
+      blend_cost REAL NOT NULL DEFAULT 0,
+      brew_method_id TEXT,
+      brew_method_snapshot TEXT,
+      sensory TEXT,
+      saved_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(series_id, version),
+      FOREIGN KEY (series_id) REFERENCES recipe_series(id) ON DELETE CASCADE
+    );
 
-  CREATE TABLE IF NOT EXISTS recipe_version_beans (
-    version_id TEXT NOT NULL,
-    bean_id TEXT NOT NULL,
-    ratio REAL NOT NULL DEFAULT 0,
-    bean_snapshot TEXT,
-    PRIMARY KEY (version_id, bean_id),
-    FOREIGN KEY (version_id) REFERENCES recipe_versions(id) ON DELETE CASCADE
-  );
+    CREATE TABLE IF NOT EXISTS recipe_version_beans (
+      version_id TEXT NOT NULL,
+      bean_id TEXT NOT NULL,
+      ratio REAL NOT NULL DEFAULT 0,
+      bean_snapshot TEXT,
+      PRIMARY KEY (version_id, bean_id),
+      FOREIGN KEY (version_id) REFERENCES recipe_versions(id) ON DELETE CASCADE
+    );
 
-  CREATE TABLE IF NOT EXISTS app_settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-  );
-`);
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+  `);
 
-ensureBeanColumns();
-ensureBlendRecipeColumns();
-migrateRecipesToSeries();
-seedDefaults();
+  ensureBeanColumns();
+  ensureBlendRecipeColumns();
+  migrateRecipesToSeries();
+  seedDefaults();
+}
+
+configureDb();
 
 function transaction(work) {
   db.exec("BEGIN");

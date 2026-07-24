@@ -12,6 +12,17 @@ import {
   normalizeBlendRatios,
   normalizePercent,
 } from "./domain/coffee/calculations.js";
+import {
+  createRecipeVersionData,
+  createSavedRecipeBrewMethod,
+  flattenRecipeSeries,
+  getLatestVersion,
+  getRecipeBean,
+  getRecipeBrewMethod,
+  normalizeRecipeSeries,
+  saveRecipeVersion,
+  sortVersions,
+} from "./domain/coffee/recipeSeries.js";
 import "./styles.css";
 
 const apiBase = "http://127.0.0.1:4174";
@@ -104,8 +115,16 @@ const defaultBrewMethods = [
 ];
 
 function readStorage(key, fallback) {
+  return parseStoredJson(readStorageValue(key), fallback);
+}
+
+function readStorageValue(key) {
+  return localStorage.getItem(key);
+}
+
+function parseStoredJson(value, fallback) {
   try {
-    return JSON.parse(localStorage.getItem(key)) || fallback;
+    return JSON.parse(value) || fallback;
   } catch {
     return fallback;
   }
@@ -407,32 +426,25 @@ function App() {
   function saveRecipe(event) {
     event.preventDefault();
     const now = new Date().toISOString();
-    const seriesId = editingRecipeSource?.seriesId || `series-${Date.now()}`;
-    const currentSeries = recipeSeries.find((series) => series.id === seriesId);
-    const version = currentSeries ? getNextSeriesVersion(currentSeries) : 1;
-    const versionId = `recipe-${Date.now()}`;
-    const recipe = {
-      seriesId,
-      id: `recipe-${Date.now()}`,
-      name: blendName.trim() || currentSeries?.name || "無題のブレンド",
-      version,
-      changeNote: changeNote.trim() || (version === 1 ? "初回作成" : ""),
-      ratios: blendBeans.map((bean) => ({
-        id: bean.id,
-        value: bean.ratio,
-        beanSnapshot: snapshotBean(bean),
-      })),
+    const seriesIdSeed = editingRecipeSource?.seriesId ? undefined : Date.now();
+    const versionIdSeed = Date.now();
+    const { recipe, currentSeries } = createRecipeVersionData({
+      recipeSeries,
+      editingRecipeSource,
+      blendName,
+      changeNote,
+      blendBeans,
       doseGram,
       brewRatio,
       targetBrewGram,
       blendCost,
-      brewMethodId: getRecipeBrewMethodId(selectedBrewMethod),
-      brewMethodSnapshot: snapshotBrewMethod(selectedBrewMethod),
+      selectedBrewMethod,
       sensory,
-      memo: memo.trim(),
-      savedAt: now,
-    };
-    recipe.id = versionId;
+      memo,
+      now,
+      seriesIdSeed,
+      versionIdSeed,
+    });
     setRecipeSeries((current) => saveRecipeVersion(current, currentSeries, recipe, now));
     setRecipeSaveMessage(`${recipe.name} v${recipe.version} を登録しました`);
     resetRecipeInput();
@@ -1045,130 +1057,6 @@ function BrewMethodMaster({ methods, dirty, saveStatus, onAdd, onDelete, onUpdat
       </div>
     </section>
   );
-}
-
-function normalizeRecipeSeries(seriesList, legacyRecipes = []) {
-  if (Array.isArray(seriesList) && seriesList.length > 0) {
-    return seriesList.map((series) => ({
-      ...series,
-      status: series.status || "active",
-      versions: sortVersions((series.versions || []).map((version) => ({
-        ...version,
-        seriesId: version.seriesId || series.id,
-        version: Number(version.version) || 1,
-      }))),
-    }));
-  }
-
-  return (legacyRecipes || []).map((recipe) => ({
-    id: recipe.seriesId || `series-${recipe.id || recipe.name}`,
-    name: recipe.name || "無題のシリーズ",
-    goal: "",
-    status: "active",
-    currentVersionId: recipe.id,
-    createdAt: recipe.savedAt,
-    updatedAt: recipe.savedAt,
-    versions: [
-      {
-        ...recipe,
-        seriesId: recipe.seriesId || `series-${recipe.id || recipe.name}`,
-        version: Number(recipe.version) || 1,
-        changeNote: recipe.changeNote || "既存レシピから移行",
-      },
-    ],
-  }));
-}
-
-function flattenRecipeSeries(seriesList) {
-  return seriesList.flatMap((series) => series.versions.map((version) => ({ ...version, seriesName: series.name })));
-}
-
-function saveRecipeVersion(seriesList, currentSeries, recipe, savedAt) {
-  if (!currentSeries) {
-    return [
-      {
-        id: recipe.seriesId,
-        name: recipe.name,
-        goal: "",
-        status: "active",
-        currentVersionId: recipe.id,
-        createdAt: savedAt,
-        updatedAt: savedAt,
-        versions: [recipe],
-      },
-      ...seriesList,
-    ];
-  }
-
-  return seriesList.map((series) =>
-    series.id === currentSeries.id
-      ? {
-          ...series,
-          name: recipe.name || series.name,
-          status: "active",
-          currentVersionId: recipe.id,
-          updatedAt: savedAt,
-          versions: sortVersions([recipe, ...series.versions]),
-        }
-      : series,
-  );
-}
-
-function sortVersions(versions) {
-  return [...versions].sort((a, b) => (Number(b.version) || 0) - (Number(a.version) || 0));
-}
-
-function getLatestVersion(series) {
-  return sortVersions(series.versions || [])[0] || null;
-}
-
-function getNextSeriesVersion(series) {
-  return Math.max(0, ...(series.versions || []).map((version) => Number(version.version) || 0)) + 1;
-}
-
-function getRecipeBrewMethodId(method) {
-  return method?.sourceBrewMethodId || method?.id || null;
-}
-
-function snapshotBrewMethod(method) {
-  if (!method) return null;
-  const { displayName, sourceBrewMethodId, ...snapshot } = method;
-  return {
-    ...snapshot,
-    id: sourceBrewMethodId || snapshot.id,
-  };
-}
-
-function createSavedRecipeBrewMethod(recipe) {
-  if (!recipe.brewMethodSnapshot) return null;
-  const sourceBrewMethodId = recipe.brewMethodId || recipe.brewMethodSnapshot.id;
-  return {
-    ...recipe.brewMethodSnapshot,
-    id: `saved-brew-${recipe.id || recipe.savedAt || sourceBrewMethodId}`,
-    sourceBrewMethodId,
-    displayName: `${recipe.brewMethodSnapshot.name}（保存時）`,
-  };
-}
-
-function getRecipeBrewMethod(recipe, brewMethods) {
-  return recipe.brewMethodSnapshot || brewMethods.find((method) => method.id === recipe.brewMethodId) || null;
-}
-
-function snapshotBean(bean) {
-  if (!bean) return null;
-  return {
-    id: bean.id,
-    name: bean.name,
-    note: bean.note,
-    color: bean.color,
-    visibleInRecipes: bean.visibleInRecipes !== false,
-    costPerKg: bean.costPerKg,
-    profile: bean.profile,
-  };
-}
-
-function getRecipeBean(ratio, beans) {
-  return ratio.beanSnapshot || beans.find((bean) => bean.id === ratio.id) || null;
 }
 
 function summarizeBrewMethod(method) {
