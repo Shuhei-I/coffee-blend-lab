@@ -1,6 +1,7 @@
 import React from "react";
+import { roastLevelOptions } from "../domain/coffee/roast.js";
 
-export function BlendBuilder({ beans, total, onRatioChange, onNormalize }) {
+export function BlendBuilder({ beans, total, onRatioChange, onRoastLevelChange = () => {}, onNormalize }) {
   return (
     <section className="panel builder-panel" aria-labelledby="builderTitle">
       <div className="section-heading">
@@ -23,6 +24,14 @@ export function BlendBuilder({ beans, total, onRatioChange, onNormalize }) {
                   {bean.visibleInRecipes === false && <span className="status-pill">非表示中</span>}
                 </p>
                 <p className="bean-note" title={bean.note}>{bean.note}</p>
+                <label>
+                  焙煎度
+                  <select value={bean.roastLevel || ""} onChange={(event) => onRoastLevelChange(bean.id, event.target.value)}>
+                    {roastLevelOptions.map(([value, label]) => (
+                      <option key={value || "unset"} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
               <output className="ratio-output">{bean.ratio ? `${bean.ratio}%` : ""}</output>
             </div>

@@ -40,6 +40,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.sensory).toEqual(initialSensory);
     expect(rendered.current.memo).toBe("");
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, brazil: 0, guatemala: 0 });
+    expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", brazil: "", guatemala: "" });
   });
 
   test("keeps existing setter contracts", () => {
@@ -57,6 +58,7 @@ describe("useRecipeEditor", () => {
       rendered.current.setSensory({ fragrance: 8, flavor: 7, aftertaste: 6, balance: 5 });
       rendered.current.setMemo("Memo");
       rendered.current.setBlendRatios({ ethiopia: 60 });
+      rendered.current.setBlendRoastLevels({ ethiopia: "full-city" });
     });
 
     expect(rendered.current.blendName).toBe("Blend");
@@ -68,6 +70,20 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.sensory).toEqual({ fragrance: 8, flavor: 7, aftertaste: 6, balance: 5 });
     expect(rendered.current.memo).toBe("Memo");
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 60 });
+    expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "full-city" });
+  });
+
+  test("updates roast levels without changing ratios", () => {
+    const rendered = renderHook({ initialBeans: fixtureBeans });
+
+    act(() => {
+      rendered.current.updateRatio("ethiopia", 40);
+      rendered.current.updateRoastLevel("ethiopia", "full-city");
+      rendered.current.updateRoastLevel("brazil", "medium");
+    });
+
+    expect(rendered.current.blendRatios).toEqual({ ethiopia: 40, brazil: 0, guatemala: 0 });
+    expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "full-city", brazil: "medium", guatemala: "" });
   });
 
   test("updates ratios with existing clamp and number conversion", () => {
@@ -145,6 +161,7 @@ describe("useRecipeEditor", () => {
         sensory: { fragrance: 1, flavor: 2, aftertaste: 3, balance: 4 },
         memo: "Memo",
         blendRatios: { old: 100 },
+        blendRoastLevels: { old: "french" },
       });
       rendered.current.resetEditor(fixtureBeans);
     });
@@ -158,6 +175,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.sensory).toEqual(initialSensory);
     expect(rendered.current.memo).toBe("");
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, brazil: 0, guatemala: 0 });
+    expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", brazil: "", guatemala: "" });
   });
 
   test("replaces editor state exactly without interpreting RecipeSeries", () => {
@@ -172,6 +190,7 @@ describe("useRecipeEditor", () => {
       sensory: { fragrance: 8, flavor: 8, aftertaste: 7, balance: 8 },
       memo: "Loaded memo",
       blendRatios: { ethiopia: 70, brazil: 30 },
+      blendRoastLevels: { ethiopia: "city", brazil: "medium" },
     };
 
     act(() => {
@@ -187,6 +206,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.sensory).toBe(nextState.sensory);
     expect(rendered.current.memo).toBe(nextState.memo);
     expect(rendered.current.blendRatios).toBe(nextState.blendRatios);
+    expect(rendered.current.blendRoastLevels).toBe(nextState.blendRoastLevels);
   });
 
   test("supports explicit bean ratio replacement for bean add, delete, and replacement flows", () => {
@@ -194,8 +214,10 @@ describe("useRecipeEditor", () => {
 
     act(() => {
       rendered.current.setBlendRatios((current) => ({ ...current, newBean: 0 }));
+      rendered.current.setBlendRoastLevels((current) => ({ ...current, newBean: "" }));
     });
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, brazil: 0, guatemala: 0, newBean: 0 });
+    expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", brazil: "", guatemala: "", newBean: "" });
 
     act(() => {
       rendered.current.setBlendRatios((current) => {
@@ -203,18 +225,26 @@ describe("useRecipeEditor", () => {
         delete next.brazil;
         return next;
       });
+      rendered.current.setBlendRoastLevels((current) => {
+        const next = { ...current };
+        delete next.brazil;
+        return next;
+      });
     });
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, guatemala: 0, newBean: 0 });
+    expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", guatemala: "", newBean: "" });
 
     act(() => {
       rendered.current.replaceBlendRatiosForBeans([{ id: "replacement" }]);
     });
     expect(rendered.current.blendRatios).toEqual({ replacement: 0 });
+    expect(rendered.current.blendRoastLevels).toEqual({ replacement: "" });
 
     act(() => {
       rendered.current.replaceBlendRatiosForBeans([]);
     });
     expect(rendered.current.blendRatios).toEqual({});
+    expect(rendered.current.blendRoastLevels).toEqual({});
   });
 
   test("clears saved recipe brew method only when selected method differs", () => {

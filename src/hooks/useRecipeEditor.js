@@ -14,12 +14,17 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
   const [sensory, setSensory] = useState(initialSensory);
   const [memo, setMemo] = useState("");
   const [blendRatios, setBlendRatios] = useState(() => emptyRatios(initialBeans));
+  const [blendRoastLevels, setBlendRoastLevels] = useState(() => emptyRoastLevels(initialBeans));
 
   function updateRatio(id, ratio) {
     setBlendRatios((current) => ({
       ...current,
       [id]: Math.max(0, Math.min(100, Number(ratio) || 0)),
     }));
+  }
+
+  function updateRoastLevel(id, roastLevel) {
+    setBlendRoastLevels((current) => ({ ...current, [id]: roastLevel }));
   }
 
   function normalizeRatios(blendBeans, total) {
@@ -31,6 +36,7 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setBlendName("");
     setChangeNote("");
     setBlendRatios(emptyRatios(beans));
+    setBlendRoastLevels(emptyRoastLevels(beans));
     setDoseGram(20);
     setBrewRatio(16);
     setSavedRecipeBrewMethod(null);
@@ -49,10 +55,12 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setSensory(nextState.sensory);
     setMemo(nextState.memo);
     setBlendRatios(nextState.blendRatios);
+    setBlendRoastLevels(nextState.blendRoastLevels || {});
   }
 
   function replaceBlendRatiosForBeans(beans) {
     setBlendRatios(emptyRatios(beans));
+    setBlendRoastLevels(emptyRoastLevels(beans));
   }
 
   function clearSavedRecipeBrewMethodIfDifferent(id) {
@@ -80,7 +88,10 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setMemo,
     blendRatios,
     setBlendRatios,
+    blendRoastLevels,
+    setBlendRoastLevels,
     updateRatio,
+    updateRoastLevel,
     normalizeRatios,
     resetEditor,
     replaceEditorState,
@@ -91,4 +102,8 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
 
 function emptyRatios(beans) {
   return Object.fromEntries(beans.map((bean) => [bean.id, 0]));
+}
+
+function emptyRoastLevels(beans) {
+  return Object.fromEntries(beans.map((bean) => [bean.id, ""]));
 }

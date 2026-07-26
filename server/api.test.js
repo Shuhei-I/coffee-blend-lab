@@ -85,8 +85,34 @@ describe("SQLite API recipe compatibility", () => {
       savedAt: "2026-05-18T09:00:00.000Z",
     });
     expect(series.versions[0].ratios).toEqual([
-      { id: "ethiopia", value: 55, beanSnapshot: fixtureBeanSnapshots[0] },
-      { id: "brazil", value: 45, beanSnapshot: fixtureBeanSnapshots[1] },
+      { id: "ethiopia", value: 55, roastLevel: "", beanSnapshot: fixtureBeanSnapshots[0] },
+      { id: "brazil", value: 45, roastLevel: "", beanSnapshot: fixtureBeanSnapshots[1] },
+    ]);
+  });
+
+  test("persists roast level on recipe version bean rows", async () => {
+    await putJson("/api/recipes", {
+      recipeSeries: [
+        {
+          ...currentRecipeSeriesFixture,
+          versions: [
+            {
+              ...currentRecipeSeriesFixture.versions[0],
+              ratios: [
+                { id: "ethiopia", value: 55, roastLevel: "full-city", beanSnapshot: fixtureBeanSnapshots[0] },
+                { id: "brazil", value: 45, roastLevel: "medium", beanSnapshot: fixtureBeanSnapshots[1] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const state = await getJson("/api/state");
+
+    expect(state.recipeSeries[0].versions[0].ratios.map((ratio) => ratio.roastLevel)).toEqual([
+      "full-city",
+      "medium",
     ]);
   });
 

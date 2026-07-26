@@ -51,10 +51,11 @@ function confirmDeleteItem(label) {
   return window.confirm(`「${label}」を削除しますか？この操作は元に戻せません。`);
 }
 
-function beansWithRatios(beans, ratios) {
+function beansWithRatios(beans, ratios, roastLevels) {
   return beans.map((bean) => ({
     ...bean,
     ratio: Number(ratios[bean.id]) || 0,
+    roastLevel: (roastLevels || {})[bean.id] || "",
   }));
 }
 
@@ -79,7 +80,10 @@ function App() {
     setMemo,
     blendRatios,
     setBlendRatios,
+    blendRoastLevels,
+    setBlendRoastLevels,
     updateRatio,
+    updateRoastLevel,
     normalizeRatios,
     resetEditor,
     replaceEditorState,
@@ -112,7 +116,10 @@ function App() {
     () => beans.filter((bean) => bean.visibleInRecipes !== false || Number(blendRatios[bean.id]) > 0),
     [beans, blendRatios],
   );
-  const blendBeans = useMemo(() => beansWithRatios(recipeBeans, blendRatios), [recipeBeans, blendRatios]);
+  const blendBeans = useMemo(
+    () => beansWithRatios(recipeBeans, blendRatios, blendRoastLevels),
+    [recipeBeans, blendRatios, blendRoastLevels],
+  );
   const total = useMemo(() => calculateBlendTotal(blendBeans), [blendBeans]);
   const profile = useMemo(() => buildProfile(blendBeans, total, profileMetricKeys), [blendBeans, total]);
   const targetBrewGram = calculateTargetBrewGram(doseGram, brewRatio);
@@ -150,6 +157,7 @@ function App() {
     const id = `bean-${Date.now()}`;
     setBeans((current) => [...current, createBean({ id, index: current.length })]);
     setBlendRatios((current) => ({ ...current, [id]: 0 }));
+    setBlendRoastLevels((current) => ({ ...current, [id]: "" }));
   }
 
   function deleteBean(id) {
@@ -158,6 +166,11 @@ function App() {
     if (!bean || !confirmDeleteItem(bean.name)) return;
     setBeans((current) => deleteBeanById(current, id));
     setBlendRatios((current) => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
+    setBlendRoastLevels((current) => {
       const next = { ...current };
       delete next[id];
       return next;
@@ -284,7 +297,7 @@ function App() {
         {activePage === "blend" && (
           <>
             <RecipeNamePanel blendName={blendName} changeNote={changeNote} saveMessage={recipeSaveMessage} editingRecipeSource={editingRecipeSource} onNameChange={setBlendName} onChangeNoteChange={setChangeNote} onSave={saveRecipe} />
-            <BlendBuilder beans={blendBeans} total={total} onRatioChange={updateRatio} onNormalize={() => normalizeRatios(blendBeans, total)} />
+            <BlendBuilder beans={blendBeans} total={total} onRatioChange={updateRatio} onRoastLevelChange={updateRoastLevel} onNormalize={() => normalizeRatios(blendBeans, total)} />
             <Dosing
               doseGram={doseGram}
               brewRatio={brewRatio}

@@ -15,6 +15,7 @@ export function buildRecipeEditorState({ recipe, series, beans, brewMethods }) {
       sensory: { ...initialSensory, ...(recipe.sensory || {}) },
       memo: recipe.memo || "",
       blendRatios: buildBlendRatiosFromRecipe(recipe, beans),
+      blendRoastLevels: buildBlendRoastLevelsFromRecipe(recipe, beans),
     },
     selectedBrewMethodId: getLoadedBrewMethodId(recipe, savedRecipeBrewMethod, brewMethods),
   };
@@ -25,6 +26,15 @@ export function buildBlendRatiosFromRecipe(recipe, beans) {
     beans.map((bean) => {
       const ratio = recipe.ratios.find((item) => item.id === bean.id);
       return [bean.id, ratio ? ratio.value : 0];
+    }),
+  );
+}
+
+export function buildBlendRoastLevelsFromRecipe(recipe, beans) {
+  return Object.fromEntries(
+    beans.map((bean) => {
+      const ratio = recipe.ratios.find((item) => item.id === bean.id);
+      return [bean.id, ratio?.roastLevel || ""];
     }),
   );
 }

@@ -16,6 +16,7 @@ export const recipeCsvHeader = [
   "blendCost",
   "bean",
   "ratio",
+  "roastLevel",
   "costPerKg",
   "brewMethod",
   "bloomPercent",
@@ -38,7 +39,7 @@ export function buildRecipeExportData({ recipeSeries, beans, brewMethods }) {
       brewMethodSnapshot: getRecipeBrewMethod(recipe, brewMethods),
       beans: recipe.ratios.map((ratio) => {
         const bean = getRecipeBean(ratio, beans);
-        return { name: bean?.name || ratio.id, ratio: ratio.value, costPerKg: bean?.costPerKg || 0 };
+        return { name: bean?.name || ratio.id, ratio: ratio.value, roastLevel: ratio.roastLevel || "", costPerKg: bean?.costPerKg || 0 };
       }),
     })),
   );
@@ -63,6 +64,7 @@ export function buildRecipeCsv({ recipeSeries, beans, brewMethods }) {
         recipe.blendCost || "",
         bean.name,
         bean.ratio,
+        bean.roastLevel,
         bean.costPerKg,
         recipe.brewMethodSnapshot?.name || "",
         recipe.brewMethodSnapshot?.bloomPercent ?? "",

@@ -178,6 +178,7 @@ function initializeDb() {
       version_id TEXT NOT NULL,
       bean_id TEXT NOT NULL,
       ratio REAL NOT NULL DEFAULT 0,
+      roast_level TEXT NOT NULL DEFAULT '',
       bean_snapshot TEXT,
       PRIMARY KEY (version_id, bean_id),
       FOREIGN KEY (version_id) REFERENCES recipe_versions(id) ON DELETE CASCADE
@@ -191,6 +192,7 @@ function initializeDb() {
 
   ensureBeanColumns();
   ensureBlendRecipeColumns();
+  ensureRecipeVersionBeanColumns();
   migrateRecipesToSeries();
   seedDefaults();
 }
@@ -295,6 +297,19 @@ function ensureBlendRecipeColumns() {
   requiredColumns.forEach(([name, definition]) => {
     if (!columns.has(name)) {
       db.exec(`ALTER TABLE blend_recipes ADD COLUMN ${name} ${definition}`);
+    }
+  });
+}
+
+function ensureRecipeVersionBeanColumns() {
+  const columns = new Set(db.prepare("PRAGMA table_info(recipe_version_beans)").all().map((column) => column.name));
+  const requiredColumns = [
+    ["roast_level", "TEXT NOT NULL DEFAULT ''"],
+  ];
+
+  requiredColumns.forEach(([name, definition]) => {
+    if (!columns.has(name)) {
+      db.exec(`ALTER TABLE recipe_version_beans ADD COLUMN ${name} ${definition}`);
     }
   });
 }
@@ -453,7 +468,7 @@ export function saveRecipes(recipes) {
 export function getRecipeSeries() {
   const seriesRows = db.prepare("SELECT * FROM recipe_series ORDER BY updated_at DESC, created_at DESC").all();
   const versionRows = db.prepare("SELECT * FROM recipe_versions WHERE series_id = ? ORDER BY version DESC, saved_at DESC");
-  const versionBeans = db.prepare("SELECT bean_id, ratio, bean_snapshot FROM recipe_version_beans WHERE version_id = ? ORDER BY rowid ASC");
+  const versionBeans = db.prepare("SELECT bean_id, ratio, roast_level, bean_snapshot FROM recipe_version_beans WHERE version_id = ? ORDER BY rowid ASC");
 
   return seriesRows.map((series) => {
     const versions = versionRows.all(series.id).map((version) => ({
@@ -466,6 +481,7 @@ export function getRecipeSeries() {
       ratios: versionBeans.all(version.id).map((bean) => ({
         id: bean.bean_id,
         value: bean.ratio,
+        roastLevel: bean.roast_level || "",
         beanSnapshot: parseJson(bean.bean_snapshot, null),
       })),
       doseGram: version.dose_gram,
@@ -505,8 +521,8 @@ export function saveRecipeSeries(seriesList) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insertBean = db.prepare(`
-    INSERT INTO recipe_version_beans (version_id, bean_id, ratio, bean_snapshot)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO recipe_version_beans (version_id, bean_id, ratio, roast_level, bean_snapshot)
+    VALUES (?, ?, ?, ?, ?)
   `);
 
   transaction(() => {
@@ -554,6 +570,7 @@ export function saveRecipeSeries(seriesList) {
             versionId,
             ratio.id,
             Number(ratio.value) || 0,
+            ratio.roastLevel || "",
             JSON.stringify(ratio.beanSnapshot || null),
           );
         });
@@ -584,6 +601,7 @@ function migrateRecipesToSeries() {
         changeNote: "既存レシピから移行",
         ratios: recipe.ratios.map((ratio) => ({
           ...ratio,
+          roastLevel: ratio.roastLevel || "",
           beanSnapshot: snapshotBean(beansById.get(ratio.id)),
         })),
       },

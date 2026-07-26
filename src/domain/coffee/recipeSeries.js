@@ -160,6 +160,7 @@ export function createRecipeVersionData({
     ratios: blendBeans.map((bean) => ({
       id: bean.id,
       value: bean.ratio,
+      roastLevel: bean.roastLevel || "",
       beanSnapshot: snapshotBean(bean),
     })),
     doseGram,

@@ -166,8 +166,8 @@ describe("recipe series compatibility", () => {
       version: 1,
       changeNote: "初回作成",
       ratios: [
-        { id: "ethiopia", value: 60, beanSnapshot: snapshotBean(fixtureBeans[0]) },
-        { id: "brazil", value: 40, beanSnapshot: snapshotBean(fixtureBeans[1]) },
+        { id: "ethiopia", value: 60, roastLevel: "", beanSnapshot: snapshotBean(fixtureBeans[0]) },
+        { id: "brazil", value: 40, roastLevel: "", beanSnapshot: snapshotBean(fixtureBeans[1]) },
       ],
       doseGram: 20,
       brewRatio: 16,
@@ -205,6 +205,34 @@ describe("recipe series compatibility", () => {
     expect(recipe.changeNote).toBe("next");
     expect(recipe.brewMethodId).toBe("standard-4-pour");
     expect(recipe.brewMethodSnapshot.id).toBe("standard-4-pour");
+  });
+
+  test("stores roast level on recipe ratio data without changing bean snapshots", () => {
+    const { recipe } = createRecipeVersionData({
+      recipeSeries: [],
+      editingRecipeSource: null,
+      blendName: "Roast Blend",
+      changeNote: "",
+      blendBeans: [
+        { ...fixtureBeans[0], roastLevel: "full-city" },
+        { ...fixtureBeans[1], roastLevel: "medium" },
+      ],
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 98.4,
+      selectedBrewMethod: fixtureBrewMethod,
+      sensory: legacyRecipeFixture.sensory,
+      memo: "",
+      now: "2026-05-22T10:00:00.000Z",
+      seriesIdSeed: 1800000000100,
+      versionIdSeed: 1800000000101,
+    });
+
+    expect(recipe.ratios).toEqual([
+      { id: "ethiopia", value: 60, roastLevel: "full-city", beanSnapshot: snapshotBean(fixtureBeans[0]) },
+      { id: "brazil", value: 40, roastLevel: "medium", beanSnapshot: snapshotBean(fixtureBeans[1]) },
+    ]);
   });
 
   test("saves recipe versions with existing insertion and sort behavior", () => {
@@ -283,8 +311,8 @@ describe("recipe series compatibility", () => {
       savedAt: "2026-05-21T09:00:00.000Z",
     });
     expect(result.recipe.ratios).toEqual([
-      { id: "ethiopia", value: 60, beanSnapshot: snapshotBean(fixtureBeans[0]) },
-      { id: "brazil", value: 40, beanSnapshot: snapshotBean(fixtureBeans[1]) },
+      { id: "ethiopia", value: 60, roastLevel: "", beanSnapshot: snapshotBean(fixtureBeans[0]) },
+      { id: "brazil", value: 40, roastLevel: "", beanSnapshot: snapshotBean(fixtureBeans[1]) },
     ]);
     expect(result.recipe.brewMethodSnapshot).toEqual(fixtureBrewMethod);
   });

@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { JSDOM } from "jsdom";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { BlendBuilder } from "./BlendBuilder.jsx";
+import { roastLevelOptions } from "../domain/coffee/roast.js";
 
 let dom;
 let container;
@@ -42,15 +43,27 @@ describe("BlendBuilder", () => {
     ]);
   });
 
-  test("renders selected bean state from props without select UI", () => {
+  test("renders selected bean state and roast level selects from props", () => {
     renderBlendBuilder();
 
-    expect(document.querySelectorAll("select")).toHaveLength(0);
+    const selects = document.querySelectorAll("select");
+    expect(selects).toHaveLength(3);
+    expect(selects[0].value).toBe("full-city");
+    expect([...selects[0].options].map((option) => [option.value, option.textContent])).toEqual(roastLevelOptions);
     expect([...document.querySelectorAll(".bean-item")].map((row) => row.querySelector(".swatch").getAttribute("style"))).toEqual([
       "background: rgb(18, 101, 107);",
       "background: rgb(184, 82, 67);",
       "background: rgb(84, 116, 90);",
     ]);
+  });
+
+  test("calls roast level callback with bean id and selected value", () => {
+    const onRoastLevelChange = vi.fn();
+    renderBlendBuilder({ onRoastLevelChange });
+
+    change(document.querySelector("select"), "city");
+
+    expect(onRoastLevelChange).toHaveBeenCalledWith("ethiopia", "city");
   });
 
   test("calls the same ratio callback from slider and step buttons", () => {
@@ -123,12 +136,13 @@ describe("BlendBuilder", () => {
 function renderBlendBuilder(overrides = {}) {
   const props = {
     beans: [
-      { id: "ethiopia", name: "Ethiopia", note: "Floral", color: "#12656b", ratio: 40 },
-      { id: "brazil", name: "Brazil", note: "Nutty", color: "#b85243", ratio: 45 },
-      { id: "kenya", name: "Kenya", note: "Hidden", color: "#54745a", ratio: 0, visibleInRecipes: false },
+      { id: "ethiopia", name: "Ethiopia", note: "Floral", color: "#12656b", ratio: 40, roastLevel: "full-city" },
+      { id: "brazil", name: "Brazil", note: "Nutty", color: "#b85243", ratio: 45, roastLevel: "medium" },
+      { id: "kenya", name: "Kenya", note: "Hidden", color: "#54745a", ratio: 0, visibleInRecipes: false, roastLevel: "" },
     ],
     total: 85,
     onRatioChange: vi.fn(),
+    onRoastLevelChange: vi.fn(),
     onNormalize: vi.fn(),
     ...overrides,
   };

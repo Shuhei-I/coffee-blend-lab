@@ -46,8 +46,8 @@ const recipeSeries = [
         blendCost: 98.4,
         brewMethodId: "standard",
         ratios: [
-          { id: "ethiopia", value: 55 },
-          { id: "brazil", value: 45 },
+          { id: "ethiopia", value: 55, roastLevel: "full-city" },
+          { id: "brazil", value: 45, roastLevel: "medium" },
         ],
         sensory: { fragrance: 8, flavor: 7.5, aftertaste: 7, balance: 8 },
         memo: "甘み,\n強め",
@@ -118,14 +118,15 @@ describe("recipe export", () => {
       seriesStatus: "active",
       brewMethodSnapshot: brewMethods[0],
       beans: [
-        { name: "Ethiopia, Natural", ratio: 55, costPerKg: 5800 },
-        { name: "Brazil \"No.2\"", ratio: 45, costPerKg: 3600 },
+        { name: "Ethiopia, Natural", ratio: 55, roastLevel: "full-city", costPerKg: 5800 },
+        { name: "Brazil \"No.2\"", ratio: 45, roastLevel: "medium", costPerKg: 3600 },
       ],
       sensory: { fragrance: 8, flavor: 7.5, aftertaste: 7, balance: 8 },
       memo: "甘み,\n強め",
     });
     expect(payload[1].brewMethodSnapshot.name).toBe("Snapshot Method");
-    expect(payload[1].beans).toEqual([{ name: "Snapshot Bean", ratio: 100, costPerKg: 0 }]);
+    expect(payload[1].beans).toEqual([{ name: "Snapshot Bean", ratio: 100, roastLevel: "", costPerKg: 0 }]);
+    expect(payload[0].ratios[0].roastLevel).toBe("full-city");
     expect(payload[2].seriesStatus).toBe("archived");
   });
 
@@ -161,6 +162,7 @@ describe("recipe export", () => {
       98.4,
       "Ethiopia, Natural",
       55,
+      "full-city",
       5800,
       "Standard",
       12,

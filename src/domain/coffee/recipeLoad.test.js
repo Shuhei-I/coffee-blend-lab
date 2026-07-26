@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { initialSensory } from "./sensory.js";
-import { buildBlendRatiosFromRecipe, buildRecipeEditorState } from "./recipeLoad.js";
+import { buildBlendRatiosFromRecipe, buildBlendRoastLevelsFromRecipe, buildRecipeEditorState } from "./recipeLoad.js";
 import {
   currentRecipeSeriesFixture,
   fixtureBeans,
@@ -28,6 +28,7 @@ describe("recipe loading editor state", () => {
       sensory: recipe.sensory,
       memo: recipe.memo,
       blendRatios: { ethiopia: 55, brazil: 45 },
+      blendRoastLevels: { ethiopia: "", brazil: "" },
     });
     expect(result.editorState.savedRecipeBrewMethod).toMatchObject({
       ...fixtureBrewMethod,
@@ -48,7 +49,7 @@ describe("recipe loading editor state", () => {
       brewMethodSnapshot: null,
       sensory: { fragrance: 9 },
       memo: "",
-      ratios: [{ id: "ethiopia", value: "0" }],
+      ratios: [{ id: "ethiopia", value: "0", roastLevel: "city" }],
     };
     const result = buildRecipeEditorState({
       recipe,
@@ -66,6 +67,7 @@ describe("recipe loading editor state", () => {
     expect(result.editorState.sensory).toEqual({ ...initialSensory, fragrance: 9 });
     expect(result.editorState.memo).toBe("");
     expect(result.editorState.blendRatios).toEqual({ ethiopia: "0", brazil: 0, kenya: 0 });
+    expect(result.editorState.blendRoastLevels).toEqual({ ethiopia: "city", brazil: "", kenya: "" });
     expect(result.selectedBrewMethodId).toBe("standard-4-pour");
   });
 
@@ -84,6 +86,20 @@ describe("recipe loading editor state", () => {
       brazil: "42",
     });
     expect(buildBlendRatiosFromRecipe(recipe, [])).toEqual({});
+  });
+
+  test("keeps current bean ids only when building roast levels", () => {
+    const recipe = {
+      ...legacyRecipeFixture,
+      ratios: [
+        { id: "deleted-bean", value: 70, roastLevel: "french" },
+        { id: "ethiopia", value: 30, roastLevel: "full-city" },
+        { id: "brazil", value: 0 },
+      ],
+    };
+
+    expect(buildBlendRoastLevelsFromRecipe(recipe, fixtureBeans)).toEqual({ ethiopia: "full-city", brazil: "" });
+    expect(buildBlendRoastLevelsFromRecipe(recipe, [])).toEqual({});
   });
 
   test("returns no selected brew method when saved and current brew methods are unavailable", () => {
