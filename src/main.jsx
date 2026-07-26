@@ -18,6 +18,7 @@ import {
 } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
+import { canDeleteBean, createBean, deleteBeanById, updateBean, updateBeanProfile } from "./domain/coffee/beanMaster.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
 import { BeanMaster } from "./components/BeanMaster.jsx";
@@ -132,46 +133,24 @@ function App() {
     [blendBeans, total, doseGram],
   );
   function updateMaster(id, patch) {
-    setBeans((current) => current.map((bean) => (bean.id === id ? { ...bean, ...patch } : bean)));
+    setBeans((current) => updateBean(current, id, patch));
   }
 
   function updateProfile(id, key, value) {
-    setBeans((current) =>
-      current.map((bean) =>
-        bean.id === id
-          ? {
-              ...bean,
-              profile: { ...bean.profile, [key]: Math.max(0, Math.min(100, Number(value) || 0)) },
-            }
-          : bean,
-      ),
-    );
+    setBeans((current) => updateBeanProfile(current, id, key, value));
   }
 
   function addBean() {
-    const colors = ["#12656b", "#b85243", "#54745a", "#c38b2d", "#6a5f99"];
     const id = `bean-${Date.now()}`;
-    setBeans((current) => [
-      ...current,
-      {
-        id,
-        name: "新しい豆",
-        note: "特徴を入力",
-        color: colors[current.length % colors.length],
-        ratio: 0,
-        visibleInRecipes: true,
-        costPerKg: 0,
-        profile: { acidity: 50, sweetness: 50, bitterness: 50, body: 50, aroma: 50 },
-      },
-    ]);
+    setBeans((current) => [...current, createBean({ id, index: current.length })]);
     setBlendRatios((current) => ({ ...current, [id]: 0 }));
   }
 
   function deleteBean(id) {
-    if (beans.length <= 1) return;
+    if (!canDeleteBean(beans)) return;
     const bean = beans.find((item) => item.id === id);
     if (!bean || !confirmDeleteItem(bean.name)) return;
-    setBeans((current) => current.filter((bean) => bean.id !== id));
+    setBeans((current) => deleteBeanById(current, id));
     setBlendRatios((current) => {
       const next = { ...current };
       delete next[id];
