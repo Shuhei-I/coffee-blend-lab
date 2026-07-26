@@ -15,17 +15,15 @@ import {
 import {
   createRecipeVersionData,
   createSavedRecipeBrewMethod,
-  flattenRecipeSeries,
   getLatestVersion,
   getRecipeBean,
   getRecipeBrewMethod,
-  normalizeRecipeSeries,
   saveRecipeVersion,
   sortVersions,
 } from "./domain/coffee/recipeSeries.js";
+import { createCoffeeRepository } from "./data/coffeeRepository.js";
+import { parseSnapshot, serializeMaster, snapshotHasId } from "./data/localStorageRepository.js";
 import "./styles.css";
-
-const apiBase = "http://127.0.0.1:4174";
 
 const defaultBeans = [
   {
@@ -114,46 +112,6 @@ const defaultBrewMethods = [
   },
 ];
 
-function readStorage(key, fallback) {
-  return parseStoredJson(readStorageValue(key), fallback);
-}
-
-function readStorageValue(key) {
-  return localStorage.getItem(key);
-}
-
-function parseStoredJson(value, fallback) {
-  try {
-    return JSON.parse(value) || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function normalizeBeans(beans) {
-  return beans.map((bean) => ({
-    ...bean,
-    visibleInRecipes: bean.visibleInRecipes !== false,
-    costPerKg: Number(bean.costPerKg ?? Number(bean.costPerGram || 0) * 1000) || 0,
-  }));
-}
-
-function serializeMaster(value) {
-  return JSON.stringify(value);
-}
-
-function parseSnapshot(snapshot, fallback) {
-  try {
-    return JSON.parse(snapshot);
-  } catch {
-    return fallback;
-  }
-}
-
-function snapshotHasId(snapshot, id) {
-  return parseSnapshot(snapshot, []).some((item) => item.id === id);
-}
-
 function confirmDeleteItem(label) {
   return window.confirm(`「${label}」を削除しますか？この操作は元に戻せません。`);
 }
@@ -170,12 +128,22 @@ function beansWithRatios(beans, ratios) {
 }
 
 function App() {
+  const coffeeRepositoryRef = useRef(null);
+  if (!coffeeRepositoryRef.current) {
+    coffeeRepositoryRef.current = createCoffeeRepository();
+  }
+  const coffeeRepository = coffeeRepositoryRef.current;
+  const initialStateRef = useRef(null);
+  if (!initialStateRef.current) {
+    initialStateRef.current = coffeeRepository.getLocalInitialState({ defaultBeans, defaultBrewMethods });
+  }
+  const initialState = initialStateRef.current;
   const [activePage, setActivePage] = useState("blend");
-  const [beans, setBeans] = useState(() => normalizeBeans(readStorage("coffeeBeansMaster", defaultBeans)));
-  const [blendRatios, setBlendRatios] = useState(() => emptyRatios(normalizeBeans(readStorage("coffeeBeansMaster", defaultBeans))));
-  const [brewMethods, setBrewMethods] = useState(() => readStorage("coffeeBrewMethodsMaster", defaultBrewMethods));
-  const [selectedBrewMethodId, setSelectedBrewMethodId] = useState(() => readStorage("coffeeSelectedBrewMethod", defaultBrewMethods[0].id));
-  const [recipeSeries, setRecipeSeries] = useState(() => normalizeRecipeSeries(readStorage("coffeeRecipeSeries", []), readStorage("coffeeBlendRecipes", [])));
+  const [beans, setBeans] = useState(() => initialState.beans);
+  const [blendRatios, setBlendRatios] = useState(() => emptyRatios(initialState.beans));
+  const [brewMethods, setBrewMethods] = useState(() => initialState.brewMethods);
+  const [selectedBrewMethodId, setSelectedBrewMethodId] = useState(() => initialState.selectedBrewMethodId);
+  const [recipeSeries, setRecipeSeries] = useState(() => initialState.recipeSeries);
   const [storageMode, setStorageMode] = useState("local");
   const [masterSaveStatus, setMasterSaveStatus] = useState({ beans: "saved", brewMethods: "saved" });
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
@@ -187,11 +155,8 @@ function App() {
   const [editingRecipeSource, setEditingRecipeSource] = useState(null);
   const [sensory, setSensory] = useState(initialSensory);
   const [memo, setMemo] = useState("");
-  const sqliteEnabled = useRef(false);
-  const remoteHydrated = useRef(false);
-  const saveQueue = useRef(Promise.resolve());
-  const savedBeansSnapshot = useRef(serializeMaster(normalizeBeans(readStorage("coffeeBeansMaster", defaultBeans))));
-  const savedBrewMethodsSnapshot = useRef(serializeMaster(readStorage("coffeeBrewMethodsMaster", defaultBrewMethods)));
+  const savedBeansSnapshot = useRef(serializeMaster(initialState.beans));
+  const savedBrewMethodsSnapshot = useRef(serializeMaster(initialState.brewMethods));
 
   const recipeBeans = useMemo(
     () => beans.filter((bean) => bean.visibleInRecipes !== false || Number(blendRatios[bean.id]) > 0),
@@ -213,27 +178,22 @@ function App() {
   useEffect(() => {
     let cancelled = false;
 
-    fetchJson("/api/state")
+    coffeeRepository
+      .loadInitialState({ defaultBeans, defaultBrewMethods })
       .then((state) => {
         if (cancelled) return;
-        const loadedBeans = normalizeBeans(state.beans || defaultBeans);
-        const loadedBrewMethods = state.brewMethods?.length ? state.brewMethods : defaultBrewMethods;
-        sqliteEnabled.current = true;
-        remoteHydrated.current = true;
-        savedBeansSnapshot.current = serializeMaster(loadedBeans);
-        savedBrewMethodsSnapshot.current = serializeMaster(loadedBrewMethods);
-        setStorageMode("sqlite");
+        savedBeansSnapshot.current = serializeMaster(state.beans);
+        savedBrewMethodsSnapshot.current = serializeMaster(state.brewMethods);
+        setStorageMode(state.storageMode);
         setMasterSaveStatus({ beans: "saved", brewMethods: "saved" });
-        setBeans(loadedBeans);
-        setBlendRatios(emptyRatios(loadedBeans));
-        setBrewMethods(loadedBrewMethods);
-        setSelectedBrewMethodId(state.selectedBrewMethodId || defaultBrewMethods[0].id);
-        setRecipeSeries(normalizeRecipeSeries(state.recipeSeries || [], state.recipes || []));
+        setBeans(state.beans);
+        setBlendRatios(emptyRatios(state.beans));
+        setBrewMethods(state.brewMethods);
+        setSelectedBrewMethodId(state.selectedBrewMethodId);
+        setRecipeSeries(state.recipeSeries);
       })
       .catch(() => {
         if (cancelled) return;
-        sqliteEnabled.current = false;
-        remoteHydrated.current = true;
         setStorageMode("local");
         setMasterSaveStatus({ beans: "saved", brewMethods: "saved" });
       });
@@ -244,59 +204,40 @@ function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("coffeeBeansMaster", JSON.stringify(beans));
-  }, [beans]);
+    coffeeRepository.saveBeansLocal(beans);
+  }, [beans, coffeeRepository]);
 
   useEffect(() => {
-    localStorage.setItem("coffeeBrewMethodsMaster", JSON.stringify(brewMethods));
-  }, [brewMethods]);
+    coffeeRepository.saveBrewMethodsLocal(brewMethods);
+  }, [brewMethods, coffeeRepository]);
 
   useEffect(() => {
     const selectedSavedRecipeMethod = savedRecipeBrewMethod?.id === selectedBrewMethodId;
-    if (!selectedSavedRecipeMethod) {
-      localStorage.setItem("coffeeSelectedBrewMethod", JSON.stringify(selectedBrewMethodId));
-    }
-    if (sqliteEnabled.current && remoteHydrated.current && !selectedSavedRecipeMethod && snapshotHasId(savedBrewMethodsSnapshot.current, selectedBrewMethodId)) {
-      queuePutJson("/api/settings/selected-brew-method", { selectedBrewMethodId });
-    }
-  }, [selectedBrewMethodId, savedRecipeBrewMethod]);
+    coffeeRepository.saveSelectedBrewMethod(selectedBrewMethodId, {
+      selectedSavedRecipeMethod,
+      existsInSavedBrewMethods: snapshotHasId(savedBrewMethodsSnapshot.current, selectedBrewMethodId),
+    });
+  }, [selectedBrewMethodId, savedRecipeBrewMethod, coffeeRepository]);
 
   useEffect(() => {
-    const recipes = flattenRecipeSeries(recipeSeries);
-    localStorage.setItem("coffeeRecipeSeries", JSON.stringify(recipeSeries));
-    localStorage.setItem("coffeeBlendRecipes", JSON.stringify(recipes));
-    if (sqliteEnabled.current && remoteHydrated.current) {
-      queuePutJson("/api/recipes", { recipeSeries });
-    }
-  }, [recipeSeries]);
-
-  function queuePutJson(path, body) {
-    const request = saveQueue.current
-      .catch(() => {})
-      .then(() => putJson(path, body))
-      .catch((error) => {
-        console.error(`Failed to save ${path}`, error);
-      });
-    saveQueue.current = request;
-  }
+    coffeeRepository.saveRecipeSeries(recipeSeries);
+  }, [recipeSeries, coffeeRepository]);
 
   async function saveBeansMaster() {
-    await saveMaster("beans", "/api/beans", { beans }, beans, savedBeansSnapshot);
+    await saveMaster("beans", () => coffeeRepository.saveBeansMaster(beans), beans, savedBeansSnapshot);
   }
 
   async function saveBrewMethodsMaster() {
-    const saved = await saveMaster("brewMethods", "/api/brew-methods", { brewMethods }, brewMethods, savedBrewMethodsSnapshot);
+    const saved = await saveMaster("brewMethods", () => coffeeRepository.saveBrewMethodsMaster(brewMethods), brewMethods, savedBrewMethodsSnapshot);
     if (saved && snapshotHasId(savedBrewMethodsSnapshot.current, selectedBrewMethodId)) {
-      queuePutJson("/api/settings/selected-brew-method", { selectedBrewMethodId });
+      coffeeRepository.queueSelectedBrewMethodSave(selectedBrewMethodId);
     }
   }
 
-  async function saveMaster(key, path, body, data, snapshotRef) {
+  async function saveMaster(key, saveRemote, data, snapshotRef) {
     setMasterSaveStatus((current) => ({ ...current, [key]: "saving" }));
     try {
-      if (sqliteEnabled.current && remoteHydrated.current) {
-        await putJson(path, body);
-      }
+      await saveRemote();
       snapshotRef.current = serializeMaster(data);
       setMasterSaveStatus((current) => ({ ...current, [key]: "saved" }));
       return true;
@@ -1153,21 +1094,6 @@ function downloadFile(filename, content, type) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
-}
-
-async function fetchJson(path) {
-  const response = await fetch(`${apiBase}${path}`);
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-  return response.json();
-}
-
-async function putJson(path, body) {
-  const response = await fetch(`${apiBase}${path}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
 }
 
 createRoot(document.getElementById("root")).render(<App />);
