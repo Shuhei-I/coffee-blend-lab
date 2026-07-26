@@ -13,11 +13,10 @@ import {
 import {
   createRecipeVersionData,
   createSavedRecipeBrewMethod,
-  getRecipeBean,
-  getRecipeBrewMethod,
   saveRecipeVersion,
   sortVersions,
 } from "./domain/coffee/recipeSeries.js";
+import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
 import { BeanMaster } from "./components/BeanMaster.jsx";
@@ -30,6 +29,7 @@ import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
 import { initialSensory, useRecipeEditor } from "./hooks/useRecipeEditor.js";
+import { downloadFile } from "./services/downloadFile.js";
 import "./styles.css";
 
 const pages = [
@@ -320,77 +320,7 @@ function App() {
   }
 
   function exportRecipes(format) {
-    const payload = recipeSeries.flatMap((series) =>
-      series.versions.map((recipe) => ({
-        ...recipe,
-        seriesName: series.name,
-        seriesStatus: series.status,
-        brewMethodSnapshot: getRecipeBrewMethod(recipe, brewMethods),
-        beans: recipe.ratios.map((ratio) => {
-          const bean = getRecipeBean(ratio, beans);
-          return { name: bean?.name || ratio.id, ratio: ratio.value, costPerKg: bean?.costPerKg || 0 };
-        }),
-      })),
-    );
-
-    if (format === "json") {
-      downloadFile("coffee-blend-recipes.json", JSON.stringify(payload, null, 2), "application/json");
-      return;
-    }
-
-    const rows = [
-      [
-        "name",
-        "seriesName",
-        "version",
-        "savedAt",
-        "changeNote",
-        "doseGram",
-        "targetBrewGram",
-        "blendCost",
-        "bean",
-        "ratio",
-        "costPerKg",
-        "brewMethod",
-        "bloomPercent",
-        "pour1Percent",
-        "pour2Percent",
-        "pour3Percent",
-        "fragrance",
-        "flavor",
-        "aftertaste",
-        "balance",
-        "memo",
-      ],
-    ];
-    payload.forEach((recipe) => {
-      recipe.beans.forEach((bean) => {
-        rows.push([
-          recipe.name,
-          recipe.seriesName,
-          recipe.version || "",
-          recipe.savedAt,
-          recipe.changeNote || "",
-          recipe.doseGram || "",
-          recipe.targetBrewGram || "",
-          recipe.blendCost || "",
-          bean.name,
-          bean.ratio,
-          bean.costPerKg,
-          recipe.brewMethodSnapshot?.name || "",
-          recipe.brewMethodSnapshot?.bloomPercent ?? "",
-          recipe.brewMethodSnapshot?.pour1Percent ?? "",
-          recipe.brewMethodSnapshot?.pour2Percent ?? "",
-          recipe.brewMethodSnapshot?.pour3Percent ?? "",
-          recipe.sensory?.fragrance ?? "",
-          recipe.sensory?.flavor ?? "",
-          recipe.sensory?.aftertaste ?? "",
-          recipe.sensory?.balance ?? "",
-          recipe.memo || "",
-        ]);
-      });
-    });
-    downloadFile("coffee-blend-recipes.csv", rows.map(toCsvRow).join("\n"), "text/csv");
+    downloadFile(buildRecipeExportFile({ format, recipeSeries, beans, brewMethods }));
   }
 
   return (
@@ -458,20 +388,6 @@ function App() {
       </main>
     </>
   );
-}
-
-function toCsvRow(row) {
-  return row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(",");
-}
-
-function downloadFile(filename, content, type) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
 createRoot(document.getElementById("root")).render(<App />);
