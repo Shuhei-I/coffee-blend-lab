@@ -19,6 +19,12 @@ import {
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
 import { canDeleteBean, createBean, deleteBeanById, updateBean, updateBeanProfile } from "./domain/coffee/beanMaster.js";
+import {
+  canDeleteBrewMethod,
+  createBrewMethod,
+  deleteBrewMethodData,
+  updateBrewMethod as updateBrewMethodData,
+} from "./domain/coffee/brewMethodMaster.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
 import { BeanMaster } from "./components/BeanMaster.jsx";
@@ -160,34 +166,22 @@ function App() {
 
   function addBrewMethod() {
     const id = `brew-${Date.now()}`;
-    setBrewMethods((current) => [
-      ...current,
-      {
-        id,
-        name: "新しい淹れ方",
-        note: "抽出意図を入力",
-        bloomPercent: 12,
-        pour1Percent: 28,
-        pour2Percent: 30,
-        pour3Percent: 30,
-        bloomSeconds: 30,
-      },
-    ]);
+    setBrewMethods((current) => [...current, createBrewMethod({ id })]);
     setSelectedBrewMethodId(id);
   }
 
   function updateBrewMethod(id, patch) {
-    setBrewMethods((current) => current.map((method) => (method.id === id ? { ...method, ...patch } : method)));
+    setBrewMethods((current) => updateBrewMethodData(current, id, patch));
   }
 
   function deleteBrewMethod(id) {
-    if (brewMethods.length <= 1) return;
+    if (!canDeleteBrewMethod(brewMethods)) return;
     const method = brewMethods.find((item) => item.id === id);
     if (!method || !confirmDeleteItem(method.name)) return;
     setBrewMethods((current) => {
-      const next = current.filter((method) => method.id !== id);
-      if (selectedBrewMethodId === id) setSelectedBrewMethodId(next[0].id);
-      return next;
+      const result = deleteBrewMethodData({ methods: current, methodId: id, selectedBrewMethodId });
+      if (selectedBrewMethodId === id) setSelectedBrewMethodId(result.selectedBrewMethodId);
+      return result.brewMethods;
     });
   }
 
