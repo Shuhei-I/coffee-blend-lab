@@ -12,11 +12,11 @@ import {
 } from "./domain/coffee/calculations.js";
 import {
   archiveRecipeSeriesData,
-  createSavedRecipeBrewMethod,
   deleteRecipeVersionData,
   restoreRecipeSeriesData,
   saveRecipeData,
 } from "./domain/coffee/recipeSeries.js";
+import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
@@ -29,7 +29,7 @@ import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
-import { initialSensory, useRecipeEditor } from "./hooks/useRecipeEditor.js";
+import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import { downloadFile } from "./services/downloadFile.js";
 import "./styles.css";
 
@@ -251,26 +251,11 @@ function App() {
   }
 
   function loadRecipe(recipe, series) {
-    const savedBrewMethod = createSavedRecipeBrewMethod(recipe);
-    if (savedBrewMethod) {
-      setSelectedBrewMethodId(savedBrewMethod.id);
-    } else if (recipe.brewMethodId && brewMethods.some((method) => method.id === recipe.brewMethodId)) {
-      setSelectedBrewMethodId(recipe.brewMethodId);
+    const loadedRecipe = buildRecipeEditorState({ recipe, series, beans, brewMethods });
+    if (loadedRecipe.selectedBrewMethodId) {
+      setSelectedBrewMethodId(loadedRecipe.selectedBrewMethodId);
     }
-    replaceEditorState({
-      blendName: series?.name || recipe.name,
-      changeNote: "",
-      editingRecipeSource: { seriesId: recipe.seriesId || series?.id, versionId: recipe.id },
-      doseGram: recipe.doseGram || 20,
-      brewRatio: recipe.brewRatio || 16,
-      savedRecipeBrewMethod: savedBrewMethod,
-      sensory: { ...initialSensory, ...(recipe.sensory || {}) },
-      memo: recipe.memo || "",
-      blendRatios: Object.fromEntries(beans.map((bean) => {
-        const ratio = recipe.ratios.find((item) => item.id === bean.id);
-        return [bean.id, ratio ? ratio.value : 0];
-      })),
-    });
+    replaceEditorState(loadedRecipe.editorState);
     setRecipeSaveMessage("");
   }
 

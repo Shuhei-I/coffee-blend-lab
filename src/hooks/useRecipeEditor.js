@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { normalizeBlendRatios } from "../domain/coffee/calculations.js";
+import { initialSensory } from "../domain/coffee/sensory.js";
 
-export const initialSensory = { fragrance: 7, flavor: 7, aftertaste: 7, balance: 7 };
+export { initialSensory } from "../domain/coffee/sensory.js";
 
 export function useRecipeEditor({ initialBeans = [] } = {}) {
   const [blendName, setBlendName] = useState("");
