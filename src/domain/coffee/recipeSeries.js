@@ -73,6 +73,17 @@ export function saveRecipeVersion(seriesList, currentSeries, recipe, savedAt) {
   );
 }
 
+export function saveRecipeData(options) {
+  const { recipe, currentSeries } = createRecipeVersionData(options);
+  return {
+    recipeSeries: saveRecipeVersion(options.recipeSeries, currentSeries, recipe, options.now),
+    recipe,
+    currentSeries,
+    savedSeriesId: recipe.seriesId,
+    savedVersionId: recipe.id,
+  };
+}
+
 export function archiveRecipeSeriesData(seriesList, seriesId, updatedAt) {
   return seriesList.map((series) =>
     series.id === seriesId

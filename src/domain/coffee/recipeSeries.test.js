@@ -13,6 +13,7 @@ import {
   normalizeLegacyRecipes,
   normalizeRecipeSeries,
   restoreRecipeSeriesData,
+  saveRecipeData,
   saveRecipeVersion,
   snapshotBean,
   snapshotBrewMethod,
@@ -230,6 +231,132 @@ describe("recipe series compatibility", () => {
     expect(series.currentVersionId).toBe("recipe-1800000000002");
     expect(series.updatedAt).toBe("2026-05-23T09:00:00.000Z");
     expect(series.versions.map((version) => version.version)).toEqual([3, 2, 1]);
+  });
+
+  test("saves a new series through pure save data helper", () => {
+    const result = saveRecipeData({
+      recipeSeries: [],
+      editingRecipeSource: null,
+      blendName: "  Test Blend  ",
+      changeNote: "",
+      blendBeans: fixtureBeans,
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 98.4,
+      selectedBrewMethod: fixtureBrewMethod,
+      sensory: { fragrance: 8, flavor: 8, aftertaste: 7, balance: 8 },
+      memo: "  memo  ",
+      now: "2026-05-21T09:00:00.000Z",
+      seriesIdSeed: 1800000000000,
+      versionIdSeed: 1800000000001,
+    });
+
+    expect(result.savedSeriesId).toBe("series-1800000000000");
+    expect(result.savedVersionId).toBe("recipe-1800000000001");
+    expect(result.currentSeries).toBeUndefined();
+    expect(result.recipeSeries).toEqual([
+      {
+        id: "series-1800000000000",
+        name: "Test Blend",
+        goal: "",
+        status: "active",
+        currentVersionId: "recipe-1800000000001",
+        createdAt: "2026-05-21T09:00:00.000Z",
+        updatedAt: "2026-05-21T09:00:00.000Z",
+        versions: [result.recipe],
+      },
+    ]);
+    expect(result.recipe).toMatchObject({
+      seriesId: "series-1800000000000",
+      id: "recipe-1800000000001",
+      name: "Test Blend",
+      version: 1,
+      changeNote: "初回作成",
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 98.4,
+      brewMethodId: "standard-4-pour",
+      sensory: { fragrance: 8, flavor: 8, aftertaste: 7, balance: 8 },
+      memo: "memo",
+      savedAt: "2026-05-21T09:00:00.000Z",
+    });
+    expect(result.recipe.ratios).toEqual([
+      { id: "ethiopia", value: 60, beanSnapshot: snapshotBean(fixtureBeans[0]) },
+      { id: "brazil", value: 40, beanSnapshot: snapshotBean(fixtureBeans[1]) },
+    ]);
+    expect(result.recipe.brewMethodSnapshot).toEqual(fixtureBrewMethod);
+  });
+
+  test("adds a version to an existing series through pure save data helper", () => {
+    const original = [clone(currentRecipeSeriesFixture), { ...clone(currentRecipeSeriesFixture), id: "series-other" }];
+    const oldVersions = original[0].versions;
+    const result = saveRecipeData({
+      recipeSeries: original,
+      editingRecipeSource: { seriesId: "series-1700000000000", versionId: "recipe-1700000001000" },
+      blendName: "Renamed Blend",
+      changeNote: " next ",
+      blendBeans: fixtureBeans,
+      doseGram: 22,
+      brewRatio: 15,
+      targetBrewGram: 330,
+      blendCost: 102.3,
+      selectedBrewMethod: { ...fixtureBrewMethod, id: "saved-brew-x", sourceBrewMethodId: "standard-4-pour", displayName: "保存時" },
+      sensory: { fragrance: 7, flavor: 7, aftertaste: 7, balance: 7 },
+      memo: "",
+      now: "2026-05-22T09:00:00.000Z",
+      versionIdSeed: 1800000000001,
+    });
+
+    expect(result.savedSeriesId).toBe("series-1700000000000");
+    expect(result.savedVersionId).toBe("recipe-1800000000001");
+    expect(result.currentSeries).toEqual(original[0]);
+    expect(result.recipe.version).toBe(3);
+    expect(result.recipe.brewMethodId).toBe("standard-4-pour");
+    expect(result.recipe.brewMethodSnapshot).toEqual(fixtureBrewMethod);
+    expect(result.recipeSeries.map((series) => series.id)).toEqual(["series-1700000000000", "series-other"]);
+    expect(result.recipeSeries[0]).toMatchObject({
+      name: "Renamed Blend",
+      status: "active",
+      currentVersionId: "recipe-1800000000001",
+      createdAt: "2026-05-17T09:00:00.000Z",
+      updatedAt: "2026-05-22T09:00:00.000Z",
+    });
+    expect(result.recipeSeries[0].versions.map((version) => version.version)).toEqual([3, 2, 1]);
+    expect(result.recipeSeries[0].versions[1]).toEqual(original[0].versions[0]);
+    expect(result.recipeSeries[1]).toBe(original[1]);
+    expect(original[0].versions).toBe(oldVersions);
+    expect(original[0].versions).toHaveLength(2);
+  });
+
+  test("keeps existing archived series save behavior and uses injected time and ids", () => {
+    const archived = { ...clone(currentRecipeSeriesFixture), status: "archived" };
+    const result = saveRecipeData({
+      recipeSeries: [archived],
+      editingRecipeSource: { seriesId: archived.id },
+      blendName: "",
+      changeNote: "",
+      blendBeans: fixtureBeans,
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 98.4,
+      selectedBrewMethod: null,
+      sensory: legacyRecipeFixture.sensory,
+      memo: legacyRecipeFixture.memo,
+      now: "2026-05-24T09:00:00.000Z",
+      seriesIdSeed: 1,
+      versionIdSeed: 2,
+    });
+
+    expect(result.recipe.id).toBe("recipe-2");
+    expect(result.recipe.seriesId).toBe(archived.id);
+    expect(result.recipe.changeNote).toBe("");
+    expect(result.recipe.brewMethodId).toBeNull();
+    expect(result.recipe.brewMethodSnapshot).toBeNull();
+    expect(result.recipeSeries[0].status).toBe("active");
+    expect(result.recipeSeries[0].updatedAt).toBe("2026-05-24T09:00:00.000Z");
   });
 
   test("handles snapshots and saved brew method helpers with existing fallback behavior", () => {

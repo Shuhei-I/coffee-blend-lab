@@ -12,11 +12,10 @@ import {
 } from "./domain/coffee/calculations.js";
 import {
   archiveRecipeSeriesData,
-  createRecipeVersionData,
   createSavedRecipeBrewMethod,
   deleteRecipeVersionData,
   restoreRecipeSeriesData,
-  saveRecipeVersion,
+  saveRecipeData,
 } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
@@ -223,7 +222,7 @@ function App() {
     const now = new Date().toISOString();
     const seriesIdSeed = editingRecipeSource?.seriesId ? undefined : Date.now();
     const versionIdSeed = Date.now();
-    const { recipe, currentSeries } = createRecipeVersionData({
+    const result = saveRecipeData({
       recipeSeries,
       editingRecipeSource,
       blendName,
@@ -240,8 +239,8 @@ function App() {
       seriesIdSeed,
       versionIdSeed,
     });
-    setRecipeSeries((current) => saveRecipeVersion(current, currentSeries, recipe, now));
-    setRecipeSaveMessage(`${recipe.name} v${recipe.version} を登録しました`);
+    setRecipeSeries(result.recipeSeries);
+    setRecipeSaveMessage(`${result.recipe.name} v${result.recipe.version} を登録しました`);
     resetRecipeInput();
     window.setTimeout(() => setRecipeSaveMessage(""), 3200);
   }
