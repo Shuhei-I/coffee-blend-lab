@@ -11,10 +11,12 @@ import {
   getPourTotal,
 } from "./domain/coffee/calculations.js";
 import {
+  archiveRecipeSeriesData,
   createRecipeVersionData,
   createSavedRecipeBrewMethod,
+  deleteRecipeVersionData,
+  restoreRecipeSeriesData,
   saveRecipeVersion,
-  sortVersions,
 } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
@@ -278,23 +280,11 @@ function App() {
     if (!series) return;
     const shouldArchive = window.confirm(`「${series.name}」をアーカイブしますか？`);
     if (!shouldArchive) return;
-    setRecipeSeries((current) =>
-      current.map((item) =>
-        item.id === seriesId
-          ? { ...item, status: "archived", updatedAt: new Date().toISOString() }
-          : item,
-      ),
-    );
+    setRecipeSeries((current) => archiveRecipeSeriesData(current, seriesId, new Date().toISOString()));
   }
 
   function restoreRecipeSeries(seriesId) {
-    setRecipeSeries((current) =>
-      current.map((series) =>
-        series.id === seriesId
-          ? { ...series, status: "active", updatedAt: new Date().toISOString() }
-          : series,
-      ),
-    );
+    setRecipeSeries((current) => restoreRecipeSeriesData(current, seriesId, new Date().toISOString()));
   }
 
   function deleteRecipeVersion(seriesId, versionId) {
@@ -303,20 +293,7 @@ function App() {
     if (!series || !version || series.versions.length <= 1) return;
     if (!confirmDeleteItem(`${series.name} v${version.version}`)) return;
 
-    setRecipeSeries((current) =>
-      current.map((item) => {
-        if (item.id !== seriesId) return item;
-
-        const versions = sortVersions(item.versions.filter((recipe) => recipe.id !== versionId));
-        const latest = versions[0];
-        return {
-          ...item,
-          currentVersionId: item.currentVersionId === versionId ? latest.id : item.currentVersionId,
-          updatedAt: new Date().toISOString(),
-          versions,
-        };
-      }),
-    );
+    setRecipeSeries((current) => deleteRecipeVersionData(current, seriesId, versionId, new Date().toISOString()));
   }
 
   function exportRecipes(format) {

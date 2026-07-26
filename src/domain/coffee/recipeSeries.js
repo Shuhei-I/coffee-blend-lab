@@ -73,6 +73,39 @@ export function saveRecipeVersion(seriesList, currentSeries, recipe, savedAt) {
   );
 }
 
+export function archiveRecipeSeriesData(seriesList, seriesId, updatedAt) {
+  return seriesList.map((series) =>
+    series.id === seriesId
+      ? { ...series, status: "archived", updatedAt }
+      : series,
+  );
+}
+
+export function restoreRecipeSeriesData(seriesList, seriesId, updatedAt) {
+  return seriesList.map((series) =>
+    series.id === seriesId
+      ? { ...series, status: "active", updatedAt }
+      : series,
+  );
+}
+
+export function deleteRecipeVersionData(seriesList, seriesId, versionId, updatedAt) {
+  return seriesList.map((series) => {
+    if (series.id !== seriesId || series.versions.length <= 1) return series;
+
+    const versions = sortVersions(series.versions.filter((recipe) => recipe.id !== versionId));
+    if (versions.length === series.versions.length) return series;
+
+    const latest = versions[0];
+    return {
+      ...series,
+      currentVersionId: series.currentVersionId === versionId ? latest.id : series.currentVersionId,
+      updatedAt,
+      versions,
+    };
+  });
+}
+
 export function sortVersions(versions) {
   return [...versions].sort((a, b) => (Number(b.version) || 0) - (Number(a.version) || 0));
 }

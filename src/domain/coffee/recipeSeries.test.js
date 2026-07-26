@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  archiveRecipeSeriesData,
   createRecipeVersionData,
   createSavedRecipeBrewMethod,
+  deleteRecipeVersionData,
   flattenRecipeSeries,
   getLatestVersion,
   getNextSeriesVersion,
@@ -10,6 +12,7 @@ import {
   getRecipeBrewMethodId,
   normalizeLegacyRecipes,
   normalizeRecipeSeries,
+  restoreRecipeSeriesData,
   saveRecipeVersion,
   snapshotBean,
   snapshotBrewMethod,
@@ -242,3 +245,116 @@ describe("recipe series compatibility", () => {
     });
   });
 });
+
+describe("recipe series management operations", () => {
+  test("archives an active series without changing order, versions, or other series", () => {
+    const original = [
+      clone(currentRecipeSeriesFixture),
+      { ...clone(currentRecipeSeriesFixture), id: "series-2", name: "Other", status: "active" },
+    ];
+    const firstSeries = original[0];
+    const firstVersions = original[0].versions;
+    const updated = archiveRecipeSeriesData(original, "series-1700000000000", "2026-06-01T00:00:00.000Z");
+
+    expect(updated.map((series) => series.id)).toEqual(["series-1700000000000", "series-2"]);
+    expect(updated[0]).toEqual({ ...firstSeries, status: "archived", updatedAt: "2026-06-01T00:00:00.000Z" });
+    expect(updated[0].versions).toBe(firstVersions);
+    expect(updated[1]).toBe(original[1]);
+    expect(original[0].status).toBe("active");
+    expect(updated).not.toBe(original);
+    expect(updated[0]).not.toBe(original[0]);
+  });
+
+  test("archive keeps existing no-op behavior for missing and already archived series", () => {
+    const archived = { ...clone(currentRecipeSeriesFixture), status: "archived" };
+
+    expect(archiveRecipeSeriesData([], "missing", "now")).toEqual([]);
+    expect(archiveRecipeSeriesData([archived], "missing", "now")[0]).toBe(archived);
+    expect(archiveRecipeSeriesData([archived], archived.id, "now")[0]).toEqual({
+      ...archived,
+      status: "archived",
+      updatedAt: "now",
+    });
+  });
+
+  test("restores an archived series without changing order, versions, or other series", () => {
+    const original = [
+      { ...clone(currentRecipeSeriesFixture), status: "archived" },
+      { ...clone(currentRecipeSeriesFixture), id: "series-2", name: "Other", status: "active" },
+    ];
+    const firstVersions = original[0].versions;
+    const updated = restoreRecipeSeriesData(original, "series-1700000000000", "2026-06-02T00:00:00.000Z");
+
+    expect(updated.map((series) => series.id)).toEqual(["series-1700000000000", "series-2"]);
+    expect(updated[0]).toEqual({ ...original[0], status: "active", updatedAt: "2026-06-02T00:00:00.000Z" });
+    expect(updated[0].versions).toBe(firstVersions);
+    expect(updated[1]).toBe(original[1]);
+    expect(original[0].status).toBe("archived");
+  });
+
+  test("restore keeps existing no-op behavior for missing and already active series", () => {
+    const active = clone(currentRecipeSeriesFixture);
+
+    expect(restoreRecipeSeriesData([], "missing", "now")).toEqual([]);
+    expect(restoreRecipeSeriesData([active], "missing", "now")[0]).toBe(active);
+    expect(restoreRecipeSeriesData([active], active.id, "now")[0]).toEqual({
+      ...active,
+      status: "active",
+      updatedAt: "now",
+    });
+  });
+
+  test("deletes latest version, keeps descending order, and points currentVersionId to latest remaining version", () => {
+    const original = [clone(currentRecipeSeriesFixture)];
+    const versionsBefore = original[0].versions;
+    const updated = deleteRecipeVersionData(
+      original,
+      "series-1700000000000",
+      "recipe-1700000001000",
+      "2026-06-03T00:00:00.000Z",
+    );
+
+    expect(updated[0].versions.map((version) => version.id)).toEqual(["recipe-1700000000000"]);
+    expect(updated[0].versions.map((version) => version.version)).toEqual([1]);
+    expect(updated[0].currentVersionId).toBe("recipe-1700000000000");
+    expect(updated[0].updatedAt).toBe("2026-06-03T00:00:00.000Z");
+    expect(original[0].versions).toBe(versionsBefore);
+    expect(original[0].versions).toHaveLength(2);
+    expect(updated[0]).not.toBe(original[0]);
+    expect(updated[0].versions).not.toBe(original[0].versions);
+  });
+
+  test("deletes older version without renumbering or changing currentVersionId", () => {
+    const original = [clone(currentRecipeSeriesFixture)];
+    const updated = deleteRecipeVersionData(original, "series-1700000000000", "recipe-1700000000000", "now");
+
+    expect(updated[0].versions.map((version) => version.version)).toEqual([2]);
+    expect(updated[0].versions[0].id).toBe("recipe-1700000001000");
+    expect(updated[0].currentVersionId).toBe("recipe-1700000001000");
+    expect(updated[0].updatedAt).toBe("now");
+  });
+
+  test("delete version keeps existing no-op behavior for missing ids, empty arrays, and final version", () => {
+    const series = clone(currentRecipeSeriesFixture);
+    const singleVersionSeries = { ...clone(currentRecipeSeriesFixture), versions: [currentRecipeSeriesFixture.versions[0]] };
+
+    expect(deleteRecipeVersionData([], "series", "recipe", "now")).toEqual([]);
+    expect(deleteRecipeVersionData([series], "missing", "recipe-1700000001000", "now")[0]).toBe(series);
+    expect(deleteRecipeVersionData([series], series.id, "missing", "now")[0]).toBe(series);
+    expect(deleteRecipeVersionData([singleVersionSeries], singleVersionSeries.id, singleVersionSeries.versions[0].id, "now")[0]).toBe(singleVersionSeries);
+  });
+
+  test("deletes versions inside archived series and preserves other series references", () => {
+    const archived = { ...clone(currentRecipeSeriesFixture), status: "archived" };
+    const other = { ...clone(currentRecipeSeriesFixture), id: "series-2" };
+    const updated = deleteRecipeVersionData([archived, other], archived.id, "recipe-1700000000000", "now");
+
+    expect(updated[0].status).toBe("archived");
+    expect(updated[0].versions.map((version) => version.id)).toEqual(["recipe-1700000001000"]);
+    expect(updated[1]).toBe(other);
+  });
+});
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
