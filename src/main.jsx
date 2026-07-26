@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import heroImage from "../assets/coffee-blend-workbench.png";
 import {
@@ -19,10 +19,12 @@ import {
   saveRecipeVersion,
   sortVersions,
 } from "./domain/coffee/recipeSeries.js";
-import { profileLabels, profileMetricKeys } from "./domain/coffee/profile.js";
+import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
 import { BeanMaster } from "./components/BeanMaster.jsx";
 import { BrewMethodMaster } from "./components/BrewMethodMaster.jsx";
+import { Dosing } from "./components/Dosing.jsx";
+import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
 import "./styles.css";
@@ -106,6 +108,22 @@ function App() {
     [brewMethods, savedRecipeBrewMethod],
   );
   const selectedBrewMethod = brewMethodOptions.find((method) => method.id === selectedBrewMethodId) || brewMethods[0];
+  const pourTotal = useMemo(() => getPourTotal(selectedBrewMethod), [selectedBrewMethod]);
+  const brewSchedule = useMemo(
+    () => calculatePourSchedule(selectedBrewMethod, targetBrewGram),
+    [selectedBrewMethod, targetBrewGram],
+  );
+  const beanDoseLines = useMemo(
+    () =>
+      blendBeans
+        .filter((bean) => bean.ratio > 0)
+        .map((bean) => ({
+          id: bean.id,
+          name: bean.name,
+          doseGram: calculateBeanDoseGram(bean, total, doseGram),
+        })),
+    [blendBeans, total, doseGram],
+  );
   function updateRatio(id, ratio) {
     setBlendRatios((current) => ({
       ...current,
@@ -421,15 +439,15 @@ function App() {
             <RecipeNamePanel blendName={blendName} changeNote={changeNote} saveMessage={recipeSaveMessage} editingRecipeSource={editingRecipeSource} onNameChange={setBlendName} onChangeNoteChange={setChangeNote} onSave={saveRecipe} />
             <BlendBuilder beans={blendBeans} total={total} onRatioChange={updateRatio} onNormalize={normalizeRatios} />
             <Dosing
-              beans={blendBeans}
-              total={total}
               doseGram={doseGram}
               brewRatio={brewRatio}
               targetBrewGram={targetBrewGram}
               blendCost={blendCost}
-              brewMethods={brewMethods}
+              pourTotal={pourTotal}
+              beanDoseLines={beanDoseLines}
+              brewSchedule={brewSchedule}
+              showBrewSchedule={Boolean(selectedBrewMethod)}
               brewMethodOptions={brewMethodOptions}
-              selectedBrewMethod={selectedBrewMethod}
               selectedBrewMethodId={selectedBrewMethodId}
               onDoseChange={setDoseGram}
               onRatioChange={setBrewRatio}
@@ -521,111 +539,6 @@ function BlendBuilder({ beans, total, onRatioChange, onNormalize }) {
   );
 }
 
-function Dosing({ beans, total, doseGram, brewRatio, targetBrewGram, blendCost, brewMethodOptions, selectedBrewMethod, selectedBrewMethodId, onDoseChange, onRatioChange, onMethodChange }) {
-  const pourTotal = getPourTotal(selectedBrewMethod);
-  return (
-    <section className="panel dosing-panel" aria-labelledby="dosingTitle">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Dose</p>
-          <h2 id="dosingTitle">g指定と抽出量</h2>
-        </div>
-      </div>
-      <div className="control-grid">
-        <label>
-          コーヒー粉量 g
-          <input type="number" min="1" max="2000" step="1" value={doseGram} onChange={(event) => onDoseChange(Number(event.target.value) || 1)} />
-        </label>
-        <label>
-          抽出比率
-          <select value={brewRatio} onChange={(event) => onRatioChange(Number(event.target.value))}>
-            <option value="11">1:11 水出し濃いめ</option>
-            <option value="12">1:12 水出し標準</option>
-            <option value="14">1:14 濃いめ</option>
-            <option value="15">1:15 バランス</option>
-            <option value="16">1:16 標準</option>
-            <option value="17">1:17 すっきり</option>
-          </select>
-        </label>
-        <label>
-          淹れ方
-          <select value={selectedBrewMethodId} onChange={(event) => onMethodChange(event.target.value)}>
-            {brewMethodOptions.map((method) => (
-              <option value={method.id} key={method.id}>{method.displayName || method.name}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <div className="dose-summary">
-        <div className="dose-line"><span>目標抽出量</span><strong>{targetBrewGram} g</strong></div>
-        <div className="dose-line"><span>ブレンド原価</span><strong>{blendCost.toFixed(1)} 円</strong></div>
-        <div className="dose-line"><span>投湯割合合計</span><strong>{pourTotal}%</strong></div>
-        {beans.filter((bean) => bean.ratio > 0).map((bean) => (
-          <div className="dose-line" key={bean.id}>
-            <span>{bean.name}</span>
-            <strong>{calculateBeanDoseGram(bean, total, doseGram).toFixed(1)} g</strong>
-          </div>
-        ))}
-      </div>
-      <BrewSchedule method={selectedBrewMethod} targetBrewGram={targetBrewGram} />
-    </section>
-  );
-}
-
-function BrewSchedule({ method, targetBrewGram }) {
-  if (!method) return null;
-
-  const steps = calculatePourSchedule(method, targetBrewGram);
-
-  return (
-    <div className="brew-schedule">
-      {steps.map(({ label, percent, sub, stepGram, cumulativeGram }) => (
-        <div className="brew-step" key={label}>
-          <span>{label}</span>
-          <strong>{cumulativeGram} g</strong>
-          <small>+{stepGram} g / {percent}% {sub}</small>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ProfilePanel({ profile, total }) {
-  const canvasRef = useRef(null);
-  const dominant = profileLabels.reduce((best, current) => (profile[current[0]] > profile[best[0]] ? current : best));
-  const low = profileLabels.reduce((worst, current) => (profile[current[0]] < profile[worst[0]] ? current : worst));
-
-  useEffect(() => {
-    drawProfile(canvasRef.current, profile);
-  }, [profile]);
-
-  return (
-    <section className="panel result-panel" aria-labelledby="resultTitle">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Profile</p>
-          <h2 id="resultTitle">味の傾向</h2>
-        </div>
-        <output className="total-output" data-ok={total === 100}>{total}%</output>
-      </div>
-      <div className="profile-grid">
-        <canvas ref={canvasRef} width="420" height="300" aria-label="味覚プロファイルのレーダーチャート" />
-        <div className="metrics">
-          {profileLabels.map(([key, label]) => (
-            <div className="metric" key={key}>
-              <div className="metric-label"><span>{label}</span><span>{profile[key]}</span></div>
-              <div className="meter"><span style={{ width: `${profile[key]}%` }} /></div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="recommendation">
-        いまは{dominant[1]}が前に出て、{low[1]}は控えめです。試作では中挽きから始め、香りを残したい場合は湯温を少し下げてください。
-      </div>
-    </section>
-  );
-}
-
 function SensoryPanel({ sensory, memo, onSensoryChange, onMemoChange }) {
   return (
     <section className="panel sensory-panel" aria-labelledby="sensoryTitle">
@@ -649,66 +562,6 @@ function SensoryPanel({ sensory, memo, onSensoryChange, onMemoChange }) {
       </label>
     </section>
   );
-}
-
-function drawProfile(canvas, profile) {
-  if (!canvas) return;
-  const context = canvas.getContext("2d");
-  const width = canvas.width;
-  const height = canvas.height;
-  const cx = width / 2;
-  const cy = height / 2 + 8;
-  const radius = 102;
-  context.clearRect(0, 0, width, height);
-  context.lineWidth = 1;
-  context.font = "700 14px sans-serif";
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-
-  for (let ring = 1; ring <= 4; ring += 1) {
-    context.beginPath();
-    profileLabels.forEach((_, index) => {
-      const point = radarPoint(index, (radius * ring) / 4, cx, cy);
-      if (index === 0) context.moveTo(point.x, point.y);
-      else context.lineTo(point.x, point.y);
-    });
-    context.closePath();
-    context.strokeStyle = ring === 4 ? "#cfc5b7" : "#e8dfd4";
-    context.stroke();
-  }
-
-  profileLabels.forEach(([, label], index) => {
-    const edge = radarPoint(index, radius + 28, cx, cy);
-    const axis = radarPoint(index, radius, cx, cy);
-    context.beginPath();
-    context.moveTo(cx, cy);
-    context.lineTo(axis.x, axis.y);
-    context.strokeStyle = "#e1d8cc";
-    context.stroke();
-    context.fillStyle = "#706b62";
-    context.fillText(label, edge.x, edge.y);
-  });
-
-  context.beginPath();
-  profileLabels.forEach(([key], index) => {
-    const point = radarPoint(index, radius * (profile[key] / 100), cx, cy);
-    if (index === 0) context.moveTo(point.x, point.y);
-    else context.lineTo(point.x, point.y);
-  });
-  context.closePath();
-  context.fillStyle = "rgba(18, 101, 107, 0.2)";
-  context.strokeStyle = "#12656b";
-  context.lineWidth = 3;
-  context.fill();
-  context.stroke();
-}
-
-function radarPoint(index, distance, cx, cy) {
-  const angle = -Math.PI / 2 + (Math.PI * 2 * index) / profileLabels.length;
-  return {
-    x: cx + Math.cos(angle) * distance,
-    y: cy + Math.sin(angle) * distance,
-  };
 }
 
 function toCsvRow(row) {
