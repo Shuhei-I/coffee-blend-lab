@@ -21,48 +21,9 @@ import {
   saveRecipeVersion,
   sortVersions,
 } from "./domain/coffee/recipeSeries.js";
-import { createCoffeeRepository } from "./data/coffeeRepository.js";
-import { parseSnapshot, serializeMaster, snapshotHasId } from "./data/localStorageRepository.js";
+import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
+import { useCoffeeData } from "./hooks/useCoffeeData.js";
 import "./styles.css";
-
-const defaultBeans = [
-  {
-    id: "ethiopia",
-    name: "エチオピア ナチュラル",
-    note: "ベリー、花、明るい酸味",
-    color: "#b85243",
-    ratio: 0,
-    costPerKg: 5800,
-    profile: { acidity: 86, sweetness: 78, bitterness: 32, body: 48, aroma: 92 },
-  },
-  {
-    id: "brazil",
-    name: "ブラジル No.2 Natural",
-    note: "ナッツ、チョコ、丸い甘み",
-    color: "#c38b2d",
-    ratio: 0,
-    costPerKg: 3600,
-    profile: { acidity: 38, sweetness: 82, bitterness: 48, body: 74, aroma: 58 },
-  },
-  {
-    id: "guatemala",
-    name: "グアテマラ ウォッシュト",
-    note: "カカオ、柑橘、整った後味",
-    color: "#12656b",
-    ratio: 0,
-    costPerKg: 4700,
-    profile: { acidity: 64, sweetness: 66, bitterness: 55, body: 68, aroma: 70 },
-  },
-  {
-    id: "sumatra",
-    name: "スマトラ マンデリン",
-    note: "ハーブ、重厚なボディ、余韻",
-    color: "#54745a",
-    ratio: 0,
-    costPerKg: 4200,
-    profile: { acidity: 26, sweetness: 46, bitterness: 72, body: 92, aroma: 64 },
-  },
-];
 
 const profileLabels = [
   ["acidity", "酸味"],
@@ -89,29 +50,6 @@ const pages = [
   ["brew", "淹れ方マスタ"],
 ];
 
-const defaultBrewMethods = [
-  {
-    id: "standard-4-pour",
-    name: "標準 4投式",
-    note: "蒸らし後に3回で注ぎ切る基本レシピ",
-    bloomPercent: 12,
-    pour1Percent: 28,
-    pour2Percent: 30,
-    pour3Percent: 30,
-    bloomSeconds: 30,
-  },
-  {
-    id: "sweet-forward",
-    name: "甘み重視",
-    note: "前半を厚めにして甘みとボディを出す",
-    bloomPercent: 15,
-    pour1Percent: 35,
-    pour2Percent: 25,
-    pour3Percent: 25,
-    bloomSeconds: 40,
-  },
-];
-
 function confirmDeleteItem(label) {
   return window.confirm(`「${label}」を削除しますか？この操作は元に戻せません。`);
 }
@@ -128,24 +66,7 @@ function beansWithRatios(beans, ratios) {
 }
 
 function App() {
-  const coffeeRepositoryRef = useRef(null);
-  if (!coffeeRepositoryRef.current) {
-    coffeeRepositoryRef.current = createCoffeeRepository();
-  }
-  const coffeeRepository = coffeeRepositoryRef.current;
-  const initialStateRef = useRef(null);
-  if (!initialStateRef.current) {
-    initialStateRef.current = coffeeRepository.getLocalInitialState({ defaultBeans, defaultBrewMethods });
-  }
-  const initialState = initialStateRef.current;
   const [activePage, setActivePage] = useState("blend");
-  const [beans, setBeans] = useState(() => initialState.beans);
-  const [blendRatios, setBlendRatios] = useState(() => emptyRatios(initialState.beans));
-  const [brewMethods, setBrewMethods] = useState(() => initialState.brewMethods);
-  const [selectedBrewMethodId, setSelectedBrewMethodId] = useState(() => initialState.selectedBrewMethodId);
-  const [recipeSeries, setRecipeSeries] = useState(() => initialState.recipeSeries);
-  const [storageMode, setStorageMode] = useState("local");
-  const [masterSaveStatus, setMasterSaveStatus] = useState({ beans: "saved", brewMethods: "saved" });
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
   const [blendName, setBlendName] = useState("");
   const [changeNote, setChangeNote] = useState("");
@@ -155,8 +76,28 @@ function App() {
   const [editingRecipeSource, setEditingRecipeSource] = useState(null);
   const [sensory, setSensory] = useState(initialSensory);
   const [memo, setMemo] = useState("");
-  const savedBeansSnapshot = useRef(serializeMaster(initialState.beans));
-  const savedBrewMethodsSnapshot = useRef(serializeMaster(initialState.brewMethods));
+  const {
+    beans,
+    brewMethods,
+    recipeSeries,
+    selectedBrewMethodId,
+    storageMode,
+    masterSaveStatus,
+    beansDirty,
+    brewMethodsDirty,
+    setBeans,
+    setBrewMethods,
+    setRecipeSeries,
+    setSelectedBrewMethodId,
+    saveBeansMaster,
+    saveBrewMethodsMaster,
+    revertBeansMaster,
+    revertBrewMethodsMaster,
+  } = useCoffeeData({
+    savedRecipeBrewMethod,
+    onBeansReplaced: (loadedBeans) => setBlendRatios(emptyRatios(loadedBeans)),
+  });
+  const [blendRatios, setBlendRatios] = useState(() => emptyRatios(beans));
 
   const recipeBeans = useMemo(
     () => beans.filter((bean) => bean.visibleInRecipes !== false || Number(blendRatios[bean.id]) > 0),
@@ -172,98 +113,6 @@ function App() {
     [brewMethods, savedRecipeBrewMethod],
   );
   const selectedBrewMethod = brewMethodOptions.find((method) => method.id === selectedBrewMethodId) || brewMethods[0];
-  const beansDirty = serializeMaster(beans) !== savedBeansSnapshot.current;
-  const brewMethodsDirty = serializeMaster(brewMethods) !== savedBrewMethodsSnapshot.current;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    coffeeRepository
-      .loadInitialState({ defaultBeans, defaultBrewMethods })
-      .then((state) => {
-        if (cancelled) return;
-        savedBeansSnapshot.current = serializeMaster(state.beans);
-        savedBrewMethodsSnapshot.current = serializeMaster(state.brewMethods);
-        setStorageMode(state.storageMode);
-        setMasterSaveStatus({ beans: "saved", brewMethods: "saved" });
-        setBeans(state.beans);
-        setBlendRatios(emptyRatios(state.beans));
-        setBrewMethods(state.brewMethods);
-        setSelectedBrewMethodId(state.selectedBrewMethodId);
-        setRecipeSeries(state.recipeSeries);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setStorageMode("local");
-        setMasterSaveStatus({ beans: "saved", brewMethods: "saved" });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    coffeeRepository.saveBeansLocal(beans);
-  }, [beans, coffeeRepository]);
-
-  useEffect(() => {
-    coffeeRepository.saveBrewMethodsLocal(brewMethods);
-  }, [brewMethods, coffeeRepository]);
-
-  useEffect(() => {
-    const selectedSavedRecipeMethod = savedRecipeBrewMethod?.id === selectedBrewMethodId;
-    coffeeRepository.saveSelectedBrewMethod(selectedBrewMethodId, {
-      selectedSavedRecipeMethod,
-      existsInSavedBrewMethods: snapshotHasId(savedBrewMethodsSnapshot.current, selectedBrewMethodId),
-    });
-  }, [selectedBrewMethodId, savedRecipeBrewMethod, coffeeRepository]);
-
-  useEffect(() => {
-    coffeeRepository.saveRecipeSeries(recipeSeries);
-  }, [recipeSeries, coffeeRepository]);
-
-  async function saveBeansMaster() {
-    await saveMaster("beans", () => coffeeRepository.saveBeansMaster(beans), beans, savedBeansSnapshot);
-  }
-
-  async function saveBrewMethodsMaster() {
-    const saved = await saveMaster("brewMethods", () => coffeeRepository.saveBrewMethodsMaster(brewMethods), brewMethods, savedBrewMethodsSnapshot);
-    if (saved && snapshotHasId(savedBrewMethodsSnapshot.current, selectedBrewMethodId)) {
-      coffeeRepository.queueSelectedBrewMethodSave(selectedBrewMethodId);
-    }
-  }
-
-  async function saveMaster(key, saveRemote, data, snapshotRef) {
-    setMasterSaveStatus((current) => ({ ...current, [key]: "saving" }));
-    try {
-      await saveRemote();
-      snapshotRef.current = serializeMaster(data);
-      setMasterSaveStatus((current) => ({ ...current, [key]: "saved" }));
-      return true;
-    } catch (error) {
-      console.error(`Failed to save ${key}`, error);
-      setMasterSaveStatus((current) => ({ ...current, [key]: "error" }));
-      return false;
-    }
-  }
-
-  function revertBeansMaster() {
-    const savedBeans = parseSnapshot(savedBeansSnapshot.current, beans);
-    setBeans(savedBeans);
-    setBlendRatios(emptyRatios(savedBeans));
-    setMasterSaveStatus((current) => ({ ...current, beans: "saved" }));
-  }
-
-  function revertBrewMethodsMaster() {
-    const savedMethods = parseSnapshot(savedBrewMethodsSnapshot.current, brewMethods);
-    setBrewMethods(savedMethods);
-    if (!savedMethods.some((method) => method.id === selectedBrewMethodId)) {
-      setSelectedBrewMethodId(savedMethods[0]?.id || defaultBrewMethods[0].id);
-    }
-    setMasterSaveStatus((current) => ({ ...current, brewMethods: "saved" }));
-  }
-
   function updateRatio(id, ratio) {
     setBlendRatios((current) => ({
       ...current,
@@ -400,7 +249,7 @@ function App() {
     setBrewRatio(16);
     setSavedRecipeBrewMethod(null);
     setEditingRecipeSource(null);
-    setSelectedBrewMethodId(brewMethods[0]?.id || defaultBrewMethods[0].id);
+    setSelectedBrewMethodId(brewMethods[0]?.id || getDefaultSelectedBrewMethodId());
     setSensory(initialSensory);
     setMemo("");
   }
