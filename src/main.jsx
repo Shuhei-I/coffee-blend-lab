@@ -9,7 +9,6 @@ import {
   calculatePourSchedule,
   calculateTargetBrewGram,
   getPourTotal,
-  normalizeBlendRatios,
 } from "./domain/coffee/calculations.js";
 import {
   createRecipeVersionData,
@@ -30,9 +29,8 @@ import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
+import { initialSensory, useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import "./styles.css";
-
-const initialSensory = { fragrance: 7, flavor: 7, aftertaste: 7, balance: 7 };
 
 const pages = [
   ["blend", "ブレンド作成"],
@@ -45,10 +43,6 @@ function confirmDeleteItem(label) {
   return window.confirm(`「${label}」を削除しますか？この操作は元に戻せません。`);
 }
 
-function emptyRatios(beans) {
-  return Object.fromEntries(beans.map((bean) => [bean.id, 0]));
-}
-
 function beansWithRatios(beans, ratios) {
   return beans.map((bean) => ({
     ...bean,
@@ -59,14 +53,31 @@ function beansWithRatios(beans, ratios) {
 function App() {
   const [activePage, setActivePage] = useState("blend");
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
-  const [blendName, setBlendName] = useState("");
-  const [changeNote, setChangeNote] = useState("");
-  const [doseGram, setDoseGram] = useState(20);
-  const [brewRatio, setBrewRatio] = useState(16);
-  const [savedRecipeBrewMethod, setSavedRecipeBrewMethod] = useState(null);
-  const [editingRecipeSource, setEditingRecipeSource] = useState(null);
-  const [sensory, setSensory] = useState(initialSensory);
-  const [memo, setMemo] = useState("");
+  const editor = useRecipeEditor();
+  const {
+    blendName,
+    setBlendName,
+    changeNote,
+    setChangeNote,
+    doseGram,
+    setDoseGram,
+    brewRatio,
+    setBrewRatio,
+    savedRecipeBrewMethod,
+    editingRecipeSource,
+    sensory,
+    setSensory,
+    memo,
+    setMemo,
+    blendRatios,
+    setBlendRatios,
+    updateRatio,
+    normalizeRatios,
+    resetEditor,
+    replaceEditorState,
+    replaceBlendRatiosForBeans,
+    clearSavedRecipeBrewMethodIfDifferent,
+  } = editor;
   const {
     beans,
     brewMethods,
@@ -86,9 +97,8 @@ function App() {
     revertBrewMethodsMaster,
   } = useCoffeeData({
     savedRecipeBrewMethod,
-    onBeansReplaced: (loadedBeans) => setBlendRatios(emptyRatios(loadedBeans)),
+    onBeansReplaced: replaceBlendRatiosForBeans,
   });
-  const [blendRatios, setBlendRatios] = useState(() => emptyRatios(beans));
 
   const recipeBeans = useMemo(
     () => beans.filter((bean) => bean.visibleInRecipes !== false || Number(blendRatios[bean.id]) > 0),
@@ -120,18 +130,6 @@ function App() {
         })),
     [blendBeans, total, doseGram],
   );
-  function updateRatio(id, ratio) {
-    setBlendRatios((current) => ({
-      ...current,
-      [id]: Math.max(0, Math.min(100, Number(ratio) || 0)),
-    }));
-  }
-
-  function normalizeRatios() {
-    if (!blendBeans.length) return;
-    setBlendRatios(normalizeBlendRatios(blendBeans, total));
-  }
-
   function updateMaster(id, patch) {
     setBeans((current) => current.map((bean) => (bean.id === id ? { ...bean, ...patch } : bean)));
   }
@@ -214,9 +212,7 @@ function App() {
   }
 
   function changeSelectedBrewMethod(id) {
-    if (savedRecipeBrewMethod?.id !== id) {
-      setSavedRecipeBrewMethod(null);
-    }
+    clearSavedRecipeBrewMethodIfDifferent(id);
     setSelectedBrewMethodId(id);
   }
 
@@ -249,40 +245,31 @@ function App() {
   }
 
   function resetRecipeInput() {
-    setBlendName("");
-    setChangeNote("");
-    setBlendRatios(emptyRatios(beans));
-    setDoseGram(20);
-    setBrewRatio(16);
-    setSavedRecipeBrewMethod(null);
-    setEditingRecipeSource(null);
+    resetEditor(beans);
     setSelectedBrewMethodId(brewMethods[0]?.id || getDefaultSelectedBrewMethodId());
-    setSensory(initialSensory);
-    setMemo("");
   }
 
   function loadRecipe(recipe, series) {
-    setBlendName(series?.name || recipe.name);
-    setChangeNote("");
-    setEditingRecipeSource({ seriesId: recipe.seriesId || series?.id, versionId: recipe.id });
-    setDoseGram(recipe.doseGram || 20);
-    setBrewRatio(recipe.brewRatio || 16);
     const savedBrewMethod = createSavedRecipeBrewMethod(recipe);
     if (savedBrewMethod) {
-      setSavedRecipeBrewMethod(savedBrewMethod);
       setSelectedBrewMethodId(savedBrewMethod.id);
     } else if (recipe.brewMethodId && brewMethods.some((method) => method.id === recipe.brewMethodId)) {
-      setSavedRecipeBrewMethod(null);
       setSelectedBrewMethodId(recipe.brewMethodId);
-    } else {
-      setSavedRecipeBrewMethod(null);
     }
-    setSensory({ ...initialSensory, ...(recipe.sensory || {}) });
-    setMemo(recipe.memo || "");
-    setBlendRatios(Object.fromEntries(beans.map((bean) => {
-      const ratio = recipe.ratios.find((item) => item.id === bean.id);
-      return [bean.id, ratio ? ratio.value : 0];
-    })));
+    replaceEditorState({
+      blendName: series?.name || recipe.name,
+      changeNote: "",
+      editingRecipeSource: { seriesId: recipe.seriesId || series?.id, versionId: recipe.id },
+      doseGram: recipe.doseGram || 20,
+      brewRatio: recipe.brewRatio || 16,
+      savedRecipeBrewMethod: savedBrewMethod,
+      sensory: { ...initialSensory, ...(recipe.sensory || {}) },
+      memo: recipe.memo || "",
+      blendRatios: Object.fromEntries(beans.map((bean) => {
+        const ratio = recipe.ratios.find((item) => item.id === bean.id);
+        return [bean.id, ratio ? ratio.value : 0];
+      })),
+    });
     setRecipeSaveMessage("");
   }
 
@@ -433,7 +420,7 @@ function App() {
         {activePage === "blend" && (
           <>
             <RecipeNamePanel blendName={blendName} changeNote={changeNote} saveMessage={recipeSaveMessage} editingRecipeSource={editingRecipeSource} onNameChange={setBlendName} onChangeNoteChange={setChangeNote} onSave={saveRecipe} />
-            <BlendBuilder beans={blendBeans} total={total} onRatioChange={updateRatio} onNormalize={normalizeRatios} />
+            <BlendBuilder beans={blendBeans} total={total} onRatioChange={updateRatio} onNormalize={() => normalizeRatios(blendBeans, total)} />
             <Dosing
               doseGram={doseGram}
               brewRatio={brewRatio}
