@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createCoffeeRepository } from "../data/coffeeRepository.js";
 import { parseSnapshot, serializeMaster, snapshotHasId } from "../data/localStorageRepository.js";
+import { createSupabaseBeanRepository } from "../data/supabaseBeanRepository.js";
 import { createDefaultCoffeeState } from "../domain/defaultCoffeeData.js";
 
 export function useCoffeeData({
@@ -8,11 +9,16 @@ export function useCoffeeData({
   defaultBrewMethods,
   savedRecipeBrewMethod = null,
   repository,
+  beanRepository,
   onBeansReplaced,
 }) {
   const repositoryRef = useRef(null);
   if (!repositoryRef.current) {
     repositoryRef.current = repository || createCoffeeRepository();
+  }
+  const beanRepositoryRef = useRef(null);
+  if (!beanRepositoryRef.current) {
+    beanRepositoryRef.current = beanRepository || createSupabaseBeanRepository();
   }
   const onBeansReplacedRef = useRef(onBeansReplaced);
   onBeansReplacedRef.current = onBeansReplaced;
@@ -57,43 +63,55 @@ export function useCoffeeData({
   useEffect(() => {
     let cancelled = false;
 
-    setLoading(true);
-    repositoryRef.current
-      .loadInitialState({ defaultBeans: defaultState.beans, defaultBrewMethods: defaultState.brewMethods })
-      .then((state) => {
+    async function loadState() {
+      setLoading(true);
+      try {
+        const state = await repositoryRef.current.loadInitialState({
+          defaultBeans: defaultState.beans,
+          defaultBrewMethods: defaultState.brewMethods,
+        });
         if (cancelled) return;
-        savedBeansSnapshot.current = serializeMaster(state.beans);
         savedBrewMethodsSnapshot.current = serializeMaster(state.brewMethods);
         setStorageMode(state.storageMode);
         setMasterSaveStatus({ beans: "saved", brewMethods: "saved" });
         setSaveError(null);
-        setLoadError(null);
-        setBeans(state.beans);
-        onBeansReplacedRef.current?.(state.beans);
         setBrewMethods(state.brewMethods);
         setSelectedBrewMethodId(state.selectedBrewMethodId);
         setRecipeSeries(state.recipeSeries);
-      })
-      .catch((error) => {
+
+        try {
+          const supabaseBeans = await beanRepositoryRef.current.getBeans();
+          if (cancelled) return;
+          savedBeansSnapshot.current = serializeMaster(supabaseBeans);
+          setLoadError(null);
+          setBeans(supabaseBeans);
+          onBeansReplacedRef.current?.(supabaseBeans);
+        } catch (error) {
+          if (cancelled) return;
+          setLoadError(error);
+          setBeans([]);
+          onBeansReplacedRef.current?.([]);
+        }
+      } catch (error) {
         if (cancelled) return;
         setStorageMode("local");
         setMasterSaveStatus({ beans: "saved", brewMethods: "saved" });
         setLoadError(error);
-      })
-      .finally(() => {
+        setBeans([]);
+        onBeansReplacedRef.current?.([]);
+      } finally {
         if (!cancelled) {
           setLoading(false);
         }
-      });
+      }
+    }
+
+    loadState();
 
     return () => {
       cancelled = true;
     };
   }, [defaultState.beans, defaultState.brewMethods]);
-
-  useEffect(() => {
-    repositoryRef.current.saveBeansLocal(beans);
-  }, [beans]);
 
   useEffect(() => {
     repositoryRef.current.saveBrewMethodsLocal(brewMethods);
@@ -112,8 +130,67 @@ export function useCoffeeData({
   }, [recipeSeries]);
 
   const saveBeansMaster = useCallback(async () => {
-    return saveMaster("beans", () => repositoryRef.current.saveBeansMaster(beans), beans, savedBeansSnapshot);
+    setMasterSaveStatus((current) => ({ ...current, beans: "saving" }));
+    try {
+      const savedBeans = parseSnapshot(savedBeansSnapshot.current, []);
+      const nextBeans = await saveBeansToSupabase({
+        beanRepository: beanRepositoryRef.current,
+        savedBeans,
+        beans,
+      });
+      savedBeansSnapshot.current = serializeMaster(nextBeans);
+      setBeans(nextBeans);
+      onBeansReplacedRef.current?.(nextBeans);
+      setSaveError(null);
+      setMasterSaveStatus((current) => ({ ...current, beans: "saved" }));
+      return true;
+    } catch (error) {
+      console.error("Failed to save beans", error);
+      setSaveError(error);
+      setMasterSaveStatus((current) => ({ ...current, beans: "error" }));
+      return false;
+    }
   }, [beans]);
+
+  const createBeanMaster = useCallback(async (bean) => {
+    setMasterSaveStatus((current) => ({ ...current, beans: "saving" }));
+    try {
+      const savedBean = await beanRepositoryRef.current.createBean(bean);
+      setBeans((current) => {
+        const nextBeans = [...current, savedBean];
+        savedBeansSnapshot.current = serializeMaster(nextBeans);
+        return nextBeans;
+      });
+      setSaveError(null);
+      setMasterSaveStatus((current) => ({ ...current, beans: "saved" }));
+      return savedBean;
+    } catch (error) {
+      console.error("Failed to create bean", error);
+      setSaveError(error);
+      setMasterSaveStatus((current) => ({ ...current, beans: "error" }));
+      return null;
+    }
+  }, []);
+
+  const deleteBeanMaster = useCallback(async (beanId) => {
+    setMasterSaveStatus((current) => ({ ...current, beans: "saving" }));
+    try {
+      await beanRepositoryRef.current.deleteBean(beanId);
+      setBeans((current) => {
+        const nextBeans = current.filter((bean) => bean.id !== beanId);
+        savedBeansSnapshot.current = serializeMaster(nextBeans);
+        return nextBeans;
+      });
+      setSaveError(null);
+      setMasterSaveStatus((current) => ({ ...current, beans: "saved" }));
+      return true;
+    } catch (error) {
+      console.error("Failed to delete bean", error);
+      setSaveError(error);
+      setMasterSaveStatus((current) => ({ ...current, beans: "error" }));
+      return false;
+    }
+  }, []);
 
   const saveBrewMethodsMaster = useCallback(async () => {
     const saved = await saveMaster(
@@ -177,8 +254,35 @@ export function useCoffeeData({
     setRecipeSeries,
     setSelectedBrewMethodId,
     saveBeansMaster,
+    createBeanMaster,
+    deleteBeanMaster,
     saveBrewMethodsMaster,
     revertBeansMaster,
     revertBrewMethodsMaster,
   };
+}
+
+async function saveBeansToSupabase({ beanRepository, savedBeans, beans }) {
+  const savedById = new Map(savedBeans.map((bean) => [bean.id, bean]));
+  const currentById = new Map(beans.map((bean) => [bean.id, bean]));
+  const savedNextBeans = [];
+
+  for (const bean of beans) {
+    const savedBean = savedById.get(bean.id);
+    if (!savedBean) {
+      savedNextBeans.push(await beanRepository.createBean(bean));
+    } else if (serializeMaster(savedBean) !== serializeMaster(bean)) {
+      savedNextBeans.push(await beanRepository.updateBean(bean));
+    } else {
+      savedNextBeans.push(bean);
+    }
+  }
+
+  for (const savedBean of savedBeans) {
+    if (!currentById.has(savedBean.id)) {
+      await beanRepository.deleteBean(savedBean.id);
+    }
+  }
+
+  return savedNextBeans;
 }

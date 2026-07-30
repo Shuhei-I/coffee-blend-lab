@@ -18,7 +18,7 @@ import {
 } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
-import { canDeleteBean, createBean, deleteBeanById, updateBean, updateBeanProfile } from "./domain/coffee/beanMaster.js";
+import { canDeleteBean, createBean, updateBean, updateBeanProfile } from "./domain/coffee/beanMaster.js";
 import {
   canDeleteBrewMethod,
   createBrewMethod,
@@ -106,6 +106,8 @@ function App({ authUser, authError, onSignOut }) {
     setRecipeSeries,
     setSelectedBrewMethodId,
     saveBeansMaster,
+    createBeanMaster,
+    deleteBeanMaster,
     saveBrewMethodsMaster,
     revertBeansMaster,
     revertBrewMethodsMaster,
@@ -155,18 +157,20 @@ function App({ authUser, authError, onSignOut }) {
     setBeans((current) => updateBeanProfile(current, id, key, value));
   }
 
-  function addBean() {
-    const id = `bean-${Date.now()}`;
-    setBeans((current) => [...current, createBean({ id, index: current.length })]);
-    setBlendRatios((current) => ({ ...current, [id]: 0 }));
-    setBlendRoastLevels((current) => ({ ...current, [id]: "" }));
+  async function addBean() {
+    const id = createClientBeanId();
+    const savedBean = await createBeanMaster(createBean({ id, index: beans.length }));
+    if (!savedBean) return;
+    setBlendRatios((current) => ({ ...current, [savedBean.id]: 0 }));
+    setBlendRoastLevels((current) => ({ ...current, [savedBean.id]: "" }));
   }
 
-  function deleteBean(id) {
+  async function deleteBean(id) {
     if (!canDeleteBean(beans)) return;
     const bean = beans.find((item) => item.id === id);
     if (!bean || !confirmDeleteItem(bean.name)) return;
-    setBeans((current) => deleteBeanById(current, id));
+    const deleted = await deleteBeanMaster(id);
+    if (!deleted) return;
     setBlendRatios((current) => {
       const next = { ...current };
       delete next[id];
@@ -346,6 +350,10 @@ function App({ authUser, authError, onSignOut }) {
       </main>
     </>
   );
+}
+
+function createClientBeanId() {
+  return globalThis.crypto?.randomUUID?.() || `bean-${Date.now()}`;
 }
 
 function Root() {
