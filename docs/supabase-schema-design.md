@@ -1,5 +1,7 @@
 # Supabase PostgreSQL Schema Design
 
+Status: This document is retained as a schema design and migration reference. References to the former local Node API, SQLite schema, and browser fallback describe the pre-migration model used for comparison and data migration planning, not the current runtime.
+
 この文書は、Coffee Blend LabをSupabase PostgreSQLへ移行する前のスキーマ設計レポートです。現時点ではmigration SQLは作成せず、現在のdomainモデルと永続化構造を正本として、PostgreSQL化の方針を整理します。
 
 ## 1. 現在の永続化構造の概要

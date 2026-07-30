@@ -146,6 +146,7 @@ export function createRecipeVersionData({
   idSeed,
   seriesIdSeed = idSeed,
   versionIdSeed = idSeed,
+  persistedBrewMethodId,
 }) {
   const seriesId = editingRecipeSource?.seriesId || `series-${seriesIdSeed}`;
   const currentSeries = recipeSeries.find((series) => series.id === seriesId);
@@ -167,7 +168,7 @@ export function createRecipeVersionData({
     brewRatio,
     targetBrewGram,
     blendCost,
-    brewMethodId: getRecipeBrewMethodId(selectedBrewMethod),
+    brewMethodId: persistedBrewMethodId !== undefined ? persistedBrewMethodId : getRecipeBrewMethodId(selectedBrewMethod),
     brewMethodSnapshot: snapshotBrewMethod(selectedBrewMethod),
     sensory,
     memo: memo.trim(),
@@ -179,6 +180,16 @@ export function createRecipeVersionData({
 
 export function getRecipeBrewMethodId(method) {
   return method?.sourceBrewMethodId || method?.id || null;
+}
+
+export function resolvePersistedBrewMethodId({ selectedBrewMethodId, sourceBrewMethodId, brewMethods }) {
+  if (hasBrewMethodId(brewMethods, selectedBrewMethodId)) {
+    return selectedBrewMethodId;
+  }
+  if (hasBrewMethodId(brewMethods, sourceBrewMethodId)) {
+    return sourceBrewMethodId;
+  }
+  return null;
 }
 
 export function snapshotBrewMethod(method) {
@@ -220,4 +231,8 @@ export function snapshotBean(bean) {
 
 export function getRecipeBean(ratio, beans) {
   return ratio.beanSnapshot || beans.find((bean) => bean.id === ratio.id) || null;
+}
+
+function hasBrewMethodId(brewMethods, id) {
+  return Boolean(id) && (brewMethods || []).some((method) => method.id === id);
 }

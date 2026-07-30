@@ -1,5 +1,7 @@
 # Coffee Blend Lab Supabase Migration Plan
 
+Status: Supabase runtime migration is complete. This document is retained as a historical migration design record. References to the former local Node API, SQLite, and browser fallback describe the pre-migration system or migration considerations, not the current runtime.
+
 作成日: 2026-07-27
 対象ブランチ: `feature/supabase-web`
 
