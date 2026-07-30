@@ -27,6 +27,7 @@ import {
 } from "./domain/coffee/brewMethodMaster.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
+import { AuthGate } from "./components/AuthGate.jsx";
 import { BeanMaster } from "./components/BeanMaster.jsx";
 import { BlendBuilder } from "./components/BlendBuilder.jsx";
 import { BrewMethodMaster } from "./components/BrewMethodMaster.jsx";
@@ -35,6 +36,7 @@ import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
+import { useAuth } from "./hooks/useAuth.js";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
 import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import { downloadFile } from "./services/downloadFile.js";
@@ -59,7 +61,7 @@ function beansWithRatios(beans, ratios, roastLevels) {
   }));
 }
 
-function App() {
+function App({ authUser, authError, onSignOut }) {
   const [activePage, setActivePage] = useState("blend");
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
   const editor = useRecipeEditor();
@@ -289,7 +291,16 @@ function App() {
             <span className="storage-badge" data-mode={storageMode}>
               {storageMode === "sqlite" ? "SQLite" : "Local"}
             </span>
+            <span className="auth-user">{authUser?.email || "Signed in"}</span>
+            <button type="button" onClick={onSignOut}>
+              ログアウト
+            </button>
           </nav>
+          {authError && (
+            <p className="auth-inline-error" role="alert">
+              {authError}
+            </p>
+          )}
         </div>
       </header>
 
@@ -337,4 +348,14 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+function Root() {
+  const auth = useAuth();
+
+  return (
+    <AuthGate auth={auth}>
+      <App authUser={auth.user} authError={auth.error} onSignOut={auth.signOut} />
+    </AuthGate>
+  );
+}
+
+createRoot(document.getElementById("root")).render(<Root />);
