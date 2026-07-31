@@ -1,36 +1,39 @@
 # Coffee Blend Lab
 
-Coffee Blend Labは、コーヒーのブレンド設計をローカルで管理するWebアプリです。
+Coffee Blend Lab is a React/Vite web app for designing coffee blends and managing recipe history.
 
-主な用途は次のとおりです。
+It supports:
 
-- コーヒー豆マスタの管理
-- ブレンド比率の設計
-- 豆ごとの焙煎度の記録
-- 抽出方法マスタの管理
-- 原価、味プロファイル、粉量、抽出量の計算
-- RecipeSeriesとversionによるレシピ履歴管理
+- Coffee bean master data
+- Brew method master data
+- Blend ratio design
+- Roast level notes per blend bean
+- Cost, profile, dose, target brew amount, and pour schedule calculations
+- RecipeSeries and RecipeVersion history
+- Bean and brew method snapshots for saved recipes
 - JSON / CSV export
 
-## 現在の運用範囲
+## Current Runtime
 
-現在の実装は、ローカル利用または信頼できる閉じた環境での利用を想定しています。
+Coffee Blend Lab now uses Supabase as its persistence layer.
 
-- 公開インターネット向けの認証は未実装です。
-- APIはCORS `*`です。
-- frontendのAPI URLは `http://127.0.0.1:4174` 固定です。
-- 複数ユーザーによる同時編集や競合解決は想定していません。
-- SQLiteファイルを使うため、serverless環境の一時ファイルシステムには適していません。
+```text
+Frontend: React + Vite
+Hosting:  Vercel-compatible static frontend
+Data:     Supabase Auth + Supabase Postgres + RLS
+RPC:      Supabase PostgreSQL functions
+```
 
-公開Webアプリとして運用するには、認証、CORS制限、API URL設定、永続ディスク、backup、validation強化が別途必要です。
+The old Node API, file-based persistence, and browser fallback storage are no longer part of the runtime path. The old local version should be referenced from Git history or the local release tag if needed.
 
 ## Requirements
 
-- Node.js 24推奨
+- Node.js 24 recommended
 - npm
-- `node:sqlite` が利用可能なNode.js環境
+- Supabase project
+- Supabase publishable key
 
-`package.json`には `engines` 指定はありません。GitHub ActionsのCIはNode.js 24で実行されています。
+`package.json` does not currently define an `engines` field. CI uses Node.js 24.
 
 ## Install
 
@@ -38,265 +41,143 @@ Coffee Blend Labは、コーヒーのブレンド設計をローカルで管理�
 npm install
 ```
 
-repository URLを使ってcloneする場合:
+## Environment Variables
 
-```bash
-git clone https://github.com/Shuhei-I/coffee-blend-lab
-cd coffee-blend-lab
-npm install
+Create a local environment file such as `.env.local` and set:
+
+| Variable | Description |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable client key |
+
+Do not put Supabase service role keys, database passwords, or other secrets in frontend environment variables.
+
+Example:
+
+```powershell
+$env:VITE_SUPABASE_URL = "https://your-project.supabase.co"
+$env:VITE_SUPABASE_PUBLISHABLE_KEY = "your-publishable-key"
+npm run dev
 ```
 
 ## Development
 
-frontendとAPI serverは別terminalで起動します。
-
-Terminal 1: SQLite API server
-
-```bash
-npm run dev:server
-```
-
-Terminal 2: Vite frontend
+Start the Vite frontend:
 
 ```bash
 npm run dev
 ```
 
-通常のURL:
+The app usually runs at:
 
 ```text
-frontend: http://127.0.0.1:5173
-API:      http://127.0.0.1:4174
+http://127.0.0.1:5173
 ```
 
-Viteのportは使用状況により変わることがあります。frontendからAPIへの接続先は `src/data/apiClient.js` の `http://127.0.0.1:4174` です。
-
-API serverが起動している場合はSQLite modeになります。API初期取得に失敗した場合はLocal modeになり、browserのlocalStorageへ保存します。
-
-## Data Modes
-
-### SQLite mode
-
-API serverが利用可能な場合、アプリはSQLite modeとして動作します。
-
-- 初期データは `GET /api/state` から取得します。
-- 豆、抽出方法、RecipeSeries、選択中抽出方法はAPI経由で保存されます。
-- レシピと選択中抽出方法は、localStorageにも互換用データとして保存されます。
-- SQLite DBの既定保存先は `data/coffee-manager.sqlite` です。
-- `COFFEE_MANAGER_DB_PATH` でDB保存先を変更できます。
-- process再起動後もDBファイルが残っていればデータは保持されます。
-
-### Local mode
-
-API初期取得に失敗した場合、アプリはLocal modeとして動作します。
-
-- browserのlocalStorageへ保存します。
-- SQLiteとは別データです。
-- SQLiteとの自動mergeや同期はありません。
-
-Local modeで編集したデータは、API復旧時にSQLiteへ自動的に統合されません。
-
-## Environment Variables
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `PORT` | `4174` | API server port |
-| `COFFEE_MANAGER_DB_PATH` | `data/coffee-manager.sqlite` | SQLite DB path |
-
-`.env`の自動読み込みは実装していません。環境変数はshellから設定してください。
-
-PowerShell:
-
-```powershell
-$env:PORT = "4174"
-npm run dev:server
-```
-
-```powershell
-$env:COFFEE_MANAGER_DB_PATH = "C:\path\to\coffee-manager.sqlite"
-npm run dev:server
-```
-
-Unix系shell:
-
-```bash
-PORT=4174 npm run dev:server
-```
-
-```bash
-COFFEE_MANAGER_DB_PATH=/path/to/coffee-manager.sqlite npm run dev:server
-```
+Vite may choose another port if the default port is already in use.
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Vite frontend development serverを `127.0.0.1` で起動 |
-| `npm run dev:server` | Node.js API serverを起動 |
-| `npm test` | Vitest test suiteを実行 |
-| `npm run build` | frontend production buildを作成 |
-| `npm run preview` | build済みfrontendをVite previewで確認 |
+| `npm run dev` | Start the Vite development server |
+| `npm test` | Run the Vitest suite |
+| `npm run build` | Build the production frontend into `dist/` |
+| `npm run preview` | Preview the built frontend locally |
 
-`npm run preview` はAPI serverを含みません。SQLite modeで確認する場合は、別terminalで `npm run dev:server` も起動してください。
+`npm run preview` is a Vite static preview server. It does not create or manage Supabase resources.
 
 ## Testing and CI
 
-ローカル確認:
+Local checks:
 
 ```bash
 npm test
 npm run build
-node --check server/index.js
-node --check server/db.js
 ```
 
-GitHub ActionsのCIは `.github/workflows/ci.yml` で定義されています。
+GitHub Actions runs:
 
-- trigger: `main` へのpush、`main` 向けpull request、manual trigger
-- Node.js: 24
-- install: `npm ci`
-- checks:
-  - `npm test`
-  - `npm run build`
-  - `node --check server/index.js`
-  - `node --check server/db.js`
+- `npm ci`
+- `npm test`
+- `npm run build`
 
-`git diff --check` はCIには含まれていません。
+## Supabase
 
-## Production Build
+Supabase is the source of truth for:
 
-```bash
-npm run build
-```
+- Auth sessions
+- Beans
+- BrewMethods
+- RecipeSeries / RecipeVersions / RecipeVersionBeans
+- App settings, including `selectedBrewMethodId`
 
-生成先は `dist/` です。
+Database schema and RPC changes are managed as SQL migrations under `supabase/migrations/`.
 
-現在のbuildはfrontend静的ファイルのみを生成します。production API serverと静的ファイルを一体配信するscriptはありません。`npm run preview` は本番サーバーではなく、build結果のローカル確認用です。
-
-現時点では、ローカル開発・ローカル運用を主用途としています。
-
-## Data Backup
-
-SQLite modeのDB既定保存先:
-
-```text
-data/coffee-manager.sqlite
-```
-
-SQLiteはWAL modeを使用します。稼働中は `coffee-manager.sqlite-wal` と `coffee-manager.sqlite-shm` が存在する場合があります。簡単で安全なbackupは、API serverを停止してからDBファイルをcopyする方法です。
-
-backup:
-
-1. API serverを停止する。
-2. `data/coffee-manager.sqlite` を別の場所へcopyする。
-3. `-wal` / `-shm` が残っている場合は、server停止後に必要に応じて同じ場所へ退避する。
-
-restore:
-
-1. API serverを停止する。
-2. 現在のDBファイルを別名で退避する。
-3. backupした `coffee-manager.sqlite` を元の場所へ戻す。
-4. API serverを起動してデータを確認する。
-
-オンライン中の単純copyは推奨しません。
-
-## API Overview
-
-現在のAPIは認証なしです。public APIとして公開しないでください。
-
-| Endpoint | Description |
-| --- | --- |
-| `GET /api/state` | beans、brewMethods、selectedBrewMethodId、recipeSeries、legacy recipes互換配列を取得 |
-| `PUT /api/beans` | beans全体を保存 |
-| `PUT /api/brew-methods` | brewMethods全体を保存 |
-| `PUT /api/recipes` | recipeSeries、またはlegacy recipes配列を保存 |
-| `PUT /api/settings/selected-brew-method` | 選択中抽出方法IDを保存 |
-| `OPTIONS` | CORS preflightへ204で応答 |
-
-PUTは現在のstate全体を保存する形式です。単一ユーザー利用を想定しています。request validationは限定的で、不正JSONなどは現在500 responseになります。
+The frontend uses the Supabase JavaScript client with the publishable key only. It does not use `service_role`, secret keys, or database passwords.
 
 ## Architecture
 
 ```text
 src/
   components/  UI components
-  hooks/       React state and editor state
-  domain/      Pure business rules, calculations, defaults, export data
-  data/        API client and repository implementations
+  hooks/       React state and app orchestration
+  domain/      Pure business rules, calculations, defaults, snapshots, export data
+  data/        Supabase repository and mapper implementations
+  lib/         Shared infrastructure clients
   services/    Browser-side side effects such as file download
-server/
-  index.js     HTTP API
-  db.js        SQLite schema, migration, seed, persistence
-docs/
-  production-readiness-plan.md
-  release-smoke-test.md
+supabase/
+  migrations/ PostgreSQL schema, RLS, and RPC migrations
 ```
 
-責務の分け方:
+Responsibilities:
 
-- `domain/` はReact、browser API、repositoryに依存しない純粋処理を置きます。
-- `hooks/` はReact state、初期ロード、editor stateを管理します。
-- `data/` はAPI/localStorage/repositoryの保存先差分を扱います。
-- `services/` はdownloadなどのbrowser副作用を扱います。
-- `main.jsx` は画面構成、props接続、UI orchestrationを担当します。
-- `server/` はHTTP APIとSQLite永続化を担当します。
+- `domain/` has no React, browser API, repository, or Supabase dependency.
+- `hooks/` manages React state and connects app operations to repositories.
+- `data/` maps between app data shapes and Supabase rows/RPC payloads.
+- `main.jsx` composes the application UI and wires handlers.
 
 ## Recipe Data Model
 
-保存済みレシピはRecipeSeriesとして管理されます。
+Recipes are stored as `RecipeSeries` with multiple versions.
 
-- RecipeSeriesは複数versionを持ちます。
-- `currentVersionId` は現在の代表versionを示します。
-- seriesは `active` または `archived` のstatusを持ちます。
-- versionには豆比率、焙煎度、抽出方法、試飲評価、メモ、保存日時などが入ります。
-- 豆と抽出方法は保存時にsnapshotを持ちます。
-- masterから豆や抽出方法を削除しても、過去recipeはsnapshotにより表示・exportできます。
+- `RecipeSeries` has `active` or `archived` status.
+- `RecipeVersion` is immutable history for a saved recipe version.
+- Saved recipe versions include bean snapshots and brew method snapshots.
+- Master beans or brew methods can be deleted without deleting historical recipe information.
+- `currentVersionId` is derived in the repository mapper from the latest version.
 
 ## Export
 
-保存済みRecipeSeriesはJSONまたはCSVでexportできます。
+Saved recipes can be exported as JSON or CSV.
 
-| Format | Filename | MIME type |
+| Format | Filename | Notes |
 | --- | --- | --- |
-| JSON | `coffee-blend-recipes.json` | `application/json` |
-| CSV | `coffee-blend-recipes.csv` | `text/csv` |
+| JSON | `coffee-blend-recipes.json` | Includes archived series and snapshots |
+| CSV | `coffee-blend-recipes.csv` | Includes archived series, snapshots, and roast level |
 
-仕様:
+CSV is UTF-8 without BOM. Windows Excel may show Japanese text incorrectly when opening the file directly. Use Excel's data import flow and choose UTF-8 if needed.
 
-- archived seriesも含みます。
-- bean snapshot / brew method snapshotを利用します。
-- CSVは全項目quoteされます。
-- CSV delimiterは`,`です。
-- CSV改行は `\n` です。
-- UTF-8で出力されます。
-- BOMは付与しません。
-- CSV列には `roastLevel` が含まれます。
+## Deployment
 
-CSVはUTF-8 BOMなしで出力されます。Windows版Excelで直接開くと、日本語が文字化けする場合があります。その場合はExcelの「データ」からUTF-8として読み込んでください。
+The current architecture is suitable for a static frontend deployment such as Vercel with Supabase as the backend.
+
+Deployment requirements:
+
+- Configure `VITE_SUPABASE_URL`
+- Configure `VITE_SUPABASE_PUBLISHABLE_KEY`
+- Apply Supabase migrations to the target project
+- Configure Supabase Auth settings for the deployment URL
+- Keep RLS enabled on public user-owned tables
 
 ## Known Limitations
 
-- 認証なし。
-- CORS `*`。
-- frontend API URLはlocalhost固定。
-- 複数ユーザー競合制御なし。
-- API payload validationが限定的。
-- SQLite migration履歴テーブルなし。
-- SQLiteとlocalStorageの自動同期なし。
-- production一体起動scriptなし。
-- browser E2Eなし。
-- CSVはBOMなし。
-- serverless ephemeral filesystem非対応。
+- Browser E2E tests are not yet present.
+- Import/migration from old local data is not automated in the runtime.
+- CSV output has no BOM.
+- Offline editing fallback is not implemented.
+- Supabase Auth email settings depend on project configuration.
 
 ## Manual Smoke Test
 
-リリース前の手動確認は [docs/release-smoke-test.md](docs/release-smoke-test.md) を参照してください。
-
-## Deployment Notes
-
-現構成は、persistent volume付きのNode.js環境に向いています。
-
-- Vercel単体は現構成に不向きです。SQLiteの永続化とNode API常駐が前提だからです。
-- Render、Railway、Fly.io、VPSなど、永続ディスクを持てるNode環境では構成可能です。
-- 公開運用には、API URL設定、CORS制限、認証、backup、監視が必要です。
-- 現在はdeployment手順を保証していません。
+Use [docs/release-smoke-test.md](docs/release-smoke-test.md) before release.

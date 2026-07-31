@@ -12,6 +12,7 @@ import {
   getRecipeBrewMethodId,
   normalizeLegacyRecipes,
   normalizeRecipeSeries,
+  resolvePersistedBrewMethodId,
   restoreRecipeSeriesData,
   saveRecipeData,
   saveRecipeVersion,
@@ -235,6 +236,59 @@ describe("recipe series compatibility", () => {
     ]);
   });
 
+  test("can persist a recipe without a brew method FK while keeping the brew method snapshot", () => {
+    const deletedSnapshotMethod = {
+      ...fixtureBrewMethod,
+      id: "saved-brew-version-1",
+      sourceBrewMethodId: "deleted-method-id",
+      displayName: "保存時",
+    };
+
+    const { recipe } = createRecipeVersionData({
+      recipeSeries: [currentRecipeSeriesFixture],
+      editingRecipeSource: { seriesId: "series-1700000000000", versionId: "recipe-1700000001000" },
+      blendName: "Snapshot Blend",
+      changeNote: "resave",
+      blendBeans: fixtureBeans,
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 98.4,
+      selectedBrewMethod: deletedSnapshotMethod,
+      persistedBrewMethodId: null,
+      sensory: legacyRecipeFixture.sensory,
+      memo: "",
+      now: "2026-05-22T11:00:00.000Z",
+      idSeed: 1800000000201,
+    });
+
+    expect(recipe.brewMethodId).toBeNull();
+    expect(recipe.brewMethodSnapshot).toEqual({ ...fixtureBrewMethod, id: "deleted-method-id" });
+  });
+
+  test("uses a resolved current brew method FK while snapshot data remains independent", () => {
+    const { recipe } = createRecipeVersionData({
+      recipeSeries: [currentRecipeSeriesFixture],
+      editingRecipeSource: { seriesId: "series-1700000000000", versionId: "recipe-1700000001000" },
+      blendName: "Current Method Blend",
+      changeNote: "resave",
+      blendBeans: fixtureBeans,
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 98.4,
+      selectedBrewMethod: { ...fixtureBrewMethod, id: "saved-brew-version-1", sourceBrewMethodId: "legacy-method" },
+      persistedBrewMethodId: "22222222-2222-4222-8222-222222222222",
+      sensory: legacyRecipeFixture.sensory,
+      memo: "",
+      now: "2026-05-22T11:30:00.000Z",
+      idSeed: 1800000000202,
+    });
+
+    expect(recipe.brewMethodId).toBe("22222222-2222-4222-8222-222222222222");
+    expect(recipe.brewMethodSnapshot.id).toBe("legacy-method");
+  });
+
   test("saves recipe versions with existing insertion and sort behavior", () => {
     const { recipe, currentSeries } = createRecipeVersionData({
       recipeSeries: [currentRecipeSeriesFixture],
@@ -398,6 +452,57 @@ describe("recipe series compatibility", () => {
       sourceBrewMethodId: "standard-4-pour",
       displayName: "標準 4投式（保存時）",
     });
+  });
+
+  test("resolves only currently loaded brew method IDs for persistence", () => {
+    const brewMethods = [
+      { id: "11111111-1111-4111-8111-111111111111" },
+      { id: "22222222-2222-4222-8222-222222222222" },
+    ];
+
+    expect(
+      resolvePersistedBrewMethodId({
+        selectedBrewMethodId: "11111111-1111-4111-8111-111111111111",
+        sourceBrewMethodId: "22222222-2222-4222-8222-222222222222",
+        brewMethods,
+      }),
+    ).toBe("11111111-1111-4111-8111-111111111111");
+    expect(
+      resolvePersistedBrewMethodId({
+        selectedBrewMethodId: "saved-brew-version-1",
+        sourceBrewMethodId: "22222222-2222-4222-8222-222222222222",
+        brewMethods,
+      }),
+    ).toBe("22222222-2222-4222-8222-222222222222");
+    expect(
+      resolvePersistedBrewMethodId({
+        selectedBrewMethodId: "saved-brew-version-1",
+        sourceBrewMethodId: "33333333-3333-4333-8333-333333333333",
+        brewMethods,
+      }),
+    ).toBeNull();
+    expect(
+      resolvePersistedBrewMethodId({
+        selectedBrewMethodId: "standard-4-pour",
+        sourceBrewMethodId: null,
+        brewMethods,
+      }),
+    ).toBeNull();
+    expect(
+      resolvePersistedBrewMethodId({
+        selectedBrewMethodId: "33333333-3333-4333-8333-333333333333",
+        sourceBrewMethodId: null,
+        brewMethods,
+      }),
+    ).toBeNull();
+    expect(resolvePersistedBrewMethodId({ selectedBrewMethodId: null, sourceBrewMethodId: null, brewMethods })).toBeNull();
+    expect(
+      resolvePersistedBrewMethodId({
+        selectedBrewMethodId: "11111111-1111-4111-8111-111111111111",
+        sourceBrewMethodId: "22222222-2222-4222-8222-222222222222",
+        brewMethods: [],
+      }),
+    ).toBeNull();
   });
 });
 

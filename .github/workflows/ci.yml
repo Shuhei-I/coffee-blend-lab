@@ -36,9 +36,3 @@ jobs:
 
       - name: Build frontend
         run: npm run build
-
-      - name: Check server entry syntax
-        run: node --check server/index.js
-
-      - name: Check database module syntax
-        run: node --check server/db.js

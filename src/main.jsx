@@ -10,15 +10,10 @@ import {
   calculateTargetBrewGram,
   getPourTotal,
 } from "./domain/coffee/calculations.js";
-import {
-  archiveRecipeSeriesData,
-  deleteRecipeVersionData,
-  restoreRecipeSeriesData,
-  saveRecipeData,
-} from "./domain/coffee/recipeSeries.js";
+import { createRecipeVersionData, resolvePersistedBrewMethodId } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
-import { canDeleteBean, createBean, deleteBeanById, updateBean, updateBeanProfile } from "./domain/coffee/beanMaster.js";
+import { canDeleteBean, createBean, updateBean, updateBeanProfile } from "./domain/coffee/beanMaster.js";
 import {
   canDeleteBrewMethod,
   createBrewMethod,
@@ -27,6 +22,7 @@ import {
 } from "./domain/coffee/brewMethodMaster.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
+import { AuthGate } from "./components/AuthGate.jsx";
 import { BeanMaster } from "./components/BeanMaster.jsx";
 import { BlendBuilder } from "./components/BlendBuilder.jsx";
 import { BrewMethodMaster } from "./components/BrewMethodMaster.jsx";
@@ -35,6 +31,7 @@ import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
+import { useAuth } from "./hooks/useAuth.js";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
 import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import { downloadFile } from "./services/downloadFile.js";
@@ -59,7 +56,7 @@ function beansWithRatios(beans, ratios, roastLevels) {
   }));
 }
 
-function App() {
+function App({ authUser, authError, onSignOut }) {
   const [activePage, setActivePage] = useState("blend");
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
   const editor = useRecipeEditor();
@@ -95,16 +92,23 @@ function App() {
     brewMethods,
     recipeSeries,
     selectedBrewMethodId,
-    storageMode,
     masterSaveStatus,
     beansDirty,
     brewMethodsDirty,
     setBeans,
     setBrewMethods,
-    setRecipeSeries,
     setSelectedBrewMethodId,
+    saveSelectedBrewMethodId,
+    saveRecipeVersion: saveRecipeVersionToSupabase,
+    archiveRecipeSeries: archiveRecipeSeriesInSupabase,
+    restoreRecipeSeries: restoreRecipeSeriesInSupabase,
+    deleteRecipeVersion: deleteRecipeVersionInSupabase,
     saveBeansMaster,
+    createBeanMaster,
+    deleteBeanMaster,
     saveBrewMethodsMaster,
+    createBrewMethodMaster,
+    deleteBrewMethodMaster,
     revertBeansMaster,
     revertBrewMethodsMaster,
   } = useCoffeeData({
@@ -153,18 +157,20 @@ function App() {
     setBeans((current) => updateBeanProfile(current, id, key, value));
   }
 
-  function addBean() {
-    const id = `bean-${Date.now()}`;
-    setBeans((current) => [...current, createBean({ id, index: current.length })]);
-    setBlendRatios((current) => ({ ...current, [id]: 0 }));
-    setBlendRoastLevels((current) => ({ ...current, [id]: "" }));
+  async function addBean() {
+    const id = createClientId();
+    const savedBean = await createBeanMaster(createBean({ id, index: beans.length }));
+    if (!savedBean) return;
+    setBlendRatios((current) => ({ ...current, [savedBean.id]: 0 }));
+    setBlendRoastLevels((current) => ({ ...current, [savedBean.id]: "" }));
   }
 
-  function deleteBean(id) {
+  async function deleteBean(id) {
     if (!canDeleteBean(beans)) return;
     const bean = beans.find((item) => item.id === id);
     if (!bean || !confirmDeleteItem(bean.name)) return;
-    setBeans((current) => deleteBeanById(current, id));
+    const deleted = await deleteBeanMaster(id);
+    if (!deleted) return;
     setBlendRatios((current) => {
       const next = { ...current };
       delete next[id];
@@ -177,38 +183,36 @@ function App() {
     });
   }
 
-  function addBrewMethod() {
-    const id = `brew-${Date.now()}`;
-    setBrewMethods((current) => [...current, createBrewMethod({ id })]);
-    setSelectedBrewMethodId(id);
+  async function addBrewMethod() {
+    const id = createClientId();
+    const savedBrewMethod = await createBrewMethodMaster(createBrewMethod({ id }));
+    if (!savedBrewMethod) return;
+    await saveSelectedBrewMethodId(savedBrewMethod.id);
   }
 
   function updateBrewMethod(id, patch) {
     setBrewMethods((current) => updateBrewMethodData(current, id, patch));
   }
 
-  function deleteBrewMethod(id) {
+  async function deleteBrewMethod(id) {
     if (!canDeleteBrewMethod(brewMethods)) return;
     const method = brewMethods.find((item) => item.id === id);
     if (!method || !confirmDeleteItem(method.name)) return;
-    setBrewMethods((current) => {
-      const result = deleteBrewMethodData({ methods: current, methodId: id, selectedBrewMethodId });
-      if (selectedBrewMethodId === id) setSelectedBrewMethodId(result.selectedBrewMethodId);
-      return result.brewMethods;
-    });
+    const result = deleteBrewMethodData({ methods: brewMethods, methodId: id, selectedBrewMethodId });
+    const deleted = await deleteBrewMethodMaster(id);
+    if (!deleted) return;
+    if (selectedBrewMethodId === id) await saveSelectedBrewMethodId(result.selectedBrewMethodId);
   }
 
-  function changeSelectedBrewMethod(id) {
-    clearSavedRecipeBrewMethodIfDifferent(id);
-    setSelectedBrewMethodId(id);
+  async function changeSelectedBrewMethod(id) {
+    const saved = await saveSelectedBrewMethodId(id);
+    if (saved) clearSavedRecipeBrewMethodIfDifferent(id);
   }
 
-  function saveRecipe(event) {
+  async function saveRecipe(event) {
     event.preventDefault();
     const now = new Date().toISOString();
-    const seriesIdSeed = editingRecipeSource?.seriesId ? undefined : Date.now();
-    const versionIdSeed = Date.now();
-    const result = saveRecipeData({
+    const { recipe } = createRecipeVersionData({
       recipeSeries,
       editingRecipeSource,
       blendName,
@@ -222,11 +226,25 @@ function App() {
       sensory,
       memo,
       now,
-      seriesIdSeed,
-      versionIdSeed,
+      seriesIdSeed: Date.now(),
+      versionIdSeed: Date.now(),
+      persistedBrewMethodId: resolvePersistedBrewMethodId({
+        selectedBrewMethodId,
+        sourceBrewMethodId: selectedBrewMethod?.sourceBrewMethodId,
+        brewMethods,
+      }),
     });
-    setRecipeSeries(result.recipeSeries);
-    setRecipeSaveMessage(`${result.recipe.name} v${result.recipe.version} を登録しました`);
+    const updatedRecipeSeries = await saveRecipeVersionToSupabase({
+      ...recipe,
+      seriesId: editingRecipeSource?.seriesId || null,
+      seriesName: recipe.name,
+    });
+    if (!updatedRecipeSeries) return;
+    const savedSeries =
+      (editingRecipeSource?.seriesId && updatedRecipeSeries.find((series) => series.id === editingRecipeSource.seriesId)) ||
+      updatedRecipeSeries[0];
+    const savedRecipe = savedSeries?.versions[0];
+    setRecipeSaveMessage(`${savedRecipe?.name || blendName.trim()} v${savedRecipe?.version || ""} を登録しました`);
     resetRecipeInput();
     window.setTimeout(() => setRecipeSaveMessage(""), 3200);
   }
@@ -245,25 +263,25 @@ function App() {
     setRecipeSaveMessage("");
   }
 
-  function archiveRecipeSeries(seriesId) {
+  async function archiveRecipeSeries(seriesId) {
     const series = recipeSeries.find((item) => item.id === seriesId);
     if (!series) return;
     const shouldArchive = window.confirm(`「${series.name}」をアーカイブしますか？`);
     if (!shouldArchive) return;
-    setRecipeSeries((current) => archiveRecipeSeriesData(current, seriesId, new Date().toISOString()));
+    await archiveRecipeSeriesInSupabase(seriesId);
   }
 
-  function restoreRecipeSeries(seriesId) {
-    setRecipeSeries((current) => restoreRecipeSeriesData(current, seriesId, new Date().toISOString()));
+  async function restoreRecipeSeries(seriesId) {
+    await restoreRecipeSeriesInSupabase(seriesId);
   }
 
-  function deleteRecipeVersion(seriesId, versionId) {
+  async function deleteRecipeVersion(seriesId, versionId) {
     const series = recipeSeries.find((item) => item.id === seriesId);
     const version = series?.versions.find((item) => item.id === versionId);
     if (!series || !version || series.versions.length <= 1) return;
     if (!confirmDeleteItem(`${series.name} v${version.version}`)) return;
 
-    setRecipeSeries((current) => deleteRecipeVersionData(current, seriesId, versionId, new Date().toISOString()));
+    await deleteRecipeVersionInSupabase({ seriesId, versionId });
   }
 
   function exportRecipes(format) {
@@ -286,10 +304,16 @@ function App() {
                 {label}
               </button>
             ))}
-            <span className="storage-badge" data-mode={storageMode}>
-              {storageMode === "sqlite" ? "SQLite" : "Local"}
-            </span>
+            <span className="auth-user">{authUser?.email || "Signed in"}</span>
+            <button type="button" onClick={onSignOut}>
+              ログアウト
+            </button>
           </nav>
+          {authError && (
+            <p className="auth-inline-error" role="alert">
+              {authError}
+            </p>
+          )}
         </div>
       </header>
 
@@ -337,4 +361,18 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+function createClientId() {
+  return globalThis.crypto?.randomUUID?.() || `client-${Date.now()}`;
+}
+
+function Root() {
+  const auth = useAuth();
+
+  return (
+    <AuthGate auth={auth}>
+      <App authUser={auth.user} authError={auth.error} onSignOut={auth.signOut} />
+    </AuthGate>
+  );
+}
+
+createRoot(document.getElementById("root")).render(<Root />);

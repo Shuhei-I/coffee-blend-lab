@@ -1,5 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
-import { createCoffeeRepository } from "../data/coffeeRepository.js";
+import { describe, expect, test } from "vitest";
 import {
   createDefaultCoffeeState,
   getDefaultBeans,
@@ -127,40 +126,4 @@ describe("default coffee data", () => {
     expect(second.recipeSeries).toEqual([]);
   });
 
-  test("applies existing defaults when API state has empty master data", async () => {
-    const defaults = createDefaultCoffeeState();
-    const repository = createCoffeeRepository({
-      apiClient: {
-        getJson: vi.fn(async () => ({
-          beans: undefined,
-          brewMethods: [],
-          selectedBrewMethodId: "",
-          recipeSeries: undefined,
-          recipes: undefined,
-        })),
-        putJson: vi.fn(),
-      },
-      localStorageRepository: {
-        loadBeans: vi.fn(),
-        loadBrewMethods: vi.fn(),
-        loadSelectedBrewMethod: vi.fn(),
-        loadRecipeSeries: vi.fn(),
-        loadLegacyRecipes: vi.fn(),
-        saveBeans: vi.fn(),
-        saveBrewMethods: vi.fn(),
-        saveSelectedBrewMethod: vi.fn(),
-        saveRecipeSeries: vi.fn(),
-      },
-    });
-
-    const state = await repository.loadInitialState({
-      defaultBeans: defaults.beans,
-      defaultBrewMethods: defaults.brewMethods,
-    });
-
-    expect(state.beans).toEqual(defaults.beans.map((bean) => ({ ...bean, visibleInRecipes: true })));
-    expect(state.brewMethods).toEqual(defaults.brewMethods);
-    expect(state.selectedBrewMethodId).toBe("standard-4-pour");
-    expect(state.recipeSeries).toEqual([]);
-  });
 });
