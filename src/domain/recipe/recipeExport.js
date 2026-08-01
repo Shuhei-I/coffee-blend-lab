@@ -4,6 +4,7 @@ export const RECIPE_JSON_FILE_NAME = "coffee-blend-recipes.json";
 export const RECIPE_CSV_FILE_NAME = "coffee-blend-recipes.csv";
 export const RECIPE_JSON_MIME_TYPE = "application/json";
 export const RECIPE_CSV_MIME_TYPE = "text/csv";
+export const CSV_UTF8_BOM = "\ufeff";
 
 export const recipeCsvHeader = [
   "name",
@@ -79,7 +80,7 @@ export function buildRecipeCsv({ recipeSeries, beans, brewMethods }) {
       ]);
     });
   });
-  return rows.map(toCsvRow).join("\n");
+  return `${CSV_UTF8_BOM}${rows.map(toCsvRow).join("\n")}`;
 }
 
 export function buildRecipeExportFile({ format, recipeSeries, beans, brewMethods }) {

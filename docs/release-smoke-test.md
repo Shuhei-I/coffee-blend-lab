@@ -34,6 +34,8 @@ Run this checklist against the Supabase-backed app before release.
   Expected: profile values follow the existing clamp rules.
 - [ ] Delete a bean.
   Expected: it disappears after confirmation and successful Supabase delete.
+- [ ] Reload after deleting a bean.
+  Expected: the deleted bean does not reappear, including default beans.
 - [ ] Try to delete the last bean.
   Expected: deletion is blocked by the existing UI rule.
 
@@ -49,6 +51,8 @@ Run this checklist against the Supabase-backed app before release.
   Expected: selected method remains unchanged.
 - [ ] Delete the selected brew method.
   Expected: selection falls back to the existing rule.
+- [ ] Reload after deleting a brew method.
+  Expected: the deleted brew method does not reappear, including default brew methods.
 - [ ] Try to delete the last method.
   Expected: deletion is blocked by the existing UI rule.
 
@@ -91,7 +95,7 @@ Run this checklist against the Supabase-backed app before release.
 - [ ] Export CSV.
   Expected: `coffee-blend-recipes.csv` downloads and includes roast level data.
 - [ ] Open CSV in a text editor.
-  Expected: file is UTF-8. No BOM is expected.
+  Expected: file is UTF-8 with BOM and opens Japanese text correctly in Windows Excel.
 
 ## 8. Regression
 

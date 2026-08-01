@@ -93,6 +93,19 @@ describe("BrewMethodMaster", () => {
     expect(onRevert).toHaveBeenCalledTimes(1);
   });
 
+  test("disables delete when only one brew method remains", () => {
+    const onDelete = vi.fn();
+    renderBrewMethodMaster({ methods: [fixtureBrewMethod], onDelete });
+
+    const deleteButton = buttonByText("Delete");
+    expect(deleteButton.disabled).toBe(true);
+    expect(deleteButton.title).toBe("最後の淹れ方は削除できません");
+
+    click(deleteButton);
+
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
   test("keeps existing saved and empty list behavior", () => {
     renderBrewMethodMaster({ methods: [], dirty: false, saveStatus: "saved" });
 

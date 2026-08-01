@@ -1,4 +1,5 @@
 import React from "react";
+import { canDeleteBean } from "../domain/coffee/beanMaster.js";
 import { profileLabels } from "../domain/coffee/profile.js";
 
 export function MasterSaveActions({ dirty, status, onSave, onRevert }) {
@@ -23,6 +24,8 @@ export function MasterSaveActions({ dirty, status, onSave, onRevert }) {
 }
 
 export function BeanMaster({ beans, dirty, saveStatus, onAdd, onDelete, onUpdate, onProfileUpdate, onSave, onRevert }) {
+  const canDelete = canDeleteBean(beans);
+
   return (
     <section className="panel master-panel" aria-labelledby="masterTitle">
       <div className="section-heading">
@@ -43,7 +46,15 @@ export function BeanMaster({ beans, dirty, saveStatus, onAdd, onDelete, onUpdate
             {profileLabels.map(([key, label]) => (
               <label key={key}>{label}<input type="number" min="0" max="100" step="1" value={bean.profile[key]} onChange={(event) => onProfileUpdate(bean.id, key, event.target.value)} /></label>
             ))}
-            <button className="delete-bean" type="button" title="豆を削除" onClick={() => onDelete(bean.id)}>Delete</button>
+            <button
+              className="delete-bean"
+              type="button"
+              title={canDelete ? "豆を削除" : "最後の豆は削除できません"}
+              disabled={!canDelete}
+              onClick={() => onDelete(bean.id)}
+            >
+              Delete
+            </button>
           </article>
         ))}
       </div>

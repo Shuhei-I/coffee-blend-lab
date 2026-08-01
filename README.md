@@ -156,7 +156,7 @@ Saved recipes can be exported as JSON or CSV.
 | JSON | `coffee-blend-recipes.json` | Includes archived series and snapshots |
 | CSV | `coffee-blend-recipes.csv` | Includes archived series, snapshots, and roast level |
 
-CSV is UTF-8 without BOM. Windows Excel may show Japanese text incorrectly when opening the file directly. Use Excel's data import flow and choose UTF-8 if needed.
+CSV is UTF-8 with BOM so Windows Excel can open Japanese text directly.
 
 ## Deployment
 
@@ -174,7 +174,6 @@ Deployment requirements:
 
 - Browser E2E tests are not yet present.
 - Import/migration from old local data is not automated in the runtime.
-- CSV output has no BOM.
 - Offline editing fallback is not implemented.
 - Supabase Auth email settings depend on project configuration.
 

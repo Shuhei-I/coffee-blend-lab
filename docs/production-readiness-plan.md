@@ -51,7 +51,6 @@ The app is ready for Supabase-based preview release if the following are true:
 | --- | --- | --- |
 | No browser E2E suite | Full login/save/load/export flow is not exercised in a real browser by CI | Add Playwright or equivalent after release baseline |
 | No automated old-data import | Users of the old local runtime need a manual migration path | Decide whether JSON import or one-off migration script is required |
-| CSV has no BOM | Windows Excel may show Japanese text incorrectly when opened directly | Keep documented limitation or add BOM later as a deliberate export change |
 | Supabase Auth email behavior depends on project config | Sign-up flow may require email confirmation in some projects | Verify project Auth settings during deployment |
 
 ## CI
