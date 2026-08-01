@@ -80,6 +80,19 @@ describe("BeanMaster", () => {
     expect(onRevert).toHaveBeenCalledTimes(1);
   });
 
+  test("disables delete when only one bean remains", () => {
+    const onDelete = vi.fn();
+    renderBeanMaster({ beans: [fixtureBeans[0]], onDelete });
+
+    const deleteButton = buttonByText("Delete");
+    expect(deleteButton.disabled).toBe(true);
+    expect(deleteButton.title).toBe("最後の豆は削除できません");
+
+    click(deleteButton);
+
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
   test("keeps existing saved state button disabling", () => {
     renderBeanMaster({ dirty: false, saveStatus: "saved" });
 

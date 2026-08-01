@@ -1,8 +1,11 @@
 import React from "react";
+import { canDeleteBrewMethod } from "../domain/coffee/brewMethodMaster.js";
 import { getPourTotal, normalizePercent } from "../domain/coffee/calculations.js";
 import { MasterSaveActions } from "./BeanMaster.jsx";
 
 export function BrewMethodMaster({ methods, dirty, saveStatus, onAdd, onDelete, onUpdate, onSave, onRevert }) {
+  const canDelete = canDeleteBrewMethod(methods);
+
   return (
     <section className="panel brew-master-panel" aria-labelledby="brewMasterTitle">
       <div className="section-heading">
@@ -24,7 +27,15 @@ export function BrewMethodMaster({ methods, dirty, saveStatus, onAdd, onDelete, 
             <label>2投目 %<input type="number" min="0" max="100" step="1" value={method.pour2Percent} onChange={(event) => onUpdate(method.id, { pour2Percent: normalizePercent(event.target.value) })} /></label>
             <label>3投目 %<input type="number" min="0" max="100" step="1" value={method.pour3Percent} onChange={(event) => onUpdate(method.id, { pour3Percent: normalizePercent(event.target.value) })} /></label>
             <div className="brew-total" data-ok={getPourTotal(method) === 100}>{getPourTotal(method)}%</div>
-            <button className="delete-bean" type="button" title="淹れ方を削除" onClick={() => onDelete(method.id)}>Delete</button>
+            <button
+              className="delete-bean"
+              type="button"
+              title={canDelete ? "淹れ方を削除" : "最後の淹れ方は削除できません"}
+              disabled={!canDelete}
+              onClick={() => onDelete(method.id)}
+            >
+              Delete
+            </button>
           </article>
         ))}
       </div>

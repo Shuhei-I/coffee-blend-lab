@@ -4,6 +4,7 @@ import {
   buildRecipeExportData,
   buildRecipeExportFile,
   buildRecipeJson,
+  CSV_UTF8_BOM,
   escapeCsvValue,
   recipeCsvHeader,
   RECIPE_CSV_FILE_NAME,
@@ -142,14 +143,15 @@ describe("recipe export", () => {
 
   test("builds empty JSON and CSV exports", () => {
     expect(buildRecipeJson({ recipeSeries: [], beans, brewMethods })).toBe("[]");
-    expect(buildRecipeCsv({ recipeSeries: [], beans, brewMethods })).toBe(recipeCsvHeader.map(escapeCsvValue).join(","));
+    expect(buildRecipeCsv({ recipeSeries: [], beans, brewMethods })).toBe(`${CSV_UTF8_BOM}${recipeCsvHeader.map(escapeCsvValue).join(",")}`);
   });
 
-  test("builds CSV with existing header, column order, record order, newline, and no BOM", () => {
+  test("builds CSV with UTF-8 BOM, existing header, column order, record order, and newline", () => {
     const csv = buildRecipeCsv({ recipeSeries, beans, brewMethods });
-    const lines = csv.split("\n");
+    const csvWithoutBom = csv.slice(CSV_UTF8_BOM.length);
+    const lines = csvWithoutBom.split("\n");
 
-    expect(csv.charCodeAt(0)).not.toBe(0xfeff);
+    expect(csv.startsWith(CSV_UTF8_BOM)).toBe(true);
     expect(lines[0]).toBe(recipeCsvHeader.map(escapeCsvValue).join(","));
     const firstRecord = [
       "Morning Blend",
@@ -176,7 +178,7 @@ describe("recipe export", () => {
       "甘み,\n強め",
     ].map(escapeCsvValue).join(",");
 
-    expect(csv.startsWith(`${lines[0]}\n${firstRecord}`)).toBe(true);
+    expect(csvWithoutBom.startsWith(`${lines[0]}\n${firstRecord}`)).toBe(true);
     expect(csv).toContain('"Ethiopia, Natural"');
     expect(csv).toContain('"More ""Brazil"""');
     expect(csv).toContain('"甘み,\n強め"');
@@ -205,7 +207,7 @@ describe("recipe export", () => {
     });
     expect(buildRecipeExportFile({ format: "unknown", recipeSeries: [], beans, brewMethods })).toEqual({
       fileName: "coffee-blend-recipes.csv",
-      content: recipeCsvHeader.map(escapeCsvValue).join(","),
+      content: `${CSV_UTF8_BOM}${recipeCsvHeader.map(escapeCsvValue).join(",")}`,
       mimeType: "text/csv",
     });
   });
