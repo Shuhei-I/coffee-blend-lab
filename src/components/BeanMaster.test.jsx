@@ -28,56 +28,107 @@ afterEach(() => {
 });
 
 describe("BeanMaster", () => {
-  test("renders beans in existing order and shows save state", () => {
-    renderBeanMaster({ dirty: true, saveStatus: "error" });
+  test("renders beans as read-only table rows in existing order", () => {
+    renderBeanMaster();
 
-    expect([...document.querySelectorAll(".master-row")].map((row) => row.querySelector("input").value)).toEqual([
+    expect([...document.querySelectorAll(".master-table-row h3")].map((heading) => heading.textContent)).toEqual([
       fixtureBeans[0].name,
       fixtureBeans[1].name,
     ]);
-    expect(document.querySelector(".master-save-status").textContent.trim()).toBe("Error");
-    expect(document.querySelector(".master-save-status").dataset.status).toBe("error");
-    expect(document.querySelector(".master-save-status").dataset.dirty).toBe("true");
+    expect(document.querySelector(".master-table-row input")).toBeNull();
+    expect([...document.querySelectorAll(".master-table-head span")].map((cell) => cell.textContent)).toContain("原価");
   });
 
-  test("calls update callbacks for bean fields and profile fields", () => {
-    const onUpdate = vi.fn();
-    const onProfileUpdate = vi.fn();
-    renderBeanMaster({ onUpdate, onProfileUpdate });
-    const firstRowInputs = document.querySelectorAll(".master-row")[0].querySelectorAll("input");
+  test("toggles row expansion for the mobile card view", () => {
+    renderBeanMaster();
+    const firstRow = document.querySelector(".master-table-row");
 
-    change(firstRowInputs[0], "Updated Bean");
-    expect(onUpdate).toHaveBeenCalledWith("ethiopia", { name: "Updated Bean" });
-
-    change(firstRowInputs[1], "Updated note");
-    expect(onUpdate).toHaveBeenCalledWith("ethiopia", { note: "Updated note" });
-
-    change(firstRowInputs[2], false);
-    expect(onUpdate).toHaveBeenCalledWith("ethiopia", { visibleInRecipes: false });
-
-    change(firstRowInputs[3], "6200");
-    expect(onUpdate).toHaveBeenCalledWith("ethiopia", { costPerKg: 6200 });
-
-    change(firstRowInputs[4], "91");
-    expect(onProfileUpdate).toHaveBeenCalledWith("ethiopia", "acidity", "91");
+    expect(firstRow.dataset.expanded).toBe("false");
+    click(firstRow.querySelector(".master-expand-button"));
+    expect(firstRow.dataset.expanded).toBe("true");
   });
 
-  test("calls add, delete, save, and revert callbacks", () => {
-    const onAdd = vi.fn();
-    const onDelete = vi.fn();
+  test("edits a single bean in a dialog and enables save only after changes", async () => {
+    const onSave = vi.fn(async () => true);
+    renderBeanMaster({ onSave });
+
+    click(buttonByText("Edit"));
+    const form = document.querySelector(".master-dialog-form");
+    const fields = form.querySelectorAll("input, textarea");
+    expect(buttonByText("Save").disabled).toBe(true);
+
+    change(fields[0], "Updated Bean");
+    expect(buttonByText("Save").disabled).toBe(false);
+    change(fields[1], "Updated note");
+    change(fields[2], false);
+    change(fields[3], "6200");
+    change(fields[4], "91");
+
+    await submit(form);
+
+    expect(onSave).toHaveBeenCalledWith({
+      ...fixtureBeans[0],
+      name: "Updated Bean",
+      note: "Updated note",
+      visibleInRecipes: false,
+      costPerKg: 6200,
+      profile: { ...fixtureBeans[0].profile, acidity: 91 },
+    });
+    expect(document.querySelector(".master-dialog")).toBeNull();
+  });
+
+  test("cancels edit without saving", () => {
     const onSave = vi.fn();
-    const onRevert = vi.fn();
-    renderBeanMaster({ dirty: true, onAdd, onDelete, onSave, onRevert });
+    renderBeanMaster({ onSave });
+
+    click(buttonByText("Edit"));
+    change(document.querySelector(".master-dialog-form input"), "Unsaved Bean");
+    click(buttonByText("Cancel"));
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(document.querySelector(".master-dialog")).toBeNull();
+    expect(document.querySelector(".master-table-row h3").textContent).toBe(fixtureBeans[0].name);
+  });
+
+  test("calls add dialog submit and delete callbacks", async () => {
+    const onAdd = vi.fn(async () => true);
+    const onDelete = vi.fn();
+    renderBeanMaster({ onAdd, onDelete });
 
     click(buttonByText("Add"));
+    const fields = document.querySelector(".master-dialog-form").querySelectorAll("input, textarea");
+    change(fields[0], "New Bean");
+    change(fields[1], "New note");
+    change(fields[3], "1200");
+    await submit(document.querySelector(".master-dialog-form"));
     click(buttonByText("Delete"));
-    click(buttonByText("Save"));
-    click(buttonByText("Revert"));
 
-    expect(onAdd).toHaveBeenCalledTimes(1);
+    expect(onAdd).toHaveBeenCalledWith({
+      name: "New Bean",
+      note: "New note",
+      visibleInRecipes: true,
+      costPerKg: 1200,
+      profile: {
+        acidity: 50,
+        sweetness: 50,
+        bitterness: 50,
+        body: 50,
+        aroma: 50,
+      },
+    });
     expect(onDelete).toHaveBeenCalledWith("ethiopia");
-    expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onRevert).toHaveBeenCalledTimes(1);
+  });
+
+  test("cancels bean add without calling add", () => {
+    const onAdd = vi.fn();
+    renderBeanMaster({ onAdd });
+
+    click(buttonByText("Add"));
+    expect(document.querySelector(".master-dialog")).toBeTruthy();
+    click(buttonByText("Cancel"));
+
+    expect(document.querySelector(".master-dialog")).toBeNull();
+    expect(onAdd).not.toHaveBeenCalled();
   });
 
   test("disables delete when only one bean remains", () => {
@@ -93,18 +144,10 @@ describe("BeanMaster", () => {
     expect(onDelete).not.toHaveBeenCalled();
   });
 
-  test("keeps existing saved state button disabling", () => {
-    renderBeanMaster({ dirty: false, saveStatus: "saved" });
-
-    expect(document.querySelector(".master-save-status").textContent.trim()).toBe("Saved");
-    expect(buttonByText("Save").disabled).toBe(true);
-    expect(buttonByText("Revert").disabled).toBe(true);
-  });
-
   test("preserves empty list behavior", () => {
     renderBeanMaster({ beans: [] });
 
-    expect(document.querySelectorAll(".master-row")).toHaveLength(0);
+    expect(document.querySelectorAll(".master-table-row")).toHaveLength(0);
     expect(buttonByText("Add")).toBeTruthy();
   });
 });
@@ -112,14 +155,10 @@ describe("BeanMaster", () => {
 function renderBeanMaster(overrides = {}) {
   const props = {
     beans: fixtureBeans,
-    dirty: false,
     saveStatus: "saved",
     onAdd: vi.fn(),
     onDelete: vi.fn(),
-    onUpdate: vi.fn(),
-    onProfileUpdate: vi.fn(),
-    onSave: vi.fn(),
-    onRevert: vi.fn(),
+    onSave: vi.fn(async () => true),
     ...overrides,
   };
 
@@ -134,6 +173,12 @@ function renderBeanMaster(overrides = {}) {
 function click(element) {
   act(() => {
     element.click();
+  });
+}
+
+async function submit(form) {
+  await act(async () => {
+    await reactProps(form).onSubmit({ preventDefault: vi.fn() });
   });
 }
 
