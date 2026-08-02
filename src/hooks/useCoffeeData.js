@@ -204,6 +204,25 @@ export function useCoffeeData({
     }
   }, []);
 
+  const updateBeanMaster = useCallback(async (bean) => {
+    setMasterSaveStatus((current) => ({ ...current, beans: "saving" }));
+    try {
+      const savedBean = await beanRepositoryRef.current.updateBean(bean);
+      const nextBeans = beans.map((item) => (item.id === savedBean.id ? savedBean : item));
+      savedBeansSnapshot.current = serializeMaster(nextBeans);
+      setBeans(nextBeans);
+      onBeansReplacedRef.current?.(nextBeans);
+      setSaveError(null);
+      setMasterSaveStatus((current) => ({ ...current, beans: "saved" }));
+      return savedBean;
+    } catch (error) {
+      console.error("Failed to update bean", error);
+      setSaveError(error);
+      setMasterSaveStatus((current) => ({ ...current, beans: "error" }));
+      return null;
+    }
+  }, [beans]);
+
   const saveBrewMethodsMaster = useCallback(async () => {
     setMasterSaveStatus((current) => ({ ...current, brewMethods: "saving" }));
     try {
@@ -213,8 +232,13 @@ export function useCoffeeData({
         savedBrewMethods,
         brewMethods,
       });
+      const nextSelectedBrewMethodId = nextBrewMethods.some((method) => method.id === selectedBrewMethodId)
+        ? selectedBrewMethodId
+        : nextBrewMethods[0]?.id || null;
+      await appSettingsRepositoryRef.current.saveSelectedBrewMethodId(nextSelectedBrewMethodId);
       savedBrewMethodsSnapshot.current = serializeMaster(nextBrewMethods);
       setBrewMethods(nextBrewMethods);
+      setSelectedBrewMethodId(nextSelectedBrewMethodId || defaultState.selectedBrewMethodId);
       setSaveError(null);
       setMasterSaveStatus((current) => ({ ...current, brewMethods: "saved" }));
       return true;
@@ -224,7 +248,7 @@ export function useCoffeeData({
       setMasterSaveStatus((current) => ({ ...current, brewMethods: "error" }));
       return false;
     }
-  }, [brewMethods, selectedBrewMethodId]);
+  }, [brewMethods, defaultState.selectedBrewMethodId, selectedBrewMethodId]);
 
   const createBrewMethodMaster = useCallback(async (brewMethod) => {
     setMasterSaveStatus((current) => ({ ...current, brewMethods: "saving" }));
@@ -265,6 +289,24 @@ export function useCoffeeData({
       return false;
     }
   }, []);
+
+  const updateBrewMethodMaster = useCallback(async (brewMethod) => {
+    setMasterSaveStatus((current) => ({ ...current, brewMethods: "saving" }));
+    try {
+      const savedBrewMethod = await brewMethodRepositoryRef.current.updateBrewMethod(brewMethod);
+      const nextBrewMethods = brewMethods.map((method) => (method.id === savedBrewMethod.id ? savedBrewMethod : method));
+      savedBrewMethodsSnapshot.current = serializeMaster(nextBrewMethods);
+      setBrewMethods(nextBrewMethods);
+      setSaveError(null);
+      setMasterSaveStatus((current) => ({ ...current, brewMethods: "saved" }));
+      return savedBrewMethod;
+    } catch (error) {
+      console.error("Failed to update brewMethod", error);
+      setSaveError(error);
+      setMasterSaveStatus((current) => ({ ...current, brewMethods: "error" }));
+      return null;
+    }
+  }, [brewMethods]);
 
   const revertBeansMaster = useCallback(() => {
     const savedBeans = parseSnapshot(savedBeansSnapshot.current, beans);
@@ -375,9 +417,11 @@ export function useCoffeeData({
     deleteRecipeVersion,
     saveBeansMaster,
     createBeanMaster,
+    updateBeanMaster,
     deleteBeanMaster,
     saveBrewMethodsMaster,
     createBrewMethodMaster,
+    updateBrewMethodMaster,
     deleteBrewMethodMaster,
     revertBeansMaster,
     revertBrewMethodsMaster,

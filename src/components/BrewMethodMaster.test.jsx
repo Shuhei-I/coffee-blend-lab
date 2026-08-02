@@ -28,69 +28,120 @@ afterEach(() => {
 });
 
 describe("BrewMethodMaster", () => {
-  test("renders brew methods in existing order and shows save state", () => {
-    renderBrewMethodMaster({ dirty: true, saveStatus: "error" });
+  test("renders brew methods as read-only table rows in existing order", () => {
+    renderBrewMethodMaster();
 
-    expect([...document.querySelectorAll(".brew-master-row")].map((row) => row.querySelector("input").value)).toEqual([
+    expect([...document.querySelectorAll(".master-table-row h3")].map((heading) => heading.textContent)).toEqual([
       "標準 4投式",
       "甘み重視",
     ]);
-    expect(document.querySelector(".master-save-status").textContent.trim()).toBe("Error");
-    expect(document.querySelector(".master-save-status").dataset.status).toBe("error");
-    expect(document.querySelector(".master-save-status").dataset.dirty).toBe("true");
+    expect(document.querySelector(".master-table-row input")).toBeNull();
+    expect([...document.querySelectorAll(".master-table-head span")].map((cell) => cell.textContent)).toContain("合計");
   });
 
-  test("calls update callbacks with existing field conversions", () => {
-    const onUpdate = vi.fn();
-    renderBrewMethodMaster({ onUpdate });
-    const inputs = document.querySelectorAll(".brew-master-row")[0].querySelectorAll("input");
+  test("toggles row expansion for the mobile card view", () => {
+    renderBrewMethodMaster();
+    const firstRow = document.querySelector(".master-table-row");
 
-    change(inputs[0], "Updated method");
-    expect(onUpdate).toHaveBeenCalledWith("standard-4-pour", { name: "Updated method" });
-
-    change(inputs[1], "Updated memo");
-    expect(onUpdate).toHaveBeenCalledWith("standard-4-pour", { note: "Updated memo" });
-
-    change(inputs[2], "105");
-    expect(onUpdate).toHaveBeenCalledWith("standard-4-pour", { bloomPercent: 100 });
-
-    change(inputs[3], "45");
-    expect(onUpdate).toHaveBeenCalledWith("standard-4-pour", { bloomSeconds: 45 });
-
-    change(inputs[4], "-1");
-    expect(onUpdate).toHaveBeenCalledWith("standard-4-pour", { pour1Percent: 0 });
-
-    change(inputs[5], "25");
-    expect(onUpdate).toHaveBeenCalledWith("standard-4-pour", { pour2Percent: 25 });
-
-    change(inputs[6], "bad");
-    expect(onUpdate).toHaveBeenCalledWith("standard-4-pour", { pour3Percent: 0 });
+    expect(firstRow.dataset.expanded).toBe("false");
+    click(firstRow.querySelector(".master-expand-button"));
+    expect(firstRow.dataset.expanded).toBe("true");
   });
 
-  test("shows existing pour total state", () => {
+  test("edits a single brew method in a dialog and enables save only after changes", async () => {
+    const onSave = vi.fn(async () => true);
+    renderBrewMethodMaster({ onSave });
+
+    click(buttonByText("Edit"));
+    const form = document.querySelector(".master-dialog-form");
+    const fields = form.querySelectorAll("input, textarea");
+    expect(buttonByText("Save").disabled).toBe(true);
+
+    change(fields[0], "Updated method");
+    expect(buttonByText("Save").disabled).toBe(false);
+    change(fields[1], "Updated memo");
+    change(fields[2], "105");
+    change(fields[3], "45");
+    change(fields[4], "-1");
+    change(fields[5], "25");
+    change(fields[6], "bad");
+
+    await submit(form);
+
+    expect(onSave).toHaveBeenCalledWith({
+      ...fixtureBrewMethod,
+      name: "Updated method",
+      note: "Updated memo",
+      bloomPercent: 100,
+      bloomSeconds: 45,
+      pour1Percent: 0,
+      pour2Percent: 25,
+      pour3Percent: 0,
+    });
+    expect(document.querySelector(".master-dialog")).toBeNull();
+  });
+
+  test("shows existing pour total state in the edit dialog", () => {
     renderBrewMethodMaster();
 
+    click(buttonByText("Edit"));
     const total = document.querySelector(".brew-total");
     expect(total.textContent).toBe("100%");
     expect(total.dataset.ok).toBe("true");
   });
 
-  test("calls add, delete, save, and revert callbacks", () => {
-    const onAdd = vi.fn();
-    const onDelete = vi.fn();
+  test("cancels edit without saving", () => {
     const onSave = vi.fn();
-    const onRevert = vi.fn();
-    renderBrewMethodMaster({ dirty: true, onAdd, onDelete, onSave, onRevert });
+    renderBrewMethodMaster({ onSave });
+
+    click(buttonByText("Edit"));
+    change(document.querySelector(".master-dialog-form input"), "Unsaved method");
+    click(buttonByText("Cancel"));
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(document.querySelector(".master-dialog")).toBeNull();
+    expect(document.querySelector(".master-table-row h3").textContent).toBe("標準 4投式");
+  });
+
+  test("calls add dialog submit and delete callbacks", async () => {
+    const onAdd = vi.fn(async () => true);
+    const onDelete = vi.fn();
+    renderBrewMethodMaster({ onAdd, onDelete });
 
     click(buttonByText("Add"));
+    const fields = document.querySelector(".master-dialog-form").querySelectorAll("input, textarea");
+    change(fields[0], "New Method");
+    change(fields[1], "New note");
+    change(fields[2], "10");
+    change(fields[3], "35");
+    change(fields[4], "30");
+    change(fields[5], "30");
+    change(fields[6], "30");
+    await submit(document.querySelector(".master-dialog-form"));
     click(buttonByText("Delete"));
-    click(buttonByText("Save"));
-    click(buttonByText("Revert"));
 
-    expect(onAdd).toHaveBeenCalledTimes(1);
+    expect(onAdd).toHaveBeenCalledWith({
+      name: "New Method",
+      note: "New note",
+      bloomPercent: 10,
+      bloomSeconds: 35,
+      pour1Percent: 30,
+      pour2Percent: 30,
+      pour3Percent: 30,
+    });
     expect(onDelete).toHaveBeenCalledWith("standard-4-pour");
-    expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onRevert).toHaveBeenCalledTimes(1);
+  });
+
+  test("cancels brew method add without calling add", () => {
+    const onAdd = vi.fn();
+    renderBrewMethodMaster({ onAdd });
+
+    click(buttonByText("Add"));
+    expect(document.querySelector(".master-dialog")).toBeTruthy();
+    click(buttonByText("Cancel"));
+
+    expect(document.querySelector(".master-dialog")).toBeNull();
+    expect(onAdd).not.toHaveBeenCalled();
   });
 
   test("disables delete when only one brew method remains", () => {
@@ -106,13 +157,10 @@ describe("BrewMethodMaster", () => {
     expect(onDelete).not.toHaveBeenCalled();
   });
 
-  test("keeps existing saved and empty list behavior", () => {
-    renderBrewMethodMaster({ methods: [], dirty: false, saveStatus: "saved" });
+  test("keeps existing empty list behavior", () => {
+    renderBrewMethodMaster({ methods: [] });
 
-    expect(document.querySelectorAll(".brew-master-row")).toHaveLength(0);
-    expect(document.querySelector(".master-save-status").textContent.trim()).toBe("Saved");
-    expect(buttonByText("Save").disabled).toBe(true);
-    expect(buttonByText("Revert").disabled).toBe(true);
+    expect(document.querySelectorAll(".master-table-row")).toHaveLength(0);
     expect(buttonByText("Add")).toBeTruthy();
   });
 });
@@ -132,13 +180,10 @@ function renderBrewMethodMaster(overrides = {}) {
         bloomSeconds: 40,
       },
     ],
-    dirty: false,
     saveStatus: "saved",
     onAdd: vi.fn(),
     onDelete: vi.fn(),
-    onUpdate: vi.fn(),
-    onSave: vi.fn(),
-    onRevert: vi.fn(),
+    onSave: vi.fn(async () => true),
     ...overrides,
   };
 
@@ -153,6 +198,12 @@ function renderBrewMethodMaster(overrides = {}) {
 function click(element) {
   act(() => {
     element.click();
+  });
+}
+
+async function submit(form) {
+  await act(async () => {
+    await reactProps(form).onSubmit({ preventDefault: vi.fn() });
   });
 }
 

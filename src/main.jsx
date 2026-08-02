@@ -13,12 +13,11 @@ import {
 import { createRecipeVersionData, resolvePersistedBrewMethodId } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
-import { canDeleteBean, createBean, updateBean, updateBeanProfile } from "./domain/coffee/beanMaster.js";
+import { canDeleteBean, createBean } from "./domain/coffee/beanMaster.js";
 import {
   canDeleteBrewMethod,
   createBrewMethod,
   deleteBrewMethodData,
-  updateBrewMethod as updateBrewMethodData,
 } from "./domain/coffee/brewMethodMaster.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
@@ -93,24 +92,18 @@ function App({ authUser, authError, onSignOut }) {
     recipeSeries,
     selectedBrewMethodId,
     masterSaveStatus,
-    beansDirty,
-    brewMethodsDirty,
-    setBeans,
-    setBrewMethods,
     setSelectedBrewMethodId,
     saveSelectedBrewMethodId,
     saveRecipeVersion: saveRecipeVersionToSupabase,
     archiveRecipeSeries: archiveRecipeSeriesInSupabase,
     restoreRecipeSeries: restoreRecipeSeriesInSupabase,
     deleteRecipeVersion: deleteRecipeVersionInSupabase,
-    saveBeansMaster,
     createBeanMaster,
+    updateBeanMaster,
     deleteBeanMaster,
-    saveBrewMethodsMaster,
     createBrewMethodMaster,
+    updateBrewMethodMaster,
     deleteBrewMethodMaster,
-    revertBeansMaster,
-    revertBrewMethodsMaster,
   } = useCoffeeData({
     savedRecipeBrewMethod,
     onBeansReplaced: replaceBlendRatiosForBeans,
@@ -149,20 +142,18 @@ function App({ authUser, authError, onSignOut }) {
         })),
     [blendBeans, total, doseGram],
   );
-  function updateMaster(id, patch) {
-    setBeans((current) => updateBean(current, id, patch));
-  }
-
-  function updateProfile(id, key, value) {
-    setBeans((current) => updateBeanProfile(current, id, key, value));
-  }
-
-  async function addBean() {
+  async function addBean(draft = {}) {
     const id = createClientId();
-    const savedBean = await createBeanMaster(createBean({ id, index: beans.length }));
-    if (!savedBean) return;
+    const savedBean = await createBeanMaster({ ...createBean({ id, index: beans.length }), ...draft });
+    if (!savedBean) return false;
     setBlendRatios((current) => ({ ...current, [savedBean.id]: 0 }));
     setBlendRoastLevels((current) => ({ ...current, [savedBean.id]: "" }));
+    return true;
+  }
+
+  async function saveBean(bean) {
+    const savedBean = await updateBeanMaster(bean);
+    return Boolean(savedBean);
   }
 
   async function deleteBean(id) {
@@ -183,15 +174,17 @@ function App({ authUser, authError, onSignOut }) {
     });
   }
 
-  async function addBrewMethod() {
+  async function addBrewMethod(draft = {}) {
     const id = createClientId();
-    const savedBrewMethod = await createBrewMethodMaster(createBrewMethod({ id }));
-    if (!savedBrewMethod) return;
+    const savedBrewMethod = await createBrewMethodMaster({ ...createBrewMethod({ id }), ...draft });
+    if (!savedBrewMethod) return false;
     await saveSelectedBrewMethodId(savedBrewMethod.id);
+    return true;
   }
 
-  function updateBrewMethod(id, patch) {
-    setBrewMethods((current) => updateBrewMethodData(current, id, patch));
+  async function saveBrewMethod(method) {
+    const savedBrewMethod = await updateBrewMethodMaster(method);
+    return Boolean(savedBrewMethod);
   }
 
   async function deleteBrewMethod(id) {
@@ -354,15 +347,15 @@ function App({ authUser, authError, onSignOut }) {
             onLoaded={() => setActivePage("blend")}
           />
         )}
-        {activePage === "beans" && <BeanMaster beans={beans} dirty={beansDirty} saveStatus={masterSaveStatus.beans} onAdd={addBean} onDelete={deleteBean} onUpdate={updateMaster} onProfileUpdate={updateProfile} onSave={saveBeansMaster} onRevert={revertBeansMaster} />}
-        {activePage === "brew" && <BrewMethodMaster methods={brewMethods} dirty={brewMethodsDirty} saveStatus={masterSaveStatus.brewMethods} onAdd={addBrewMethod} onDelete={deleteBrewMethod} onUpdate={updateBrewMethod} onSave={saveBrewMethodsMaster} onRevert={revertBrewMethodsMaster} />}
+        {activePage === "beans" && <BeanMaster beans={beans} saveStatus={masterSaveStatus.beans} onAdd={addBean} onDelete={deleteBean} onSave={saveBean} />}
+        {activePage === "brew" && <BrewMethodMaster methods={brewMethods} saveStatus={masterSaveStatus.brewMethods} onAdd={addBrewMethod} onDelete={deleteBrewMethod} onSave={saveBrewMethod} />}
       </main>
     </>
   );
 }
 
 function createClientId() {
-  return globalThis.crypto?.randomUUID?.() || `client-${Date.now()}`;
+  return globalThis.crypto?.randomUUID?.() || `00000000-0000-4000-8000-${String(Date.now()).slice(-12).padStart(12, "0")}`;
 }
 
 function Root() {

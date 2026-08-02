@@ -1,105 +1,129 @@
-# Coffee Blend Lab Release Smoke Test
+# Coffee Blend Lab リリーススモークテスト
 
-Run this checklist against the Supabase-backed app before release.
+リリース前に、Supabase 接続済みのアプリで以下を確認する。
 
-## 1. Startup and Auth
+## 1. 起動と認証
 
-- [ ] Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
-  Expected: frontend can create the Supabase client without configuration errors.
-- [ ] Run `npm run dev`.
-  Expected: Vite prints a local frontend URL.
-- [ ] Open the frontend.
-  Expected: unauthenticated users see the auth screen.
-- [ ] Sign up with email and password.
-  Expected: either a session starts or the app shows the email confirmation message, depending on Supabase project settings.
-- [ ] Sign in with email and password.
-  Expected: authenticated users reach the Coffee Blend Lab workspace.
-- [ ] Sign out.
-  Expected: the auth screen is shown again.
+- [x] `VITE_SUPABASE_URL` と `VITE_SUPABASE_PUBLISHABLE_KEY` を設定する。
+  期待結果: フロントエンドが設定エラーなく Supabase client を作成できる。
+- [x] `npm run dev` を実行する。
+  期待結果: Vite がローカル URL を表示する。
+- [x] フロントエンドを開く。
+  期待結果: 未ログイン時は認証画面が表示される。
+- [x] メールアドレスとパスワードでサインアップする。
+  期待結果: Supabase project の設定に応じて、セッション開始またはメール確認メッセージが表示される。
+- [x] メールアドレスとパスワードでサインインする。
+  期待結果: Coffee Blend Lab のワークスペースが表示される。
+- [x] サインアウトする。
+  期待結果: 認証画面に戻る。
 
-## 2. Initial Defaults
+## 2. 初期データ
 
-- [ ] Sign in as a new user.
-  Expected: default beans, default brew methods, and app settings are initialized by Supabase RPC.
-- [ ] Reload the browser.
-  Expected: the same Supabase-backed data appears after session restore.
+- [x] 新規ユーザーでサインインする。
+  期待結果: Supabase RPC により、初期の豆マスタ、淹れ方マスタ、アプリ設定が作成される。
+- [x] ブラウザをリロードする。
+  期待結果: セッション復元後も、同じ Supabase 上のデータが表示される。
 
-## 3. Bean Master
+## 3. 豆マスタ
 
-- [ ] Add a bean.
-  Expected: the new bean appears and receives a Supabase UUID.
-- [ ] Edit bean name, memo, cost, visibility, and roast/profile-related fields.
-  Expected: changes are reflected in the UI and persist after saving/reload.
-- [ ] Edit profile values outside the allowed range.
-  Expected: profile values follow the existing clamp rules.
-- [ ] Delete a bean.
-  Expected: it disappears after confirmation and successful Supabase delete.
-- [ ] Reload after deleting a bean.
-  Expected: the deleted bean does not reappear, including default beans.
-- [ ] Try to delete the last bean.
-  Expected: deletion is blocked by the existing UI rule.
+- [x] PC 幅で豆マスタを開く。
+  期待結果: 豆が読み取り専用のテーブル風一覧で表示され、各行に Edit / Delete が表示される。
+- [x] スマホ幅で豆マスタを開く。
+  期待結果: 豆が折り畳みカードとして表示され、開閉ボタンで詳細を確認できる。入力欄は表示されない。
+- [x] 豆を追加する。
+  期待結果: 追加ダイアログが表示される。
+- [x] 豆追加ダイアログを送信する。
+  期待結果: 新しい豆が表示され、Supabase UUID が付与される。マスタ全体の Save を押さなくてもリロード後に残る。
+- [x] 豆の Edit を押す。
+  期待結果: その豆の編集ダイアログが表示される。
+- [x] 豆名、メモ、原価、表示状態、プロファイル値を編集する。
+  期待結果: 値を変更するまで Save は disabled で、変更後に有効になる。
+- [x] 豆編集を Cancel する。
+  期待結果: 編集内容は破棄され、読み取り専用一覧は変更されない。
+- [x] 豆編集を Save する。
+  期待結果: 対象の豆だけが保存され、リロード後も変更が残る。
+- [x] プロファイル値に許容範囲外の値を入力する。
+  期待結果: 既存ルールどおり、値が許容範囲内に丸められる。
+- [x] 豆を削除する。
+  期待結果: 確認後、Supabase delete が成功すると一覧から消える。
+- [x] 豆削除後にリロードする。
+  期待結果: 削除した豆は、初期豆を含めて復活しない。
+- [x] 最後の1件の豆を削除しようとする。
+  期待結果: UI ルールにより削除できない。
 
-## 4. Brew Method Master
+## 4. 淹れ方マスタ
 
-- [ ] Add a brew method.
-  Expected: the new method appears, receives a Supabase UUID, and becomes selected.
-- [ ] Edit brew method fields.
-  Expected: values update and persist after saving/reload.
-- [ ] Select a brew method from the blend screen.
-  Expected: app settings persist the selected ID in Supabase.
-- [ ] Delete a non-selected brew method.
-  Expected: selected method remains unchanged.
-- [ ] Delete the selected brew method.
-  Expected: selection falls back to the existing rule.
-- [ ] Reload after deleting a brew method.
-  Expected: the deleted brew method does not reappear, including default brew methods.
-- [ ] Try to delete the last method.
-  Expected: deletion is blocked by the existing UI rule.
+- [x] PC 幅で淹れ方マスタを開く。
+  期待結果: 淹れ方が読み取り専用のテーブル風一覧で表示され、各行に Edit / Delete が表示される。
+- [x] スマホ幅で淹れ方マスタを開く。
+  期待結果: 淹れ方が折り畳みカードとして表示され、開閉ボタンで詳細を確認できる。入力欄は表示されない。
+- [x] 淹れ方を追加する。
+  期待結果: 追加ダイアログが表示される。
+- [x] 淹れ方追加ダイアログを送信する。
+  期待結果: 新しい淹れ方が表示され、Supabase UUID が付与される。追加した淹れ方が選択状態になり、マスタ全体の Save を押さなくてもリロード後に残る。
+- [x] 淹れ方の Edit を押す。
+  期待結果: その淹れ方の編集ダイアログが表示される。
+- [x] 淹れ方の各項目を編集する。
+  期待結果: 値を変更するまで Save は disabled で、変更後に有効になる。
+- [x] 淹れ方編集を Cancel する。
+  期待結果: 編集内容は破棄され、読み取り専用一覧は変更されない。
+- [x] 淹れ方編集を Save する。
+  期待結果: 対象の淹れ方だけが保存され、リロード後も変更が残る。
+- [x] ブレンド画面で淹れ方を選択する。
+  期待結果: 選択した ID が Supabase のアプリ設定に保存される。
+- [x] 選択中ではない淹れ方を削除する。
+  期待結果: 現在の選択は変わらない。
+- [x] 選択中の淹れ方を削除する。
+  期待結果: 既存ルールに従って選択がフォールバックする。
+- [x] 淹れ方削除後にリロードする。
+  期待結果: 削除した淹れ方は、初期淹れ方を含めて復活しない。
+- [x] 最後の1件の淹れ方を削除しようとする。
+  期待結果: UI ルールにより削除できない。
 
-## 5. Blend Workflow
+## 5. ブレンド作成
 
-- [ ] Change blend ratios.
-  Expected: total, cost, profile, dose lines, and brew schedule update.
-- [ ] Normalize ratios.
-  Expected: ratios normalize according to existing rules.
-- [ ] Set bean roast levels in the blend screen.
-  Expected: roast level values remain visible while editing.
-- [ ] Change dose and brew ratio.
-  Expected: target brew amount and schedule update.
-- [ ] Enter sensory notes and memo.
-  Expected: values remain in editor state until reset or recipe load.
+- [x] ブレンド比率を変更する。
+  期待結果: 合計、コスト、プロファイル、豆ごとの使用量、抽出スケジュールが更新される。
+- [x] 比率を Normalize する。
+  期待結果: 既存ルールどおり比率が正規化される。
+- [x] ブレンド画面で豆ごとの焙煎度を設定する。
+  期待結果: 編集中、焙煎度の値が保持される。
+- [x] 粉量と抽出比率を変更する。
+  期待結果: 目標抽出量とスケジュールが更新される。
+- [x] 官能評価とメモを入力する。
+  期待結果: リセットまたはレシピ読み込みまで、エディタ状態に保持される。
 
-## 6. Recipes
+## 6. レシピ
 
-- [ ] Save a new recipe.
-  Expected: a new RecipeSeries with version 1 is created through Supabase.
-- [ ] Load the saved recipe.
-  Expected: editor state is restored from saved recipe and snapshots.
-- [ ] Save another version.
-  Expected: a new version is added to the same series.
-- [ ] Archive the series.
-  Expected: it moves to archived status.
-- [ ] Restore the series.
-  Expected: it returns to active status.
-- [ ] Delete a non-final version.
-  Expected: version is deleted and remaining versions stay ordered.
-- [ ] Try to delete the final version.
-  Expected: UI guard prevents deletion.
-- [ ] Load a recipe whose master bean or brew method was deleted.
-  Expected: snapshot data still displays enough information to reproduce the recipe.
+- [x] 新しいレシピを保存する。
+  期待結果: Supabase 経由で version 1 の RecipeSeries が作成される。
+- [x] 保存したレシピを読み込む。
+  期待結果: 保存済みレシピと snapshot からエディタ状態が復元される。
+- [x] もう一度保存して別 version を作成する。
+  期待結果: 同じシリーズに新しい version が追加される。
+- [x] シリーズを Archive する。
+  期待結果: シリーズが archived 状態になる。
+- [x] シリーズを Restore する。
+  期待結果: シリーズが active 状態に戻る。
+- [x] 最終版ではない version を削除する。
+  期待結果: 対象 version が削除され、残りの version の順序が保たれる。
+- [x] 最後の1件の version を削除しようとする。
+  期待結果: UI ガードにより削除できない。
+- [x] 削除済みの豆または淹れ方を参照するレシピを読み込む。
+  期待結果: snapshot により、再現に必要な情報が表示される。
 
-## 7. Export
+## 7. エクスポート
 
-- [ ] Export JSON.
-  Expected: `coffee-blend-recipes.json` downloads and includes archived series and snapshots.
-- [ ] Export CSV.
-  Expected: `coffee-blend-recipes.csv` downloads and includes roast level data.
-- [ ] Open CSV in a text editor.
-  Expected: file is UTF-8 with BOM and opens Japanese text correctly in Windows Excel.
+- [x] JSON をエクスポートする。
+  期待結果: `coffee-blend-recipes.json` がダウンロードされ、archived series と snapshot が含まれる。
+- [x] CSV をエクスポートする。
+  期待結果: `coffee-blend-recipes.csv` がダウンロードされ、焙煎度データが含まれる。
+- [x] CSV をテキストエディタまたは Windows Excel で開く。
+  期待結果: UTF-8 BOM 付きで、日本語が文字化けせず表示される。
 
-## 8. Regression
+## 8. 回帰確認
 
-- [ ] Run `npm test`.
-  Expected: all tests pass.
-- [ ] Run `npm run build`.
-  Expected: production frontend build succeeds.
+- [x] `npm test` を実行する。
+  期待結果: すべてのテストが成功する。
+- [x] `npm run build` を実行する。
+  期待結果: production frontend build が成功する。

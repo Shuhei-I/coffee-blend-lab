@@ -284,35 +284,10 @@ button:disabled {
   gap: 12px;
 }
 
-.master-save-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: -4px 0 14px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-}
-
-.master-save-status {
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 900;
-}
-
-.master-save-status[data-dirty="true"] {
-  color: var(--gold);
-}
-
-.master-save-status[data-status="error"] {
-  color: var(--coral);
-}
-
 .bean-item,
 .recipe-item,
 .recipe-series-item,
+.master-card,
 .master-row,
 .brew-master-row {
   border: 1px solid var(--line);
@@ -687,25 +662,219 @@ canvas {
   line-height: 1.6;
 }
 
-.master-row {
+.master-table {
   display: grid;
-  grid-template-columns: 1.1fr 1.35fr 88px minmax(92px, 0.6fr) repeat(5, minmax(68px, 0.55fr)) auto;
-  gap: 10px;
-  align-items: end;
-  padding: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
 }
 
-.brew-master-row {
+.master-table-head,
+.master-table-row {
   display: grid;
-  grid-template-columns: 1.1fr 1.35fr repeat(5, minmax(76px, 0.55fr)) 64px auto;
-  gap: 10px;
-  align-items: end;
-  padding: 14px;
+  align-items: center;
 }
 
-.master-row input[type="number"],
-.brew-master-row input[type="number"] {
+.bean-master-table .master-table-head,
+.bean-master-table .master-table-row {
+  grid-template-columns: minmax(220px, 1.7fr) 88px 110px repeat(5, minmax(62px, 0.55fr)) 154px;
+}
+
+.brew-master-table .master-table-head,
+.brew-master-table .master-table-row {
+  grid-template-columns: minmax(240px, 1.8fr) 80px repeat(5, minmax(76px, 0.58fr)) 154px;
+}
+
+.master-table-head {
+  min-height: 48px;
+  padding: 0 16px;
+  color: var(--muted);
+  background: #f7f4ef;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.master-table-row {
+  min-height: 74px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.master-primary-cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   min-width: 0;
+}
+
+.master-primary-cell h3 {
+  margin: 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+.master-primary-cell p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.master-table-cell {
+  color: #4f4b45;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.master-table-cell .status-pill {
+  margin-left: 0;
+}
+
+.master-table-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.master-expand-button {
+  display: none;
+  position: relative;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: #f4f3f1;
+}
+
+.master-expand-button::before {
+  content: "";
+  position: absolute;
+  inset: 11px 12px 13px 12px;
+  border-right: 2px solid #4f4b45;
+  border-bottom: 2px solid #4f4b45;
+  transform: rotate(45deg);
+}
+
+.master-expand-button[aria-expanded="true"]::before {
+  inset: 13px 12px 11px 12px;
+  transform: rotate(225deg);
+}
+
+.master-row-error,
+.master-card-error {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(32, 29, 24, 0.42);
+}
+
+.master-dialog {
+  width: min(960px, 100%);
+  max-height: min(760px, calc(100vh - 40px));
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 20px 60px rgba(22, 18, 13, 0.24);
+}
+
+.master-dialog-form {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dialog-heading h3 {
+  margin: 0;
+  font-size: 1.28rem;
+}
+
+.master-form-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.master-form-card h4 {
+  margin: 0 0 8px;
+  font-size: 1.08rem;
+}
+
+.master-form-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.master-dialog-fields {
+  display: grid;
+  gap: 14px 16px;
+}
+
+.bean-dialog-fields {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.brew-dialog-fields {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.master-dialog-fields label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.master-dialog-fields label {
+  grid-column: span 2;
+}
+
+.master-dialog-fields label:nth-child(1),
+.master-dialog-fields label:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+.master-dialog-fields textarea {
+  min-height: 96px;
+}
+
+.master-dialog-fields input,
+.master-dialog-fields select {
+  min-height: 50px;
+}
+
+.dialog-actions {
+  padding-top: 2px;
 }
 
 .checkbox-field {
@@ -822,8 +991,8 @@ canvas {
   .workspace,
   .profile-grid,
   .recipe-name-form,
-  .master-row,
-  .brew-master-row {
+  .bean-dialog-fields,
+  .brew-dialog-fields {
     grid-template-columns: 1fr;
   }
 
@@ -859,5 +1028,97 @@ canvas {
   .ratio-output {
     width: auto;
     text-align: left;
+  }
+
+  .master-table {
+    border-radius: 8px;
+  }
+
+  .master-table-head {
+    display: none;
+  }
+
+  .bean-master-table .master-table-row,
+  .brew-master-table .master-table-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .master-table-row + .master-table-row {
+    border-top: 1px solid var(--line);
+  }
+
+  .master-primary-cell {
+    min-height: 42px;
+  }
+
+  .master-expand-button {
+    display: inline-grid;
+  }
+
+  .master-table-row .master-table-cell,
+  .master-table-row .master-table-actions {
+    display: none;
+  }
+
+  .master-table-row[data-expanded="true"] .master-table-cell {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    min-height: 28px;
+  }
+
+  .master-table-row[data-expanded="true"] .master-table-cell::before,
+  .master-table-row[data-expanded="true"] .master-table-actions::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 900;
+  }
+
+  .master-table-row[data-expanded="true"] .master-table-actions {
+    display: grid;
+    grid-template-columns: 92px repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    justify-content: stretch;
+  }
+
+  .master-table-row[data-expanded="true"] .master-table-actions .ghost-button,
+  .master-table-row[data-expanded="true"] .master-table-actions .delete-bean {
+    flex: 1;
+  }
+
+  .master-table-actions > button {
+    min-width: 0;
+  }
+
+  .master-dialog {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+  }
+
+  .dialog-backdrop {
+    padding: 10px;
+    place-items: end center;
+  }
+
+  .master-dialog-form {
+    padding: 16px;
+  }
+
+  .master-form-card {
+    padding: 16px 14px;
+  }
+
+  .dialog-heading {
+    align-items: stretch;
+  }
+
+  .dialog-actions button {
+    flex: 1;
   }
 }

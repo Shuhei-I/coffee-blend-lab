@@ -247,10 +247,46 @@ describe("useCoffeeData", () => {
     expect(rendered.current.beansDirty).toBe(false);
   });
 
+  test("saves bean additions and deletions only when master save runs", async () => {
+    const newBean = { id: "new-bean", name: "New", profile: {} };
+    const beanRepository = createBeanRepository();
+    const rendered = await renderHook(createRepository(), { beanRepository });
+
+    await act(async () => {
+      rendered.current.setBeans([...defaultBeans, newBean]);
+    });
+
+    expect(rendered.current.beansDirty).toBe(true);
+    expect(beanRepository.createBean).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await rendered.current.saveBeansMaster();
+    });
+
+    expect(beanRepository.createBean).toHaveBeenCalledWith(newBean);
+    expect(rendered.current.beansDirty).toBe(false);
+
+    await act(async () => {
+      rendered.current.setBeans([]);
+    });
+
+    expect(rendered.current.beansDirty).toBe(true);
+    expect(beanRepository.deleteBean).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await rendered.current.saveBeansMaster();
+    });
+
+    expect(beanRepository.deleteBean).toHaveBeenCalledWith(defaultBeans[0].id);
+    expect(beanRepository.deleteBean).toHaveBeenCalledWith(newBean.id);
+    expect(rendered.current.beansDirty).toBe(false);
+  });
+
   test("saves brew methods through Supabase without old selected method persistence", async () => {
     const brewMethodRepository = createBrewMethodRepository({
       brewMethods: [{ id: "method" }, { id: "method-2" }],
     });
+    const appSettingsRepository = createAppSettingsRepository();
     const repository = createRepository({
       initialState: {
         beans: defaultBeans,
@@ -259,7 +295,7 @@ describe("useCoffeeData", () => {
         recipeSeries: [],
       },
     });
-    const rendered = await renderHook(repository, { brewMethodRepository });
+    const rendered = await renderHook(repository, { brewMethodRepository, appSettingsRepository });
 
     await act(async () => {
       rendered.current.setBrewMethods([{ id: "method", name: "updated" }]);
@@ -272,6 +308,8 @@ describe("useCoffeeData", () => {
 
     expect(repository.saveBrewMethodsMaster).not.toHaveBeenCalled();
     expect(brewMethodRepository.updateBrewMethod).toHaveBeenCalledWith({ id: "method", name: "updated" });
+    expect(brewMethodRepository.deleteBrewMethod).toHaveBeenCalledWith("method-2");
+    expect(appSettingsRepository.saveSelectedBrewMethodId).toHaveBeenCalledWith("method");
     expect(repository.queueSelectedBrewMethodSave).not.toHaveBeenCalled();
     expect(rendered.current.masterSaveStatus.brewMethods).toBe("saved");
     expect(rendered.current.brewMethodsDirty).toBe(false);
@@ -523,6 +561,27 @@ describe("useCoffeeData", () => {
     expect(rendered.current.beansDirty).toBe(false);
   });
 
+  test("updates one bean through Supabase and keeps master state saved", async () => {
+    const updatedBean = { ...defaultBeans[0], name: "Updated" };
+    const beanRepository = createBeanRepository({
+      updateBean: vi.fn(async () => updatedBean),
+    });
+    const onBeansReplaced = vi.fn();
+    const rendered = await renderHook(createRepository(), { beanRepository, onBeansReplaced });
+
+    let saved;
+    await act(async () => {
+      saved = await rendered.current.updateBeanMaster(updatedBean);
+    });
+
+    expect(saved).toBe(updatedBean);
+    expect(beanRepository.updateBean).toHaveBeenCalledWith(updatedBean);
+    expect(rendered.current.beans).toEqual([updatedBean]);
+    expect(rendered.current.beansDirty).toBe(false);
+    expect(rendered.current.masterSaveStatus.beans).toBe("saved");
+    expect(onBeansReplaced).toHaveBeenLastCalledWith([updatedBean]);
+  });
+
   test("deletes beans only after Supabase deletion succeeds", async () => {
     const beanRepository = createBeanRepository();
     const rendered = await renderHook(createRepository(), { beanRepository });
@@ -569,6 +628,25 @@ describe("useCoffeeData", () => {
     expect(created).toBe(returnedMethod);
     expect(rendered.current.brewMethods.at(-1)).toBe(returnedMethod);
     expect(rendered.current.brewMethodsDirty).toBe(false);
+  });
+
+  test("updates one brew method through Supabase and keeps master state saved", async () => {
+    const updatedMethod = { ...defaultBrewMethods[0], name: "Updated" };
+    const brewMethodRepository = createBrewMethodRepository({
+      updateBrewMethod: vi.fn(async () => updatedMethod),
+    });
+    const rendered = await renderHook(createRepository(), { brewMethodRepository });
+
+    let saved;
+    await act(async () => {
+      saved = await rendered.current.updateBrewMethodMaster(updatedMethod);
+    });
+
+    expect(saved).toBe(updatedMethod);
+    expect(brewMethodRepository.updateBrewMethod).toHaveBeenCalledWith(updatedMethod);
+    expect(rendered.current.brewMethods).toEqual([updatedMethod]);
+    expect(rendered.current.brewMethodsDirty).toBe(false);
+    expect(rendered.current.masterSaveStatus.brewMethods).toBe("saved");
   });
 
   test("deletes brew methods only after Supabase deletion succeeds", async () => {
