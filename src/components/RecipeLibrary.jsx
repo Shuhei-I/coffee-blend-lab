@@ -6,7 +6,6 @@ export function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onArch
   const [showArchived, setShowArchived] = useState(false);
   const [expandedSeriesIds, setExpandedSeriesIds] = useState(() => new Set());
   const visibleSeries = recipeSeries.filter((series) => showArchived || series.status !== "archived");
-  const archivedCount = recipeSeries.filter((series) => series.status === "archived").length;
 
   function handleLoad(recipe, series) {
     onLoad(recipe, series);
@@ -34,10 +33,8 @@ export function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onArch
         </div>
         <div className="button-row">
           <button className="ghost-button" type="button" title="アーカイブ済みの表示を切り替える" aria-pressed={showArchived} onClick={() => setShowArchived((current) => !current)}>
-            {showArchived ? "Hide archived" : `Archived${archivedCount ? ` ${archivedCount}` : ""}`}
+            {showArchived ? "Hide archived" : "Archived"}
           </button>
-          <button className="ghost-button" type="button" title="JSONで出力" onClick={() => onExport("json")}>JSON</button>
-          <button className="ghost-button" type="button" title="CSVで出力" onClick={() => onExport("csv")}>CSV</button>
         </div>
       </div>
       <div className="recipe-list">
