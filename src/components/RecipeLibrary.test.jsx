@@ -40,10 +40,11 @@ describe("RecipeLibrary", () => {
     expect(seriesNames()).toEqual(["Active"]);
     expect(document.body.textContent).not.toContain("Archived Series");
 
-    click(buttonByText("Archived 1"));
+    click(buttonByText("Archived"));
 
     expect(seriesNames()).toEqual(["Active", "Archived SeriesArchived"]);
     expect(buttonByText("Hide archived")).toBeTruthy();
+    expect(document.body.textContent).not.toContain("Archived 1");
   });
 
   test("expands and collapses version rows", () => {
@@ -89,7 +90,7 @@ describe("RecipeLibrary", () => {
     expect(onLoaded).toHaveBeenCalledTimes(2);
   });
 
-  test("calls archive, restore, export, and version delete callbacks", () => {
+  test("calls archive, restore, and version delete callbacks while hiding exports", () => {
     const onArchive = vi.fn();
     const onRestore = vi.fn();
     const onDeleteVersion = vi.fn();
@@ -102,17 +103,17 @@ describe("RecipeLibrary", () => {
       onExport,
     });
 
-    click(buttonByText("Archive"));
+    expect(buttonByText("JSON")).toBeUndefined();
+    expect(buttonByText("CSV")).toBeUndefined();
+
+    click(document.querySelector(".archive-button"));
     expect(onArchive).toHaveBeenCalledWith("series-1700000000000");
 
-    click(buttonByText("Archived 1"));
-    click(buttonByText("Restore"));
+    click(buttonByText("Archived"));
+    click(document.querySelector(".restore-button"));
     expect(onRestore).toHaveBeenCalledWith("archived");
 
-    click(buttonByText("JSON"));
-    click(buttonByText("CSV"));
-    expect(onExport).toHaveBeenNthCalledWith(1, "json");
-    expect(onExport).toHaveBeenNthCalledWith(2, "csv");
+    expect(onExport).not.toHaveBeenCalled();
 
     click(document.querySelector(".toggle-versions-button"));
     click(buttonByText("Delete"));
