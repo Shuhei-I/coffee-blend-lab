@@ -211,7 +211,7 @@ function App({ authUser, authError, onSignOut }) {
   }
 
   async function saveRecipe(event) {
-    event.preventDefault();
+    event?.preventDefault?.();
     if (!recipeSaveValidation.valid) {
       setRecipeSaveMessage(recipeSaveValidation.reason);
       return;
@@ -321,41 +321,53 @@ function App({ authUser, authError, onSignOut }) {
       <main className={`workspace ${activePage !== "blend" ? "single-page" : ""}`}>
         {activePage === "blend" && (
           <>
-            <BlendBuilder beans={blendBeans} total={total} onRatioChange={updateRatio} onRoastLevelChange={updateRoastLevel} onNormalize={() => normalizeRatios(blendBeans, total)} />
+            <BlendBuilder
+              beans={blendBeans}
+              total={total}
+              onRatioChange={updateRatio}
+              onRoastLevelChange={updateRoastLevel}
+              onNormalize={() => normalizeRatios(blendBeans, total)}
+            />
             <ProfilePanel profile={profile} total={total} />
+            <PageNextAction onClick={() => setActivePage("brew")} />
           </>
         )}
         {activePage === "brew" && (
-          <Dosing
-            doseGram={doseGram}
-            brewRatio={brewRatio}
-            targetBrewGram={targetBrewGram}
-            blendCost={blendCost}
-            pourTotal={pourTotal}
-            beanDoseLines={beanDoseLines}
-            brewSchedule={brewSchedule}
-            showBrewSchedule={Boolean(selectedBrewMethod)}
-            brewMethodOptions={brewMethodOptions}
-            selectedBrewMethodId={selectedBrewMethodId}
-            onDoseChange={setDoseGram}
-            onRatioChange={setBrewRatio}
-            onMethodChange={changeSelectedBrewMethod}
-          />
+          <>
+            <Dosing
+              doseGram={doseGram}
+              brewRatio={brewRatio}
+              targetBrewGram={targetBrewGram}
+              blendCost={blendCost}
+              pourTotal={pourTotal}
+              beanDoseLines={beanDoseLines}
+              brewSchedule={brewSchedule}
+              showBrewSchedule={Boolean(selectedBrewMethod)}
+              brewMethodOptions={brewMethodOptions}
+              selectedBrewMethodId={selectedBrewMethodId}
+              onDoseChange={setDoseGram}
+              onRatioChange={setBrewRatio}
+              onMethodChange={changeSelectedBrewMethod}
+            />
+            <PageNextAction onClick={() => setActivePage("record")} />
+          </>
         )}
         {activePage === "record" && (
           <>
             <RecipeNamePanel
               blendName={blendName}
               blendGoal={blendGoal}
-              saveMessage={recipeSaveMessage}
               editingRecipeSource={editingRecipeSource}
-              saveDisabled={!recipeSaveValidation.valid}
-              saveDisabledReason={recipeSaveValidation.reason}
               onNameChange={setBlendName}
               onBlendGoalChange={setBlendGoal}
-              onSave={saveRecipe}
             />
             <SensoryPanel sensory={sensory} memo={memo} onSensoryChange={setSensory} onMemoChange={setMemo} />
+            <RecordSaveAction
+              disabled={!recipeSaveValidation.valid}
+              disabledReason={recipeSaveValidation.reason}
+              saveMessage={recipeSaveMessage}
+              onSave={saveRecipe}
+            />
           </>
         )}
         {activePage === "history" && (
@@ -380,6 +392,30 @@ function App({ authUser, authError, onSignOut }) {
         )}
       </main>
     </>
+  );
+}
+
+function PageNextAction({ onClick }) {
+  return (
+    <div className="page-action-row">
+      <button className="next-page-button" type="button" onClick={onClick}>
+        次へ
+      </button>
+    </div>
+  );
+}
+
+function RecordSaveAction({ disabled, disabledReason, saveMessage, onSave }) {
+  return (
+    <div className="record-save-action">
+      {disabled && disabledReason && (
+        <p className="inline-warning" role="status">{disabledReason}</p>
+      )}
+      <button className="save-page-button" type="button" title={disabledReason || "保存"} disabled={disabled} onClick={onSave}>
+        保存
+      </button>
+      {saveMessage && <div className="save-toast" role="status">{saveMessage}</div>}
+    </div>
   );
 }
 

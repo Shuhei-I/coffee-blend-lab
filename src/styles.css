@@ -239,7 +239,7 @@ textarea {
 
 .recipe-name-form {
   display: grid;
-  grid-template-columns: minmax(180px, 0.7fr) minmax(210px, 0.9fr) minmax(240px, 1fr) 92px;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(210px, 0.9fr) minmax(240px, 1fr);
   gap: 14px;
   align-items: end;
 }
@@ -249,15 +249,6 @@ textarea {
   gap: 7px;
   color: var(--muted);
   font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.recipe-name-form button {
-  min-height: 42px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: #fff;
-  background: var(--coral);
   font-weight: 800;
 }
 
@@ -431,6 +422,43 @@ input[type="range"] {
   border-color: var(--line);
   color: var(--muted);
   background: #f4f0e9;
+}
+
+.page-action-row {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.next-page-button {
+  min-width: 96px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fffaf0;
+  background: var(--teal);
+  font-weight: 900;
+}
+
+.record-save-action {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.save-page-button {
+  min-width: 128px;
+  min-height: 46px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fff;
+  background: var(--coral);
+  font-weight: 900;
 }
 
 .control-grid,
@@ -1192,6 +1220,22 @@ canvas {
   }
 
   .normalize-button {
+    width: 100%;
+  }
+
+  .page-action-row {
+    justify-content: stretch;
+  }
+
+  .next-page-button {
+    width: 100%;
+  }
+
+  .record-save-action {
+    justify-items: stretch;
+  }
+
+  .save-page-button {
     width: 100%;
   }
 

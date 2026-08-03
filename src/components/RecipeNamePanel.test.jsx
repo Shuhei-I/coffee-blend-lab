@@ -27,29 +27,28 @@ afterEach(() => {
 });
 
 describe("RecipeNamePanel", () => {
-  test("renders existing series name, blend description, and save message", () => {
-    renderRecipeNamePanel({ saveMessage: "Recipe v1 を登録しました" });
+  test("renders existing series name and blend description", () => {
+    renderRecipeNamePanel();
 
     const inputs = document.querySelectorAll("input");
     const textarea = document.querySelector("textarea");
     expect(inputs[0].value).toBe("Morning Blend");
     expect(textarea.value).toBe("Sweet morning cup");
     expect(formLabels()).toEqual(["シリーズ名", "ブレンド説明"]);
-    expect(document.querySelector(".save-toast").textContent).toBe("Recipe v1 を登録しました");
   });
 
   test("renders new series heading when no editing source exists", () => {
     renderRecipeNamePanel({ editingRecipeSource: null });
 
     expect(document.querySelector("#recipeNameTitle").textContent).toBe("新規シリーズ作成");
-    expect(buttonByText("Save")).toBeTruthy();
+    expect(document.querySelector("button")).toBeNull();
   });
 
   test("renders next version heading when editing source exists", () => {
     renderRecipeNamePanel({ editingRecipeSource: { seriesId: "series-1", versionId: "recipe-1" } });
 
     expect(document.querySelector("#recipeNameTitle").textContent).toBe("次バージョン作成");
-    expect(buttonByText("Save")).toBeTruthy();
+    expect(document.querySelector("button")).toBeNull();
   });
 
   test("calls input callbacks with raw event values", () => {
@@ -66,39 +65,12 @@ describe("RecipeNamePanel", () => {
     expect(onBlendGoalChange).toHaveBeenCalledWith("  Balanced daily cup  ");
   });
 
-  test("submits through existing save callback", () => {
-    const onSave = vi.fn((event) => event.preventDefault());
-    renderRecipeNamePanel({ onSave });
-
-    act(() => {
-      document.querySelector("form").dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }));
-    });
-
-    expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onSave.mock.calls[0][0].type).toBe("submit");
-  });
-
-  test("keeps existing button and disabled behavior", () => {
+  test("does not render save controls", () => {
     renderRecipeNamePanel({ blendName: "", blendGoal: "" });
 
-    const buttons = document.querySelectorAll("button");
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0].textContent).toBe("Save");
-    expect(buttons[0].type).toBe("submit");
-    expect(buttons[0].title).toBe("保存");
-    expect(buttons[0].disabled).toBe(false);
-  });
-
-  test("disables save and shows reason when save validation fails", () => {
-    renderRecipeNamePanel({
-      saveDisabled: true,
-      saveDisabledReason: "豆比率の合計を100%にしてください。",
-    });
-
-    const button = buttonByText("Save");
-    expect(button.disabled).toBe(true);
-    expect(button.title).toBe("豆比率の合計を100%にしてください。");
-    expect(document.querySelector(".inline-warning").textContent).toBe("豆比率の合計を100%にしてください。");
+    expect(document.querySelectorAll("button")).toHaveLength(0);
+    expect(document.querySelector(".inline-warning")).toBeNull();
+    expect(document.querySelector(".save-toast")).toBeNull();
   });
 
   test("keeps input and description attributes", () => {
@@ -108,12 +80,6 @@ describe("RecipeNamePanel", () => {
     expect(document.querySelector("textarea").getAttribute("maxLength")).toBe("160");
     expect(document.querySelector("textarea").getAttribute("rows")).toBe("2");
     expect(document.querySelector("textarea").getAttribute("placeholder")).toBe("目指す味、構成、飲みたいシーン");
-  });
-
-  test("does not render save message when empty", () => {
-    renderRecipeNamePanel({ saveMessage: "" });
-
-    expect(document.querySelector(".save-toast")).toBeNull();
   });
 
   test("renders from props only", () => {
@@ -134,11 +100,9 @@ function renderRecipeNamePanel(overrides = {}) {
   const props = {
     blendName: "Morning Blend",
     blendGoal: "Sweet morning cup",
-    saveMessage: "",
     editingRecipeSource: null,
     onNameChange: vi.fn(),
     onBlendGoalChange: vi.fn(),
-    onSave: vi.fn((event) => event.preventDefault()),
     ...overrides,
   };
 
@@ -159,10 +123,6 @@ function change(input, value) {
 function reactProps(element) {
   const key = Object.keys(element).find((item) => item.startsWith("__reactProps$"));
   return element[key];
-}
-
-function buttonByText(text) {
-  return [...document.querySelectorAll("button")].find((button) => button.textContent === text);
 }
 
 function formLabels() {
