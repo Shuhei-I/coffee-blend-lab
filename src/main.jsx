@@ -10,7 +10,7 @@ import {
   calculateTargetBrewGram,
   getPourTotal,
 } from "./domain/coffee/calculations.js";
-import { createRecipeVersionData, resolvePersistedBrewMethodId } from "./domain/coffee/recipeSeries.js";
+import { createRecipeVersionData, resolvePersistedBrewMethodId, validateRecipeSaveInput } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
 import { canDeleteBean, createBean } from "./domain/coffee/beanMaster.js";
@@ -146,6 +146,10 @@ function App({ authUser, authError, onSignOut }) {
         })),
     [blendBeans, total, doseGram],
   );
+  const recipeSaveValidation = useMemo(
+    () => validateRecipeSaveInput({ blendBeans, total, doseGram, brewRatio }),
+    [blendBeans, total, doseGram, brewRatio],
+  );
   async function addBean(draft = {}) {
     const id = createClientId();
     const savedBean = await createBeanMaster({ ...createBean({ id, index: beans.length }), ...draft });
@@ -208,6 +212,11 @@ function App({ authUser, authError, onSignOut }) {
 
   async function saveRecipe(event) {
     event.preventDefault();
+    if (!recipeSaveValidation.valid) {
+      setRecipeSaveMessage(recipeSaveValidation.reason);
+      return;
+    }
+
     const now = new Date().toISOString();
     const { recipe } = createRecipeVersionData({
       recipeSeries,
@@ -335,7 +344,17 @@ function App({ authUser, authError, onSignOut }) {
         )}
         {activePage === "record" && (
           <>
-            <RecipeNamePanel blendName={blendName} blendGoal={blendGoal} saveMessage={recipeSaveMessage} editingRecipeSource={editingRecipeSource} onNameChange={setBlendName} onBlendGoalChange={setBlendGoal} onSave={saveRecipe} />
+            <RecipeNamePanel
+              blendName={blendName}
+              blendGoal={blendGoal}
+              saveMessage={recipeSaveMessage}
+              editingRecipeSource={editingRecipeSource}
+              saveDisabled={!recipeSaveValidation.valid}
+              saveDisabledReason={recipeSaveValidation.reason}
+              onNameChange={setBlendName}
+              onBlendGoalChange={setBlendGoal}
+              onSave={saveRecipe}
+            />
             <SensoryPanel sensory={sensory} memo={memo} onSensoryChange={setSensory} onMemoChange={setMemo} />
           </>
         )}
