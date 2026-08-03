@@ -57,6 +57,15 @@ describe("RecipeLibrary", () => {
 
     expect(toggle.getAttribute("aria-expanded")).toBe("true");
     expect([...document.querySelectorAll(".version-row strong")].map((item) => item.textContent)).toEqual(["v2", "v1"]);
+    expect([...document.querySelectorAll(".version-row span")].map((item) => item.textContent)).toEqual([
+      "甘みを少し強めた",
+      "配合エチオピア 55% / ブラジル 45%",
+      "抽出標準 4投式 / 蒸らし12% 30秒 / 100%",
+      "明るい香りと丸い甘み",
+      "配合エチオピア 60% / ブラジル 40%",
+      "抽出標準 4投式 / 蒸らし12% 30秒 / 100%",
+    ]);
+    expect(document.querySelector(".recipe-series-goal").textContent).toBe("朝に飲みやすい甘み重視のブレンド");
 
     click(toggle);
 

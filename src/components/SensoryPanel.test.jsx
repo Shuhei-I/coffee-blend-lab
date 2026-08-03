@@ -116,7 +116,9 @@ describe("SensoryPanel", () => {
 
     expect(textarea.value).toBe("");
     expect(textarea.getAttribute("rows")).toBe("4");
-    expect(textarea.getAttribute("placeholder")).toBe("香り、甘み、後味、改善したい点");
+    expect(textarea.getAttribute("placeholder")).toBe("味の印象、気づき、次に試したいこと");
+    expect(document.querySelector("#sensoryTitle").textContent).toBe("試飲の記録");
+    expect(memoLabel()).toBe("試飲メモ");
   });
 
   test("renders from props only", () => {
@@ -160,4 +162,8 @@ function reactProps(element) {
 
 function sensoryLabels() {
   return [...document.querySelectorAll(".sensory-grid label")].map((label) => label.childNodes[0].textContent.trim());
+}
+
+function memoLabel() {
+  return document.querySelector(".memo-field").childNodes[0].textContent.trim();
 }

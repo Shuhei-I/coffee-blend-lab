@@ -2,11 +2,11 @@ import React from "react";
 
 export function RecipeNamePanel({
   blendName,
-  changeNote,
+  blendGoal,
   saveMessage,
   editingRecipeSource,
   onNameChange,
-  onChangeNoteChange,
+  onBlendGoalChange,
   onSave,
 }) {
   return (
@@ -21,8 +21,8 @@ export function RecipeNamePanel({
           <input value={blendName} maxLength={28} onChange={(event) => onNameChange(event.target.value)} />
         </label>
         <label>
-          メモ
-          <input value={changeNote} maxLength={64} onChange={(event) => onChangeNoteChange(event.target.value)} />
+          ブレンド説明
+          <textarea rows="2" maxLength={160} placeholder="目指す味、構成、飲みたいシーン" value={blendGoal} onChange={(event) => onBlendGoalChange(event.target.value)} />
         </label>
         <button type="submit" title="保存">Save</button>
       </form>

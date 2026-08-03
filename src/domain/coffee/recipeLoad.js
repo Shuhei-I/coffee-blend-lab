@@ -7,7 +7,8 @@ export function buildRecipeEditorState({ recipe, series, beans, brewMethods }) {
   return {
     editorState: {
       blendName: series?.name || recipe.name,
-      changeNote: "",
+      blendGoal: series?.goal || "",
+      changeNote: recipe.changeNote || "",
       doseGram: recipe.doseGram || 20,
       brewRatio: recipe.brewRatio || 16,
       savedRecipeBrewMethod,

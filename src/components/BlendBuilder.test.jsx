@@ -95,7 +95,7 @@ describe("BlendBuilder", () => {
     const onNormalize = vi.fn();
     renderBlendBuilder({ onNormalize });
 
-    const button = buttonByText("100%");
+    const button = buttonByText("100%に正規化");
     expect(button.disabled).toBe(false);
     click(button);
 
@@ -106,6 +106,8 @@ describe("BlendBuilder", () => {
     renderBlendBuilder({ total: 100 });
 
     expect(document.querySelector(".inline-warning")).toBeNull();
+    expect(document.querySelector(".blend-total-bar").dataset.ok).toBe("true");
+    expect(buttonByText("調整済み").disabled).toBe(true);
   });
 
   test("shows existing warning when total is not 100", () => {
@@ -119,7 +121,7 @@ describe("BlendBuilder", () => {
 
     expect(document.querySelectorAll(".bean-item")).toHaveLength(0);
     expect(document.querySelector(".empty-state").textContent).toBe("レシピ表示がONの豆はありません。");
-    expect(buttonByText("100%").disabled).toBe(true);
+    expect(buttonByText("100%に正規化").disabled).toBe(true);
   });
 
   test("renders from props only", () => {

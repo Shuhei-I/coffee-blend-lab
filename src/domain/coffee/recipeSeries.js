@@ -48,7 +48,7 @@ export function saveRecipeVersion(seriesList, currentSeries, recipe, savedAt) {
       {
         id: recipe.seriesId,
         name: recipe.name,
-        goal: "",
+        goal: recipe.goal || "",
         status: "active",
         currentVersionId: recipe.id,
         createdAt: savedAt,
@@ -64,6 +64,7 @@ export function saveRecipeVersion(seriesList, currentSeries, recipe, savedAt) {
       ? {
           ...series,
           name: recipe.name || series.name,
+          goal: recipe.goal ?? series.goal,
           status: "active",
           currentVersionId: recipe.id,
           updatedAt: savedAt,
@@ -133,6 +134,7 @@ export function createRecipeVersionData({
   recipeSeries,
   editingRecipeSource,
   blendName,
+  blendGoal,
   changeNote,
   blendBeans,
   doseGram,
@@ -156,6 +158,7 @@ export function createRecipeVersionData({
     seriesId,
     id: versionId,
     name: blendName.trim() || currentSeries?.name || "無題のブレンド",
+    goal: (blendGoal ?? currentSeries?.goal ?? "").trim(),
     version,
     changeNote: changeNote.trim() || (version === 1 ? "初回作成" : ""),
     ratios: blendBeans.map((bean) => ({

@@ -164,6 +164,7 @@ describe("recipe series compatibility", () => {
       seriesId: "series-1800000000000",
       id: "recipe-1800000000001",
       name: "Test Blend",
+      goal: "",
       version: 1,
       changeNote: "初回作成",
       ratios: [

@@ -9,7 +9,6 @@ export function BlendBuilder({ beans, total, onRatioChange, onRoastLevelChange =
           <p className="eyebrow">Blend Builder</p>
           <h2 id="builderTitle">配合</h2>
         </div>
-        <button className="ghost-button" type="button" title="合計を100%に調整" disabled={!beans.length} onClick={onNormalize}>100%</button>
       </div>
       <div className="bean-list">
         {beans.length === 0 ? (
@@ -42,6 +41,15 @@ export function BlendBuilder({ beans, total, onRatioChange, onRoastLevelChange =
             </div>
           </article>
         ))}
+      </div>
+      <div className="blend-total-bar" data-ok={total === 100}>
+        <div>
+          <span>合計</span>
+          <strong>{total}%</strong>
+        </div>
+        <button className="normalize-button" type="button" title="合計を100%に調整" disabled={!beans.length || total === 100} onClick={onNormalize}>
+          {total === 100 ? "調整済み" : "100%に正規化"}
+        </button>
       </div>
       {total > 0 && total !== 100 && <p className="inline-warning">合計は{total}%です。100%に正規化できます。</p>}
     </section>

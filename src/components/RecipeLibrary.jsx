@@ -30,7 +30,7 @@ export function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onArch
       <div className="section-heading">
         <div>
           <p className="eyebrow">Recipes</p>
-          <h2 id="libraryTitle">保存済み</h2>
+          <h2 id="libraryTitle">レシピ</h2>
         </div>
         <div className="button-row">
           <button className="ghost-button" type="button" title="アーカイブ済みの表示を切り替える" aria-pressed={showArchived} onClick={() => setShowArchived((current) => !current)}>
@@ -66,8 +66,9 @@ export function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onArch
                     />
                     <div>
                       <strong>{series.name}{archived && <span className="status-pill">Archived</span>}</strong>
-                      {latest && <span>{summarizeRecipe(latest, beans)} / v{latest.version}</span>}
-                      {brewMethod && <span className="recipe-brew-method">{summarizeBrewMethod(brewMethod)}</span>}
+                      {series.goal && <span className="recipe-series-goal">{series.goal}</span>}
+                      {latest && <span className="recipe-latest-summary">{summarizeRecipe(latest, beans)} / v{latest.version}</span>}
+                      {brewMethod && <span className="recipe-brew-method recipe-latest-summary">{summarizeBrewMethod(brewMethod)}</span>}
                     </div>
                   </div>
                   <div className="recipe-actions">
@@ -85,7 +86,13 @@ export function RecipeLibrary({ recipeSeries, beans, brewMethods, onLoad, onArch
                       <div className="version-row" key={recipe.id}>
                         <div>
                           <strong>v{recipe.version}</strong>
-                          <span>{recipe.changeNote || "変更メモなし"}</span>
+                          <span>{recipe.memo || "試飲メモなし"}</span>
+                          <span className="version-detail-summary"><b>配合</b>{summarizeRecipe(recipe, beans)}</span>
+                          {getRecipeBrewMethod(recipe, brewMethods) && (
+                            <span className="version-detail-summary">
+                              <b>抽出</b>{summarizeBrewMethod(getRecipeBrewMethod(recipe, brewMethods))}
+                            </span>
+                          )}
                           <small>{formatSavedAt(recipe.savedAt)}</small>
                         </div>
                         <div className="recipe-actions">

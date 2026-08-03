@@ -6,6 +6,7 @@ export { initialSensory } from "../domain/coffee/sensory.js";
 
 export function useRecipeEditor({ initialBeans = [] } = {}) {
   const [blendName, setBlendName] = useState("");
+  const [blendGoal, setBlendGoal] = useState("");
   const [changeNote, setChangeNote] = useState("");
   const [doseGram, setDoseGram] = useState(20);
   const [brewRatio, setBrewRatio] = useState(16);
@@ -34,6 +35,7 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
 
   function resetEditor(beans) {
     setBlendName("");
+    setBlendGoal("");
     setChangeNote("");
     setBlendRatios(emptyRatios(beans));
     setBlendRoastLevels(emptyRoastLevels(beans));
@@ -47,6 +49,7 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
 
   function replaceEditorState(nextState) {
     setBlendName(nextState.blendName);
+    setBlendGoal(nextState.blendGoal || "");
     setChangeNote(nextState.changeNote);
     setDoseGram(nextState.doseGram);
     setBrewRatio(nextState.brewRatio);
@@ -72,6 +75,8 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
   return {
     blendName,
     setBlendName,
+    blendGoal,
+    setBlendGoal,
     changeNote,
     setChangeNote,
     doseGram,
