@@ -425,21 +425,33 @@ input[type="range"] {
 }
 
 .page-action-row {
-  display: flex;
+  display: grid;
   grid-column: 1 / -1;
-  justify-content: flex-end;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: 18px;
 }
 
+.reset-page-button,
 .next-page-button {
   min-width: 96px;
   min-height: 44px;
   padding: 0 18px;
   border: 1px solid transparent;
   border-radius: 6px;
+  font-weight: 900;
+}
+
+.reset-page-button {
+  border-color: var(--line);
+  color: var(--muted);
+  background: #fff;
+}
+
+.next-page-button {
   color: #fffaf0;
   background: var(--teal);
-  font-weight: 900;
 }
 
 .record-save-action {
@@ -1224,9 +1236,10 @@ canvas {
   }
 
   .page-action-row {
-    justify-content: stretch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .reset-page-button,
   .next-page-button {
     width: 100%;
   }

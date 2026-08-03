@@ -261,6 +261,13 @@ function App({ authUser, authError, onSignOut }) {
     setSelectedBrewMethodId(brewMethods[0]?.id || getDefaultSelectedBrewMethodId());
   }
 
+  function resetWorkflowInput() {
+    if (!window.confirm("現在の入力をリセットしますか？")) return;
+    resetRecipeInput();
+    setRecipeSaveMessage("");
+    setActivePage("blend");
+  }
+
   function loadRecipe(recipe, series) {
     const loadedRecipe = buildRecipeEditorState({ recipe, series, beans, brewMethods });
     if (loadedRecipe.selectedBrewMethodId) {
@@ -329,7 +336,7 @@ function App({ authUser, authError, onSignOut }) {
               onNormalize={() => normalizeRatios(blendBeans, total)}
             />
             <ProfilePanel profile={profile} total={total} />
-            <PageNextAction onClick={() => setActivePage("brew")} />
+            <WorkflowPageActions onReset={resetWorkflowInput} onNext={() => setActivePage("brew")} />
           </>
         )}
         {activePage === "brew" && (
@@ -349,7 +356,7 @@ function App({ authUser, authError, onSignOut }) {
               onRatioChange={setBrewRatio}
               onMethodChange={changeSelectedBrewMethod}
             />
-            <PageNextAction onClick={() => setActivePage("record")} />
+            <WorkflowPageActions onReset={resetWorkflowInput} onNext={() => setActivePage("record")} />
           </>
         )}
         {activePage === "record" && (
@@ -395,10 +402,13 @@ function App({ authUser, authError, onSignOut }) {
   );
 }
 
-function PageNextAction({ onClick }) {
+function WorkflowPageActions({ onReset, onNext }) {
   return (
     <div className="page-action-row">
-      <button className="next-page-button" type="button" onClick={onClick}>
+      <button className="reset-page-button" type="button" onClick={onReset}>
+        リセット
+      </button>
+      <button className="next-page-button" type="button" onClick={onNext}>
         次へ
       </button>
     </div>
