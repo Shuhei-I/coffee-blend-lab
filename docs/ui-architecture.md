@@ -202,3 +202,166 @@ The next UI refactors should be evaluated against this order:
 5. Move master management behind Manage.
 6. Add timer and brew guidance inside Brew.
 
+## Pending UI Requests
+
+These requests are candidates for the next UI iteration. They should be implemented in a way that keeps the workbench focused on:
+
+Create -> Brew -> Record -> Review -> Refine
+
+### Editor Reset
+
+Goal:
+
+- Add a way to reset the current unsaved editor input.
+
+Current idea:
+
+- Clicking the logo could start reset.
+
+Recommended behavior:
+
+- Do not reset immediately on logo click.
+- Use a confirmation dialog if the logo starts reset.
+- Prefer an explicit reset action if the UI can expose it without crowding the header.
+
+Open questions:
+
+- Should reset clear only the current blend/record inputs, or also reset selected brew method?
+- Should reset keep the user on the current page, or return to Blend?
+
+### Next Actions
+
+Goal:
+
+- Add a `次へ` action at the bottom-right of Blend.
+- Add a `次へ` action at the bottom-right of Brew.
+
+Expected navigation:
+
+- Blend -> Brew
+- Brew -> Record
+
+Notes:
+
+- This supplements bottom navigation rather than replacing it.
+- On mobile, the button must not collide with the fixed bottom navigation.
+
+### Record Save Placement
+
+Goal:
+
+- Move the Record page `保存` action to the bottom of the page.
+
+Reason:
+
+- Users should naturally review tasting notes and memo content before saving the version.
+
+Notes:
+
+- The save disabled message should stay close enough to the save button to be understood.
+- The save action should remain visually clear and reachable.
+
+### History Labels And Export Visibility
+
+Requested changes:
+
+- Change `Archived` to `アーカイブ`.
+- Remove archive count display.
+- Hide JSON and CSV export buttons for now.
+
+Notes:
+
+- Export behavior can stay in code for later use.
+- Tests should reflect that JSON and CSV are not part of the current visible History UI.
+
+## Future Brew Data
+
+These fields are candidates for future RecipeVersion or BrewMethod data. They should be added only when they strengthen recording, comparison, or repeatability.
+
+### Grind Size
+
+Goal:
+
+- Record grind size.
+
+Possible options:
+
+- 細挽き
+- 中細挽き
+- 中挽き
+- 粗挽き
+
+Open question:
+
+- Should this be a fixed option set, free text, or both?
+
+### Equipment
+
+Goal:
+
+- Record the brewing equipment or device.
+
+Examples:
+
+- ペーパードリップ
+- フレンチプレス
+- サイフォン
+
+Open question:
+
+- Should equipment be part of BrewMethod master data, or stored directly on each RecipeVersion?
+
+### Brew Temperature
+
+Goal:
+
+- Record brew temperature.
+
+Recommended initial shape:
+
+- Celsius-only numeric value.
+- Optional field.
+
+Open question:
+
+- Should brew temperature be shown only in Brew, or also summarized in History?
+
+## Brew Stopwatch
+
+Goal:
+
+- Add a stopwatch under the Brew section.
+
+Behavior:
+
+- Start begins a 3 second countdown.
+- Measurement starts after countdown.
+- Reset returns the stopwatch to idle.
+- Stopwatch automatically resets at 5 minutes.
+
+Expected states:
+
+- idle
+- countdown
+- running
+- auto-reset
+
+Controls:
+
+- Start
+- Reset
+
+Notes:
+
+- The stopwatch should not block recording or saving.
+- Keep it simple before adding step-by-step brew guidance.
+
+## Suggested UI Implementation Order
+
+1. Clean up History labels and hide JSON/CSV.
+2. Add `次へ` actions on Blend and Brew.
+3. Move the Record save action to the bottom.
+4. Add a safe reset action with confirmation.
+5. Add the Brew stopwatch.
+6. Add grind size, equipment, and brew temperature fields.
+
