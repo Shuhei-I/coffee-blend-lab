@@ -32,6 +32,7 @@ describe("useRecipeEditor", () => {
     const rendered = renderHook({ initialBeans: fixtureBeans });
 
     expect(rendered.current.blendName).toBe("");
+    expect(rendered.current.blendGoal).toBe("");
     expect(rendered.current.changeNote).toBe("");
     expect(rendered.current.doseGram).toBe(20);
     expect(rendered.current.brewRatio).toBe(16);
@@ -50,6 +51,7 @@ describe("useRecipeEditor", () => {
 
     act(() => {
       rendered.current.setBlendName("Blend");
+      rendered.current.setBlendGoal("Daily cup");
       rendered.current.setChangeNote("Note");
       rendered.current.setDoseGram(24);
       rendered.current.setBrewRatio(15);
@@ -62,6 +64,7 @@ describe("useRecipeEditor", () => {
     });
 
     expect(rendered.current.blendName).toBe("Blend");
+    expect(rendered.current.blendGoal).toBe("Daily cup");
     expect(rendered.current.changeNote).toBe("Note");
     expect(rendered.current.doseGram).toBe(24);
     expect(rendered.current.brewRatio).toBe(15);
@@ -153,6 +156,7 @@ describe("useRecipeEditor", () => {
     act(() => {
       rendered.current.replaceEditorState({
         blendName: "Loaded",
+        blendGoal: "Loaded goal",
         changeNote: "Changed",
         doseGram: 30,
         brewRatio: 12,
@@ -167,6 +171,7 @@ describe("useRecipeEditor", () => {
     });
 
     expect(rendered.current.blendName).toBe("");
+    expect(rendered.current.blendGoal).toBe("");
     expect(rendered.current.changeNote).toBe("");
     expect(rendered.current.doseGram).toBe(20);
     expect(rendered.current.brewRatio).toBe(16);
@@ -182,6 +187,7 @@ describe("useRecipeEditor", () => {
     const rendered = renderHook();
     const nextState = {
       blendName: "Series Name",
+      blendGoal: "Series goal",
       changeNote: "",
       doseGram: 18,
       brewRatio: 14,
@@ -198,6 +204,7 @@ describe("useRecipeEditor", () => {
     });
 
     expect(rendered.current.blendName).toBe(nextState.blendName);
+    expect(rendered.current.blendGoal).toBe(nextState.blendGoal);
     expect(rendered.current.changeNote).toBe(nextState.changeNote);
     expect(rendered.current.doseGram).toBe(nextState.doseGram);
     expect(rendered.current.brewRatio).toBe(nextState.brewRatio);

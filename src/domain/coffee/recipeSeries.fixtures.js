@@ -63,7 +63,7 @@ export const legacyRecipeFixture = {
 export const currentRecipeSeriesFixture = {
   id: "series-1700000000000",
   name: "Morning Blend",
-  goal: "",
+  goal: "朝に飲みやすい甘み重視のブレンド",
   status: "active",
   currentVersionId: "recipe-1700000001000",
   createdAt: "2026-05-17T09:00:00.000Z",

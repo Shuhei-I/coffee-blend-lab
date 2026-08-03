@@ -14,6 +14,8 @@ Create -> Brew -> Record -> Review -> Refine
 
 Use a bottom navigation model for the primary mobile experience.
 
+For the current v1.0 workbench, navigation is based on experiment phases. A broader app-home structure is documented separately in `docs/future-home-ui-structure.md` and should be treated as a later direction, not the immediate release target.
+
 Primary sections:
 
 1. Blend

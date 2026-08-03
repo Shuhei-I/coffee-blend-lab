@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import heroImage from "../assets/coffee-blend-workbench.png";
+import logoImage from "../assets/cbl-logo.png";
 import {
   buildBlendCost,
   buildProfile,
@@ -22,6 +22,7 @@ import {
 import { profileMetricKeys } from "./domain/coffee/profile.js";
 import { getDefaultSelectedBrewMethodId } from "./domain/defaultCoffeeData.js";
 import { AuthGate } from "./components/AuthGate.jsx";
+import { AccountPanel } from "./components/AccountPanel.jsx";
 import { BeanMaster } from "./components/BeanMaster.jsx";
 import { BlendBuilder } from "./components/BlendBuilder.jsx";
 import { BrewMethodMaster } from "./components/BrewMethodMaster.jsx";
@@ -37,10 +38,11 @@ import { downloadFile } from "./services/downloadFile.js";
 import "./styles.css";
 
 const pages = [
-  ["blend", "ブレンド作成"],
-  ["recipes", "レシピ一覧"],
-  ["beans", "豆マスタ"],
-  ["brew", "淹れ方マスタ"],
+  ["blend", "配合"],
+  ["brew", "抽出"],
+  ["record", "記録"],
+  ["history", "履歴"],
+  ["manage", "管理"],
 ];
 
 function confirmDeleteItem(label) {
@@ -62,6 +64,8 @@ function App({ authUser, authError, onSignOut }) {
   const {
     blendName,
     setBlendName,
+    blendGoal,
+    setBlendGoal,
     changeNote,
     setChangeNote,
     doseGram,
@@ -209,6 +213,7 @@ function App({ authUser, authError, onSignOut }) {
       recipeSeries,
       editingRecipeSource,
       blendName,
+      blendGoal,
       changeNote,
       blendBeans,
       doseGram,
@@ -284,24 +289,10 @@ function App({ authUser, authError, onSignOut }) {
   return (
     <>
       <header className="app-header">
-        <div className="header-media" style={{ backgroundImage: `linear-gradient(90deg, rgba(11, 16, 17, 0.84), rgba(11, 16, 17, 0.38)), url(${heroImage})` }} />
         <div className="header-content">
-          <div>
-            <p className="eyebrow">Coffee Blend Studio</p>
-            <h1>Blend Manager</h1>
-            <p className="lead">豆の個性と比率から、配合量、抽出量、試飲結果、保存レシピまで一画面で管理します。</p>
+          <div className="brand-area">
+            <img className="brand-logo" src={logoImage} alt="Coffee Blend Lab" />
           </div>
-          <nav className="app-nav" aria-label="ページ切り替え">
-            {pages.map(([id, label]) => (
-              <button type="button" key={id} data-active={activePage === id} onClick={() => setActivePage(id)}>
-                {label}
-              </button>
-            ))}
-            <span className="auth-user">{authUser?.email || "Signed in"}</span>
-            <button type="button" onClick={onSignOut}>
-              ログアウト
-            </button>
-          </nav>
           {authError && (
             <p className="auth-inline-error" role="alert">
               {authError}
@@ -310,31 +301,45 @@ function App({ authUser, authError, onSignOut }) {
         </div>
       </header>
 
+      <nav className="app-nav" aria-label="ページ切り替え">
+        {pages.map(([id, label]) => (
+          <button type="button" key={id} data-active={activePage === id} onClick={() => setActivePage(id)}>
+            {label}
+          </button>
+        ))}
+      </nav>
+
       <main className={`workspace ${activePage !== "blend" ? "single-page" : ""}`}>
         {activePage === "blend" && (
           <>
-            <RecipeNamePanel blendName={blendName} changeNote={changeNote} saveMessage={recipeSaveMessage} editingRecipeSource={editingRecipeSource} onNameChange={setBlendName} onChangeNoteChange={setChangeNote} onSave={saveRecipe} />
             <BlendBuilder beans={blendBeans} total={total} onRatioChange={updateRatio} onRoastLevelChange={updateRoastLevel} onNormalize={() => normalizeRatios(blendBeans, total)} />
-            <Dosing
-              doseGram={doseGram}
-              brewRatio={brewRatio}
-              targetBrewGram={targetBrewGram}
-              blendCost={blendCost}
-              pourTotal={pourTotal}
-              beanDoseLines={beanDoseLines}
-              brewSchedule={brewSchedule}
-              showBrewSchedule={Boolean(selectedBrewMethod)}
-              brewMethodOptions={brewMethodOptions}
-              selectedBrewMethodId={selectedBrewMethodId}
-              onDoseChange={setDoseGram}
-              onRatioChange={setBrewRatio}
-              onMethodChange={changeSelectedBrewMethod}
-            />
             <ProfilePanel profile={profile} total={total} />
+          </>
+        )}
+        {activePage === "brew" && (
+          <Dosing
+            doseGram={doseGram}
+            brewRatio={brewRatio}
+            targetBrewGram={targetBrewGram}
+            blendCost={blendCost}
+            pourTotal={pourTotal}
+            beanDoseLines={beanDoseLines}
+            brewSchedule={brewSchedule}
+            showBrewSchedule={Boolean(selectedBrewMethod)}
+            brewMethodOptions={brewMethodOptions}
+            selectedBrewMethodId={selectedBrewMethodId}
+            onDoseChange={setDoseGram}
+            onRatioChange={setBrewRatio}
+            onMethodChange={changeSelectedBrewMethod}
+          />
+        )}
+        {activePage === "record" && (
+          <>
+            <RecipeNamePanel blendName={blendName} blendGoal={blendGoal} saveMessage={recipeSaveMessage} editingRecipeSource={editingRecipeSource} onNameChange={setBlendName} onBlendGoalChange={setBlendGoal} onSave={saveRecipe} />
             <SensoryPanel sensory={sensory} memo={memo} onSensoryChange={setSensory} onMemoChange={setMemo} />
           </>
         )}
-        {activePage === "recipes" && (
+        {activePage === "history" && (
           <RecipeLibrary
             recipeSeries={recipeSeries}
             beans={beans}
@@ -347,8 +352,13 @@ function App({ authUser, authError, onSignOut }) {
             onLoaded={() => setActivePage("blend")}
           />
         )}
-        {activePage === "beans" && <BeanMaster beans={beans} saveStatus={masterSaveStatus.beans} onAdd={addBean} onDelete={deleteBean} onSave={saveBean} />}
-        {activePage === "brew" && <BrewMethodMaster methods={brewMethods} saveStatus={masterSaveStatus.brewMethods} onAdd={addBrewMethod} onDelete={deleteBrewMethod} onSave={saveBrewMethod} />}
+        {activePage === "manage" && (
+          <>
+            <BeanMaster beans={beans} saveStatus={masterSaveStatus.beans} onAdd={addBean} onDelete={deleteBean} onSave={saveBean} />
+            <BrewMethodMaster methods={brewMethods} saveStatus={masterSaveStatus.brewMethods} onAdd={addBrewMethod} onDelete={deleteBrewMethod} onSave={saveBrewMethod} />
+            <AccountPanel email={authUser?.email} onSignOut={onSignOut} />
+          </>
+        )}
       </main>
     </>
   );

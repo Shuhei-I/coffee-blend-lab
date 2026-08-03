@@ -21,7 +21,8 @@ describe("recipe loading editor state", () => {
 
     expect(result.editorState).toMatchObject({
       blendName: "Morning Blend",
-      changeNote: "",
+      blendGoal: series.goal,
+      changeNote: recipe.changeNote,
       doseGram: recipe.doseGram,
       brewRatio: recipe.brewRatio,
       editingRecipeSource: { seriesId: "series-1700000000000", versionId: "recipe-1700000001000" },
@@ -59,6 +60,7 @@ describe("recipe loading editor state", () => {
     });
 
     expect(result.editorState.blendName).toBe("Legacy Name");
+    expect(result.editorState.blendGoal).toBe("");
     expect(result.editorState.changeNote).toBe("");
     expect(result.editorState.doseGram).toBe(20);
     expect(result.editorState.brewRatio).toBe(16);

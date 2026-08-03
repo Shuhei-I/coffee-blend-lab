@@ -13,7 +13,7 @@ export function SensoryPanel({ sensory, memo, onSensoryChange, onMemoChange }) {
       <div className="section-heading">
         <div>
           <p className="eyebrow">Cupping</p>
-          <h2 id="sensoryTitle">試飲の感能</h2>
+          <h2 id="sensoryTitle">試飲の記録</h2>
         </div>
       </div>
       <div className="sensory-grid">
@@ -25,8 +25,8 @@ export function SensoryPanel({ sensory, memo, onSensoryChange, onMemoChange }) {
         ))}
       </div>
       <label className="memo-field">
-        メモ
-        <textarea rows="4" placeholder="香り、甘み、後味、改善したい点" value={memo} onChange={(event) => onMemoChange(event.target.value)} />
+        試飲メモ
+        <textarea rows="4" placeholder="味の印象、気づき、次に試したいこと" value={memo} onChange={(event) => onMemoChange(event.target.value)} />
       </label>
     </section>
   );

@@ -68,3 +68,4 @@ without confusion.
 - PDF export
 - Images
 - Community features
+- App-home structure based on `docs/future-home-ui-structure.md`
