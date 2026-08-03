@@ -181,6 +181,34 @@ export function createRecipeVersionData({
   return { recipe, currentSeries };
 }
 
+export function validateRecipeSaveInput({ blendBeans = [], total = 0, doseGram, brewRatio } = {}) {
+  const positiveRatioCount = blendBeans.filter((bean) => Number(bean.ratio) > 0).length;
+  const ratioReason = "豆比率の合計を100%にしてください。";
+
+  if (positiveRatioCount === 0) {
+    return {
+      valid: false,
+      reason: ratioReason,
+    };
+  }
+
+  if (Number(total) !== 100) {
+    return {
+      valid: false,
+      reason: ratioReason,
+    };
+  }
+
+  if (Number(doseGram) <= 0 || Number(brewRatio) <= 0) {
+    return {
+      valid: false,
+      reason: "粉量と抽出比率は1以上にしてください。",
+    };
+  }
+
+  return { valid: true, reason: "" };
+}
+
 export function getRecipeBrewMethodId(method) {
   return method?.sourceBrewMethodId || method?.id || null;
 }

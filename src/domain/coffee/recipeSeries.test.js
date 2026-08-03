@@ -19,6 +19,7 @@ import {
   snapshotBean,
   snapshotBrewMethod,
   sortVersions,
+  validateRecipeSaveInput,
 } from "./recipeSeries.js";
 import {
   currentRecipeSeriesFixture,
@@ -180,6 +181,36 @@ describe("recipe series compatibility", () => {
       sensory: { fragrance: 8, flavor: 8, aftertaste: 7, balance: 8 },
       memo: "memo",
       savedAt: "2026-05-21T09:00:00.000Z",
+    });
+  });
+
+  test("validates recipe save inputs before persistence", () => {
+    expect(validateRecipeSaveInput({ blendBeans: fixtureBeans, total: 100, doseGram: 20, brewRatio: 16 })).toEqual({
+      valid: true,
+      reason: "",
+    });
+    expect(
+      validateRecipeSaveInput({
+        blendBeans: fixtureBeans.map((bean) => ({ ...bean, ratio: 0 })),
+        total: 0,
+        doseGram: 20,
+        brewRatio: 16,
+      }),
+    ).toEqual({
+      valid: false,
+      reason: "豆比率の合計を100%にしてください。",
+    });
+    expect(validateRecipeSaveInput({ blendBeans: fixtureBeans, total: 95, doseGram: 20, brewRatio: 16 })).toEqual({
+      valid: false,
+      reason: "豆比率の合計を100%にしてください。",
+    });
+    expect(validateRecipeSaveInput({ blendBeans: fixtureBeans, total: 100, doseGram: 0, brewRatio: 16 })).toEqual({
+      valid: false,
+      reason: "粉量と抽出比率は1以上にしてください。",
+    });
+    expect(validateRecipeSaveInput({ blendBeans: fixtureBeans, total: 100, doseGram: 20, brewRatio: 0 })).toEqual({
+      valid: false,
+      reason: "粉量と抽出比率は1以上にしてください。",
     });
   });
 

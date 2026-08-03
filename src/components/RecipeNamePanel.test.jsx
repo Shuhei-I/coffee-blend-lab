@@ -89,6 +89,18 @@ describe("RecipeNamePanel", () => {
     expect(buttons[0].disabled).toBe(false);
   });
 
+  test("disables save and shows reason when save validation fails", () => {
+    renderRecipeNamePanel({
+      saveDisabled: true,
+      saveDisabledReason: "豆比率の合計を100%にしてください。",
+    });
+
+    const button = buttonByText("Save");
+    expect(button.disabled).toBe(true);
+    expect(button.title).toBe("豆比率の合計を100%にしてください。");
+    expect(document.querySelector(".inline-warning").textContent).toBe("豆比率の合計を100%にしてください。");
+  });
+
   test("keeps input and description attributes", () => {
     renderRecipeNamePanel();
 

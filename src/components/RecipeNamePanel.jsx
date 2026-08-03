@@ -5,6 +5,8 @@ export function RecipeNamePanel({
   blendGoal,
   saveMessage,
   editingRecipeSource,
+  saveDisabled = false,
+  saveDisabledReason = "",
   onNameChange,
   onBlendGoalChange,
   onSave,
@@ -24,8 +26,13 @@ export function RecipeNamePanel({
           ブレンド説明
           <textarea rows="2" maxLength={160} placeholder="目指す味、構成、飲みたいシーン" value={blendGoal} onChange={(event) => onBlendGoalChange(event.target.value)} />
         </label>
-        <button type="submit" title="保存">Save</button>
+        <button type="submit" title={saveDisabledReason || "保存"} disabled={saveDisabled}>
+          Save
+        </button>
       </form>
+      {saveDisabled && saveDisabledReason && (
+        <p className="inline-warning" role="status">{saveDisabledReason}</p>
+      )}
       {saveMessage && <div className="save-toast" role="status">{saveMessage}</div>}
     </section>
   );
