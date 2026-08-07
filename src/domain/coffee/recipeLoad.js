@@ -17,6 +17,7 @@ export function buildRecipeEditorState({ recipe, series, beans, brewMethods }) {
       memo: recipe.memo || "",
       blendRatios: buildBlendRatiosFromRecipe(recipe, beans),
       blendRoastLevels: buildBlendRoastLevelsFromRecipe(recipe, beans),
+      selectedBlendBeanIds: buildSelectedBlendBeanIdsFromRecipe(recipe, beans),
     },
     selectedBrewMethodId: getLoadedBrewMethodId(recipe, savedRecipeBrewMethod, brewMethods),
   };
@@ -38,6 +39,13 @@ export function buildBlendRoastLevelsFromRecipe(recipe, beans) {
       return [bean.id, ratio?.roastLevel || ""];
     }),
   );
+}
+
+export function buildSelectedBlendBeanIdsFromRecipe(recipe, beans) {
+  const beanIds = new Set(beans.map((bean) => bean.id));
+  return recipe.ratios
+    .filter((item) => beanIds.has(item.id) && Number(item.value) > 0)
+    .map((item) => item.id);
 }
 
 function getLoadedBrewMethodId(recipe, savedRecipeBrewMethod, brewMethods) {

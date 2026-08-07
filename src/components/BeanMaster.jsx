@@ -89,7 +89,9 @@ export function BeanMaster({ beans, saveStatus, onAdd, onDelete, onSave }) {
                 />
               </div>
               <div className="master-table-cell" data-label="表示">
-                <span className="status-pill">{bean.visibleInRecipes === false ? "非表示" : "表示中"}</span>
+                <span className="status-pill" data-status={bean.visibleInRecipes === false ? "hidden" : "visible"}>
+                  {bean.visibleInRecipes === false ? "非表示" : "表示中"}
+                </span>
               </div>
               <div className="master-table-cell" data-label="原価">¥{Number(bean.costPerKg) || 0}/kg</div>
               {profileLabels.map(([key, label]) => (

@@ -46,21 +46,31 @@ describe("BlendBuilder", () => {
   test("renders selected bean state and roast level selects from props", () => {
     renderBlendBuilder();
 
-    const selects = document.querySelectorAll("select");
-    expect(selects).toHaveLength(3);
-    expect(selects[0].value).toBe("full-city");
-    expect([...selects[0].options].map((option) => [option.value, option.textContent])).toEqual(roastLevelOptions);
+    expect(document.querySelectorAll("select")).toHaveLength(0);
+    expect([...document.querySelectorAll(".bean-meta")].map((item) => item.textContent)).toEqual([
+      "フルシティ",
+      "ミディアム",
+      "焙煎度未設定",
+    ]);
     expect([...document.querySelectorAll(".bean-item")].map((row) => row.querySelector(".swatch").getAttribute("style"))).toEqual([
       "background: rgb(18, 101, 107);",
       "background: rgb(184, 82, 67);",
       "background: rgb(84, 116, 90);",
     ]);
+
+    click(document.querySelector(".bean-edit-button"));
+
+    const selects = document.querySelectorAll("select");
+    expect(selects).toHaveLength(1);
+    expect(selects[0].value).toBe("full-city");
+    expect([...selects[0].options].map((option) => [option.value, option.textContent])).toEqual(roastLevelOptions);
   });
 
   test("calls roast level callback with bean id and selected value", () => {
     const onRoastLevelChange = vi.fn();
     renderBlendBuilder({ onRoastLevelChange });
 
+    click(document.querySelector(".bean-edit-button"));
     change(document.querySelector("select"), "city");
 
     expect(onRoastLevelChange).toHaveBeenCalledWith("ethiopia", "city");
@@ -71,9 +81,10 @@ describe("BlendBuilder", () => {
     renderBlendBuilder({ onRatioChange });
     const firstRow = document.querySelector(".bean-item");
 
-    click(firstRow.querySelectorAll("button")[0]);
+    click(firstRow.querySelector(".bean-edit-button"));
+    click(buttonByText("-"));
     change(firstRow.querySelector("input"), "45");
-    click(firstRow.querySelectorAll("button")[1]);
+    click(buttonByText("+"));
 
     expect(onRatioChange).toHaveBeenNthCalledWith(1, "ethiopia", 35);
     expect(onRatioChange).toHaveBeenNthCalledWith(2, "ethiopia", "45");
@@ -83,12 +94,59 @@ describe("BlendBuilder", () => {
   test("keeps slider attributes and zero ratio display", () => {
     renderBlendBuilder();
 
+    expect(document.querySelectorAll("input")).toHaveLength(0);
+    click([...document.querySelectorAll(".bean-edit-button")][2]);
+
     const sliders = document.querySelectorAll("input");
     expect(sliders[0].getAttribute("min")).toBe("0");
     expect(sliders[0].getAttribute("max")).toBe("100");
     expect(sliders[0].getAttribute("step")).toBe("5");
-    expect(sliders[2].value).toBe("0");
-    expect(document.querySelectorAll(".ratio-output")[2].textContent).toBe("");
+    expect(sliders[0].value).toBe("0");
+    expect(document.querySelectorAll(".ratio-output")[2].textContent).toBe("0%");
+  });
+
+  test("adds checked available beans from the inline picker", () => {
+    const onAddBean = vi.fn();
+    renderBlendBuilder({
+      onAddBean,
+      availableBeans: [
+        { id: "colombia", name: "Colombia", note: "Chocolate", color: "#333333" },
+        { id: "guatemala", name: "Guatemala", note: "Cacao", color: "#444444" },
+      ],
+    });
+
+    click(buttonByText("豆を追加"));
+    change([...document.querySelectorAll(".bean-picker-item input")][0]);
+    change([...document.querySelectorAll(".bean-picker-item input")][1]);
+    click(buttonByText("追加"));
+
+    expect(onAddBean).toHaveBeenNthCalledWith(1, "colombia");
+    expect(onAddBean).toHaveBeenNthCalledWith(2, "guatemala");
+  });
+
+  test("cancels checked available beans without adding them", () => {
+    const onAddBean = vi.fn();
+    renderBlendBuilder({
+      onAddBean,
+      availableBeans: [{ id: "colombia", name: "Colombia", note: "Chocolate", color: "#333333" }],
+    });
+
+    click(buttonByText("豆を追加"));
+    change(document.querySelector(".bean-picker-item input"));
+    click(buttonByText("キャンセル"));
+
+    expect(onAddBean).not.toHaveBeenCalled();
+    expect(document.querySelector(".bean-picker-panel")).toBeNull();
+  });
+
+  test("removes a bean from the current blend from the detail panel", () => {
+    const onRemoveBean = vi.fn();
+    renderBlendBuilder({ onRemoveBean });
+
+    click(document.querySelector(".bean-edit-button"));
+    click(buttonByText("このブレンドから外す"));
+
+    expect(onRemoveBean).toHaveBeenCalledWith("ethiopia");
   });
 
   test("calls normalize callback and keeps enabled condition", () => {
@@ -120,7 +178,7 @@ describe("BlendBuilder", () => {
     renderBlendBuilder({ beans: [], total: 0 });
 
     expect(document.querySelectorAll(".bean-item")).toHaveLength(0);
-    expect(document.querySelector(".empty-state").textContent).toBe("レシピ表示がONの豆はありません。");
+    expect(document.querySelector(".empty-state").textContent).toBe("今回のブレンドに使う豆を追加してください。");
     expect(buttonByText("100%に正規化").disabled).toBe(true);
   });
 
@@ -143,6 +201,9 @@ function renderBlendBuilder(overrides = {}) {
       { id: "kenya", name: "Kenya", note: "Hidden", color: "#54745a", ratio: 0, visibleInRecipes: false, roastLevel: "" },
     ],
     total: 85,
+    availableBeans: [],
+    onAddBean: vi.fn(),
+    onRemoveBean: vi.fn(),
     onRatioChange: vi.fn(),
     onRoastLevelChange: vi.fn(),
     onNormalize: vi.fn(),
