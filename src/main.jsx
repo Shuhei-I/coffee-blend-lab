@@ -82,8 +82,11 @@ function App({ authUser, authError, onSignOut }) {
     setBlendRatios,
     blendRoastLevels,
     setBlendRoastLevels,
+    selectedBlendBeanIds,
     updateRatio,
     updateRoastLevel,
+    selectBlendBean,
+    removeBlendBean,
     normalizeRatios,
     resetEditor,
     replaceEditorState,
@@ -113,13 +116,21 @@ function App({ authUser, authError, onSignOut }) {
     onBeansReplaced: replaceBlendRatiosForBeans,
   });
 
+  const recipeBeanIds = useMemo(() => new Set(selectedBlendBeanIds), [selectedBlendBeanIds]);
   const recipeBeans = useMemo(
-    () => beans.filter((bean) => bean.visibleInRecipes !== false || Number(blendRatios[bean.id]) > 0),
-    [beans, blendRatios],
+    () => beans.filter((bean) => recipeBeanIds.has(bean.id) || Number(blendRatios[bean.id]) > 0),
+    [beans, blendRatios, recipeBeanIds],
   );
   const blendBeans = useMemo(
     () => beansWithRatios(recipeBeans, blendRatios, blendRoastLevels),
     [recipeBeans, blendRatios, blendRoastLevels],
+  );
+  const availableBlendBeans = useMemo(
+    () =>
+      beans
+        .filter((bean) => bean.visibleInRecipes !== false)
+        .filter((bean) => !recipeBeanIds.has(bean.id) && Number(blendRatios[bean.id]) <= 0),
+    [beans, blendRatios, recipeBeanIds],
   );
   const total = useMemo(() => calculateBlendTotal(blendBeans), [blendBeans]);
   const profile = useMemo(() => buildProfile(blendBeans, total, profileMetricKeys), [blendBeans, total]);
@@ -170,6 +181,7 @@ function App({ authUser, authError, onSignOut }) {
     if (!bean || !confirmDeleteItem(bean.name)) return;
     const deleted = await deleteBeanMaster(id);
     if (!deleted) return;
+    removeBlendBean(id);
     setBlendRatios((current) => {
       const next = { ...current };
       delete next[id];
@@ -330,7 +342,10 @@ function App({ authUser, authError, onSignOut }) {
           <>
             <BlendBuilder
               beans={blendBeans}
+              availableBeans={availableBlendBeans}
               total={total}
+              onAddBean={selectBlendBean}
+              onRemoveBean={removeBlendBean}
               onRatioChange={updateRatio}
               onRoastLevelChange={updateRoastLevel}
               onNormalize={() => normalizeRatios(blendBeans, total)}

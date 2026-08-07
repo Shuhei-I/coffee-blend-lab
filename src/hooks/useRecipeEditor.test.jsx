@@ -42,6 +42,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.memo).toBe("");
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, brazil: 0, guatemala: 0 });
     expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", brazil: "", guatemala: "" });
+    expect(rendered.current.selectedBlendBeanIds).toEqual([]);
   });
 
   test("keeps existing setter contracts", () => {
@@ -61,6 +62,7 @@ describe("useRecipeEditor", () => {
       rendered.current.setMemo("Memo");
       rendered.current.setBlendRatios({ ethiopia: 60 });
       rendered.current.setBlendRoastLevels({ ethiopia: "full-city" });
+      rendered.current.selectBlendBean("ethiopia");
     });
 
     expect(rendered.current.blendName).toBe("Blend");
@@ -74,6 +76,26 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.memo).toBe("Memo");
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 60 });
     expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "full-city" });
+    expect(rendered.current.selectedBlendBeanIds).toEqual(["ethiopia"]);
+  });
+
+  test("selects and removes blend beans independently from master data", () => {
+    const rendered = renderHook({ initialBeans: fixtureBeans });
+
+    act(() => {
+      rendered.current.selectBlendBean("ethiopia");
+      rendered.current.selectBlendBean("ethiopia");
+      rendered.current.updateRoastLevel("ethiopia", "city");
+    });
+    expect(rendered.current.selectedBlendBeanIds).toEqual(["ethiopia"]);
+    expect(rendered.current.blendRoastLevels.ethiopia).toBe("city");
+
+    act(() => {
+      rendered.current.removeBlendBean("ethiopia");
+    });
+    expect(rendered.current.selectedBlendBeanIds).toEqual([]);
+    expect(rendered.current.blendRatios.ethiopia).toBe(0);
+    expect(rendered.current.blendRoastLevels.ethiopia).toBe("");
   });
 
   test("updates roast levels without changing ratios", () => {
@@ -98,6 +120,7 @@ describe("useRecipeEditor", () => {
       rendered.current.updateRatio("guatemala", -1);
     });
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 40, brazil: 55, guatemala: 0 });
+    expect(rendered.current.selectedBlendBeanIds).toEqual(["ethiopia", "brazil"]);
 
     act(() => {
       rendered.current.updateRatio("guatemala", 101);
@@ -166,6 +189,7 @@ describe("useRecipeEditor", () => {
         memo: "Memo",
         blendRatios: { old: 100 },
         blendRoastLevels: { old: "french" },
+        selectedBlendBeanIds: ["old"],
       });
       rendered.current.resetEditor(fixtureBeans);
     });
@@ -181,6 +205,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.memo).toBe("");
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, brazil: 0, guatemala: 0 });
     expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", brazil: "", guatemala: "" });
+    expect(rendered.current.selectedBlendBeanIds).toEqual([]);
   });
 
   test("replaces editor state exactly without interpreting RecipeSeries", () => {
@@ -197,6 +222,7 @@ describe("useRecipeEditor", () => {
       memo: "Loaded memo",
       blendRatios: { ethiopia: 70, brazil: 30 },
       blendRoastLevels: { ethiopia: "city", brazil: "medium" },
+      selectedBlendBeanIds: ["ethiopia", "brazil"],
     };
 
     act(() => {
@@ -214,6 +240,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.memo).toBe(nextState.memo);
     expect(rendered.current.blendRatios).toBe(nextState.blendRatios);
     expect(rendered.current.blendRoastLevels).toBe(nextState.blendRoastLevels);
+    expect(rendered.current.selectedBlendBeanIds).toBe(nextState.selectedBlendBeanIds);
   });
 
   test("supports explicit bean ratio replacement for bean add, delete, and replacement flows", () => {

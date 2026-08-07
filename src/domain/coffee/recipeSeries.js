@@ -161,12 +161,14 @@ export function createRecipeVersionData({
     goal: (blendGoal ?? currentSeries?.goal ?? "").trim(),
     version,
     changeNote: changeNote.trim() || (version === 1 ? "初回作成" : ""),
-    ratios: blendBeans.map((bean) => ({
-      id: bean.id,
-      value: bean.ratio,
-      roastLevel: bean.roastLevel || "",
-      beanSnapshot: snapshotBean(bean),
-    })),
+    ratios: blendBeans
+      .filter((bean) => Number(bean.ratio) > 0)
+      .map((bean) => ({
+        id: bean.id,
+        value: bean.ratio,
+        roastLevel: bean.roastLevel || "",
+        beanSnapshot: snapshotBean(bean),
+      })),
     doseGram,
     brewRatio,
     targetBrewGram,

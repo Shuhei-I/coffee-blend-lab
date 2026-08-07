@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { initialSensory } from "./sensory.js";
-import { buildBlendRatiosFromRecipe, buildBlendRoastLevelsFromRecipe, buildRecipeEditorState } from "./recipeLoad.js";
+import {
+  buildBlendRatiosFromRecipe,
+  buildBlendRoastLevelsFromRecipe,
+  buildRecipeEditorState,
+  buildSelectedBlendBeanIdsFromRecipe,
+} from "./recipeLoad.js";
 import {
   currentRecipeSeriesFixture,
   fixtureBeans,
@@ -30,6 +35,7 @@ describe("recipe loading editor state", () => {
       memo: recipe.memo,
       blendRatios: { ethiopia: 55, brazil: 45 },
       blendRoastLevels: { ethiopia: "", brazil: "" },
+      selectedBlendBeanIds: ["ethiopia", "brazil"],
     });
     expect(result.editorState.savedRecipeBrewMethod).toMatchObject({
       ...fixtureBrewMethod,
@@ -70,6 +76,7 @@ describe("recipe loading editor state", () => {
     expect(result.editorState.memo).toBe("");
     expect(result.editorState.blendRatios).toEqual({ ethiopia: "0", brazil: 0, kenya: 0 });
     expect(result.editorState.blendRoastLevels).toEqual({ ethiopia: "city", brazil: "", kenya: "" });
+    expect(result.editorState.selectedBlendBeanIds).toEqual([]);
     expect(result.selectedBrewMethodId).toBe("standard-4-pour");
   });
 
@@ -102,6 +109,20 @@ describe("recipe loading editor state", () => {
 
     expect(buildBlendRoastLevelsFromRecipe(recipe, fixtureBeans)).toEqual({ ethiopia: "full-city", brazil: "" });
     expect(buildBlendRoastLevelsFromRecipe(recipe, [])).toEqual({});
+  });
+
+  test("keeps positive current bean ids only when restoring selected blend beans", () => {
+    const recipe = {
+      ...legacyRecipeFixture,
+      ratios: [
+        { id: "deleted-bean", value: 70 },
+        { id: "ethiopia", value: 30 },
+        { id: "brazil", value: 0 },
+      ],
+    };
+
+    expect(buildSelectedBlendBeanIdsFromRecipe(recipe, fixtureBeans)).toEqual(["ethiopia"]);
+    expect(buildSelectedBlendBeanIdsFromRecipe(recipe, [])).toEqual([]);
   });
 
   test("returns no selected brew method when saved and current brew methods are unavailable", () => {

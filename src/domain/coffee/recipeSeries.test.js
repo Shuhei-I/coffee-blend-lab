@@ -184,6 +184,33 @@ describe("recipe series compatibility", () => {
     });
   });
 
+  test("omits zero percent beans from saved recipe ratios", () => {
+    const { recipe } = createRecipeVersionData({
+      recipeSeries: [],
+      editingRecipeSource: null,
+      blendName: "Zero Bean Blend",
+      changeNote: "",
+      blendBeans: [
+        { ...fixtureBeans[0], ratio: 100 },
+        { ...fixtureBeans[1], ratio: 0 },
+      ],
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 98.4,
+      selectedBrewMethod: fixtureBrewMethod,
+      sensory: { fragrance: 8, flavor: 8, aftertaste: 7, balance: 8 },
+      memo: "",
+      now: "2026-05-21T09:00:00.000Z",
+      seriesIdSeed: 1800000000000,
+      versionIdSeed: 1800000000001,
+    });
+
+    expect(recipe.ratios).toEqual([
+      { id: "ethiopia", value: 100, roastLevel: "", beanSnapshot: snapshotBean({ ...fixtureBeans[0], ratio: 100 }) },
+    ]);
+  });
+
   test("validates recipe save inputs before persistence", () => {
     expect(validateRecipeSaveInput({ blendBeans: fixtureBeans, total: 100, doseGram: 20, brewRatio: 16 })).toEqual({
       valid: true,

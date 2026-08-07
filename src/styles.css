@@ -337,12 +337,37 @@ button:disabled {
   line-height: 1.35;
 }
 
+.bean-meta {
+  margin: 4px 0 0;
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.bean-actions {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.bean-edit-button {
+  min-width: 56px;
+  min-height: 34px;
+}
+
 .ratio-output {
   width: 54px;
   text-align: right;
   color: var(--teal);
   font-size: 1rem;
   font-weight: 900;
+}
+
+.bean-detail {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
 }
 
 .slider-row {
@@ -358,6 +383,69 @@ button:disabled {
   padding: 0;
   color: var(--ink);
   background: var(--teal-soft);
+}
+
+.roast-level-field {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.remove-blend-bean-button {
+  justify-self: start;
+}
+
+.bean-picker {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.add-blend-bean-button {
+  justify-self: start;
+}
+
+.bean-picker-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf8;
+}
+
+.bean-picker-list {
+  display: grid;
+  gap: 6px;
+}
+
+.bean-picker-item {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.bean-picker-item input {
+  width: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: var(--teal);
+}
+
+.bean-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 input[type="range"] {
@@ -737,6 +825,18 @@ canvas {
   font-size: 0.72rem;
   font-weight: 900;
   vertical-align: middle;
+}
+
+.status-pill[data-status="visible"] {
+  border-color: #bdd9d7;
+  color: var(--teal);
+  background: #f1fbfa;
+}
+
+.status-pill[data-status="hidden"] {
+  border-color: var(--line);
+  color: var(--muted);
+  background: #f4f0e9;
 }
 
 .recipe-series-head span,
@@ -1225,6 +1325,27 @@ canvas {
   .ratio-output {
     width: auto;
     text-align: left;
+  }
+
+  .bean-top {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .bean-actions {
+    align-self: start;
+  }
+
+  .bean-picker-item {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  .bean-picker-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bean-picker-actions button {
+    width: 100%;
   }
 
   .blend-total-bar {

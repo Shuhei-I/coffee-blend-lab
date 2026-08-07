@@ -16,21 +16,35 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
   const [memo, setMemo] = useState("");
   const [blendRatios, setBlendRatios] = useState(() => emptyRatios(initialBeans));
   const [blendRoastLevels, setBlendRoastLevels] = useState(() => emptyRoastLevels(initialBeans));
+  const [selectedBlendBeanIds, setSelectedBlendBeanIds] = useState([]);
 
   function updateRatio(id, ratio) {
+    const nextRatio = Math.max(0, Math.min(100, Number(ratio) || 0));
     setBlendRatios((current) => ({
       ...current,
-      [id]: Math.max(0, Math.min(100, Number(ratio) || 0)),
+      [id]: nextRatio,
     }));
+    if (nextRatio > 0) selectBlendBean(id);
   }
 
   function updateRoastLevel(id, roastLevel) {
     setBlendRoastLevels((current) => ({ ...current, [id]: roastLevel }));
   }
 
+  function selectBlendBean(id) {
+    setSelectedBlendBeanIds((current) => (current.includes(id) ? current : [...current, id]));
+  }
+
+  function removeBlendBean(id) {
+    setSelectedBlendBeanIds((current) => current.filter((item) => item !== id));
+    setBlendRatios((current) => ({ ...current, [id]: 0 }));
+    setBlendRoastLevels((current) => ({ ...current, [id]: "" }));
+  }
+
   function normalizeRatios(blendBeans, total) {
     if (!blendBeans.length) return;
     setBlendRatios(normalizeBlendRatios(blendBeans, total));
+    setSelectedBlendBeanIds((current) => mergeUnique(current, blendBeans.map((bean) => bean.id)));
   }
 
   function resetEditor(beans) {
@@ -39,6 +53,7 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setChangeNote("");
     setBlendRatios(emptyRatios(beans));
     setBlendRoastLevels(emptyRoastLevels(beans));
+    setSelectedBlendBeanIds([]);
     setDoseGram(20);
     setBrewRatio(16);
     setSavedRecipeBrewMethod(null);
@@ -59,11 +74,13 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setMemo(nextState.memo);
     setBlendRatios(nextState.blendRatios);
     setBlendRoastLevels(nextState.blendRoastLevels || {});
+    setSelectedBlendBeanIds(nextState.selectedBlendBeanIds || selectedBeanIdsFromRatios(nextState.blendRatios));
   }
 
   function replaceBlendRatiosForBeans(beans) {
     setBlendRatios(emptyRatios(beans));
     setBlendRoastLevels(emptyRoastLevels(beans));
+    setSelectedBlendBeanIds([]);
   }
 
   function clearSavedRecipeBrewMethodIfDifferent(id) {
@@ -95,8 +112,11 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setBlendRatios,
     blendRoastLevels,
     setBlendRoastLevels,
+    selectedBlendBeanIds,
     updateRatio,
     updateRoastLevel,
+    selectBlendBean,
+    removeBlendBean,
     normalizeRatios,
     resetEditor,
     replaceEditorState,
@@ -111,4 +131,14 @@ function emptyRatios(beans) {
 
 function emptyRoastLevels(beans) {
   return Object.fromEntries(beans.map((bean) => [bean.id, ""]));
+}
+
+function selectedBeanIdsFromRatios(ratios = {}) {
+  return Object.entries(ratios)
+    .filter(([, ratio]) => Number(ratio) > 0)
+    .map(([id]) => id);
+}
+
+function mergeUnique(first = [], second = []) {
+  return [...new Set([...first, ...second])];
 }
