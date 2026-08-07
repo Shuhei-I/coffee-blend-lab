@@ -68,13 +68,27 @@ describe("Dosing", () => {
     expect(onMethodChange).toHaveBeenCalledWith("saved-recipe");
   });
 
-  test("keeps existing fallback for empty dose input", () => {
+  test("allows temporarily empty dose input while editing", () => {
     const onDoseChange = vi.fn();
     renderDosing({ onDoseChange });
+    const doseInput = document.querySelector("input");
 
-    change(document.querySelector("input"), "");
+    change(doseInput, "");
 
-    expect(onDoseChange).toHaveBeenCalledWith(1);
+    expect(doseInput.value).toBe("");
+    expect(onDoseChange).not.toHaveBeenCalled();
+  });
+
+  test("restores the current dose when an empty dose input loses focus", () => {
+    const onDoseChange = vi.fn();
+    renderDosing({ onDoseChange });
+    const doseInput = document.querySelector("input");
+
+    change(doseInput, "");
+    blur(doseInput);
+
+    expect(doseInput.value).toBe("20");
+    expect(onDoseChange).toHaveBeenCalledWith(20);
   });
 
   test("preserves zero value display", () => {
@@ -160,6 +174,12 @@ function renderDosing(overrides = {}) {
 function change(input, value) {
   act(() => {
     reactProps(input).onChange({ target: { value } });
+  });
+}
+
+function blur(input) {
+  act(() => {
+    reactProps(input).onBlur();
   });
 }
 

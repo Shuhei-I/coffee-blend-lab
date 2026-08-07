@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export function Dosing({
   doseGram,
@@ -15,6 +15,31 @@ export function Dosing({
   onRatioChange,
   onMethodChange,
 }) {
+  const [doseInputValue, setDoseInputValue] = useState(String(doseGram));
+
+  useEffect(() => {
+    setDoseInputValue(String(doseGram));
+  }, [doseGram]);
+
+  function changeDoseInput(value) {
+    setDoseInputValue(value);
+    if (value === "") return;
+
+    const nextDose = Number(value);
+    if (!Number.isFinite(nextDose)) return;
+
+    onDoseChange(nextDose);
+  }
+
+  function commitDoseInput() {
+    const nextDose = Number(doseInputValue);
+    if (doseInputValue !== "" && Number.isFinite(nextDose) && nextDose > 0) return;
+
+    const fallbackDose = Number(doseGram) > 0 ? doseGram : 20;
+    setDoseInputValue(String(fallbackDose));
+    onDoseChange(fallbackDose);
+  }
+
   return (
     <section className="panel dosing-panel" aria-labelledby="dosingTitle">
       <div className="section-heading">
@@ -26,7 +51,16 @@ export function Dosing({
       <div className="control-grid">
         <label>
           コーヒー粉量 g
-          <input type="number" min="1" max="2000" step="1" value={doseGram} onChange={(event) => onDoseChange(Number(event.target.value) || 1)} />
+          <input
+            type="number"
+            inputMode="decimal"
+            min="1"
+            max="2000"
+            step="1"
+            value={doseInputValue}
+            onChange={(event) => changeDoseInput(event.target.value)}
+            onBlur={commitDoseInput}
+          />
         </label>
         <label>
           抽出比率
