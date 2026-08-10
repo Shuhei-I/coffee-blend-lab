@@ -1,6 +1,6 @@
 # 将来の Home UI 構造
 
-この文書は、`site-image.png` に着想を得た長期的な UI 方針を記録します。
+この文書は、`docs/reference/future-home-ui.png` に着想を得た長期的な UI 方針を記録します。
 
 これは直近の v1.0 実装対象ではありません。現在の v1.0 navigation は、次の実験 workflow に集中します。
 
@@ -128,7 +128,7 @@ account-level と personal context をまとめる。
 
 ## Visual direction / 視覚方針
 
-`site-image.png` から得た理想的な visual direction には、次の要素が含まれます。
+`docs/reference/future-home-ui.png` から得た理想的な visual direction には、次の要素が含まれます。
 
 - 強い centered brand header を持つ light app shell
 - notifications や account などの明確な icon-based top utilities
