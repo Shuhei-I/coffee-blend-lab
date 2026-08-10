@@ -1,22 +1,22 @@
-# Coffee Blend Lab UI Architecture
+# Coffee Blend Lab UI アーキテクチャ
 
-## Purpose
+## 目的
 
-The UI should support a mobile-first blending workbench.
+UI は、モバイルファーストのブレンド作業台を支えるべきです。
 
-Coffee Blend Lab is not a dashboard of stored recipes. It is a place where a user can quickly adjust a blend, brew it, record what happened, and decide what to try next.
+Coffee Blend Lab は、保存済みレシピのダッシュボードではありません。ユーザーがブレンドを素早く調整し、抽出し、何が起きたかを記録し、次に何を試すかを決める場所です。
 
-The interface should make the experiment cycle easy:
+インターフェースは、次の実験サイクルを進めやすくする必要があります。
 
 Create -> Brew -> Record -> Review -> Refine
 
-## Primary Navigation
+## 主要ナビゲーション
 
-Use a bottom navigation model for the primary mobile experience.
+主要なモバイル体験には、bottom navigation model を使います。
 
-For the current v1.0 workbench, navigation is based on experiment phases. A broader app-home structure is documented separately in `docs/future-home-ui-structure.md` and should be treated as a later direction, not the immediate release target.
+現在の v1.0 workbench では、ナビゲーションは実験フェーズに基づきます。より広い app-home structure は `docs/future-home-ui-structure.md` に別途記録されており、直近のリリース対象ではなく将来方針として扱います。
 
-Primary sections:
+主要セクション:
 
 1. Blend
 2. Brew
@@ -24,7 +24,7 @@ Primary sections:
 4. History
 5. Manage
 
-Japanese UI labels:
+日本語 UI ラベル:
 
 1. 配合
 2. 抽出
@@ -32,81 +32,81 @@ Japanese UI labels:
 4. 履歴
 5. 管理
 
-The bottom navigation should stay light. It should help users move between work phases, not expose every feature directly.
+bottom navigation は軽く保ちます。すべての機能を直接露出するのではなく、ユーザーが作業フェーズを移動するためのものです。
 
-## Section Responsibilities
+## セクションの責務
 
 ### Blend
 
-Purpose:
+目的:
 
-Design the blend.
+ブレンドを設計する。
 
-Includes:
+含むもの:
 
 - Blend name
 - Bean selection
 - Bean ratio sliders
-- Roast level per blend bean
+- ブレンド内の豆ごとの roast level
 - Normalize to 100%
 - Blend cost
 - Flavor/profile preview
 
-Does not include:
+含まないもの:
 
 - Brew timer
-- Full recipe history browsing
-- Bean master editing unless intentionally opened from Manage
+- レシピ履歴の完全な閲覧
+- Manage から意図的に開く場合を除く bean master editing
 
 ### Brew
 
-Purpose:
+目的:
 
-Help the user brew the current blend.
+現在のブレンドを抽出するためにユーザーを支援する。
 
-Includes:
+含むもの:
 
 - Dose
 - Brew ratio
 - Target brew amount
 - Brew method selection
 - Pour schedule
-- Future brew timer
-- Future step-by-step brew support
+- 将来の brew timer
+- 将来の step-by-step brew support
 
-Does not include:
+含まないもの:
 
 - Bean master editing
-- Long tasting notes
+- 長い tasting notes
 - Recipe version browsing
 
 ### Record
 
-Purpose:
+目的:
 
-Capture the result of the experiment.
+実験結果を記録する。
 
-Includes:
+含むもの:
 
 - Tasting evaluation
 - Improvement memo
 - Change note
 - Save recipe version
-- Clear save confirmation
+- 明確な save confirmation
 
-Does not include:
+含まないもの:
 
-- Detailed master management
-- Full archive management
+- 詳細な master management
+- 完全な archive management
 - Public sharing controls
 
 ### History
 
-Purpose:
+目的:
 
-Find, review, compare, and reuse previous experiments.
+過去の実験を見つけ、確認し、比較し、再利用する。
 
-Includes:
+含むもの:
 
 - RecipeSeries list
 - Version list
@@ -114,9 +114,9 @@ Includes:
 - Specific version loading
 - Archive and restore
 - Version deletion guard
-- Future version comparison
+- 将来の version comparison
 
-Does not include:
+含まないもの:
 
 - Primary blend editing controls
 - Brew timer
@@ -124,62 +124,62 @@ Does not include:
 
 ### Manage
 
-Purpose:
+目的:
 
-Keep supporting data organized without crowding the main workbench.
+メインの workbench を混雑させず、補助データを整理する。
 
-Includes:
+含むもの:
 
 - Bean master
 - Brew method master
-- Future account or app settings
+- 将来の account または app settings
 
-Does not include:
+含まないもの:
 
 - Main blend workflow
 - Recipe version comparison
 - Tasting workflow
 
-## Card Model
+## カードモデル / Card model
 
-Use function-level cards.
+機能単位の card を使います。
 
-Recommended pattern:
+推奨パターン:
 
-- One card for one user intention
-- Dense row UI inside cards
-- Avoid turning every small item into a large card
-- Avoid putting an entire screen into one heavy card
+- 1つの card は1つのユーザー意図に対応する
+- card の中では密度のある row UI を使う
+- 小さな要素ごとに大きな card にしない
+- 画面全体を1つの重い card にしない
 
-Examples:
+例:
 
 - Blend screen: blend identity, bean ratios, profile preview, cost summary
 - Brew screen: brew parameters, pour schedule, timer
 - Record screen: sensory notes, improvement memo, save action
-- History screen: series cards with compact version rows
+- History screen: compact version rows を含む series cards
 - Manage screen: master list sections
 
-## Mobile First Rules
+## モバイルファーストのルール
 
-- Primary actions should be reachable with one hand where practical.
-- Bottom navigation should remain stable.
-- The current work state should remain visible or easy to return to.
-- Long forms should be split by work phase instead of stacked into one page.
-- Buttons and inputs should avoid horizontal overflow.
-- Sliders remain a core interaction for blend ratios.
-- Normalize to 100% remains a core command.
+- 主要 action は、実用上可能な範囲で片手で届きやすくする。
+- bottom navigation は安定して表示する。
+- 現在の作業状態は見える状態、または戻りやすい状態にする。
+- 長い form は1ページに積み上げず、作業フェーズごとに分割する。
+- button と input は横方向にはみ出さないようにする。
+- slider は blend ratio の中心的な操作として維持する。
+- Normalize to 100% は中心的な command として維持する。
 
-## Desktop Behavior
+## デスクトップの挙動
 
-Desktop may show more information at once, but it should not define the product structure.
+デスクトップでは一度により多くの情報を表示してもよいですが、プロダクト構造を決める基準にはしません。
 
-Desktop layouts can use wider cards, side-by-side summaries, or persistent panels where helpful. The section responsibilities should remain the same as mobile.
+デスクトップ layout では、必要に応じて広い card、横並び summary、persistent panel を使えます。セクションの責務はモバイルと同じままにします。
 
-## Product Identity
+## プロダクトらしさ
 
-The UI should feel like a focused coffee blending workbench.
+UI は、集中して使えるコーヒーブレンドの workbench のように感じられるべきです。
 
-Distinctiveness should come from:
+特徴は次の要素から生まれるべきです。
 
 - Ratio adjustment
 - Blend visualization
@@ -189,179 +189,178 @@ Distinctiveness should come from:
 - Version comparison
 - Experiment history
 
-It should not rely on decorative complexity or dashboard-style density.
+装飾的な複雑さや dashboard 風の密度に頼るべきではありません。
 
-## Future UI Work
+## 将来の UI 作業
 
-The next UI refactors should be evaluated against this order:
+次の UI refactor は、以下の順序で評価します。
 
-1. Make navigation lighter and mobile-first.
-2. Split blend and brew responsibilities.
-3. Create a dedicated record flow.
-4. Improve history as a comparison and reuse surface.
-5. Move master management behind Manage.
-6. Add timer and brew guidance inside Brew.
+1. ナビゲーションを軽くし、モバイルファーストにする。
+2. Blend と Brew の責務を分ける。
+3. 専用の Record flow を作る。
+4. History を比較と再利用の画面として改善する。
+5. Master management を Manage の背後へ移す。
+6. Brew の中に timer と brew guidance を追加する。
 
-## Pending UI Requests
+## 保留中の UI 要望
 
-These requests are candidates for the next UI iteration. They should be implemented in a way that keeps the workbench focused on:
+以下の要望は、次の UI iteration の候補です。実装時は workbench が次の流れに集中できるようにします。
 
 Create -> Brew -> Record -> Review -> Refine
 
-### Editor Reset
+### エディターのリセット / Editor reset
 
-Goal:
+目標:
 
-- Add a way to reset the current unsaved editor input.
+- 現在の未保存 editor input を reset できるようにする。
 
-Current idea:
+現在の案:
 
-- Clicking the logo could start reset.
+- logo click を reset の開始に使う可能性がある。
 
-Recommended behavior:
+推奨挙動:
 
-- Do not reset immediately on logo click.
-- Use a confirmation dialog if the logo starts reset.
-- Prefer an explicit reset action if the UI can expose it without crowding the header.
+- logo click ですぐに reset しない。
+- logo から reset を始める場合は confirmation dialog を使う。
+- header を混雑させずに出せるなら、明示的な reset action を優先する。
 
-Open questions:
+未決事項:
 
-- Should reset clear only the current blend/record inputs, or also reset selected brew method?
-- Should reset keep the user on the current page, or return to Blend?
+- reset は現在の blend/record input だけを消すのか、selected brew method も reset するのか。
+- reset 後は現在の page に留まるのか、Blend に戻るのか。
 
-### Next Actions
+### 次へ action / Next actions
 
-Goal:
+目標:
 
-- Add a `次へ` action at the bottom-right of Blend.
-- Add a `次へ` action at the bottom-right of Brew.
+- Blend の右下に `次へ` action を追加する。
+- Brew の右下に `次へ` action を追加する。
 
-Expected navigation:
+期待するナビゲーション:
 
 - Blend -> Brew
 - Brew -> Record
 
-Notes:
+メモ:
 
-- This supplements bottom navigation rather than replacing it.
-- On mobile, the button must not collide with the fixed bottom navigation.
+- bottom navigation を置き換えるのではなく補助する。
+- モバイルでは fixed bottom navigation と衝突しないようにする。
 
-### Record Save Placement
+### Record の保存位置 / Record save placement
 
-Goal:
+目標:
 
-- Move the Record page `保存` action to the bottom of the page.
+- Record page の `保存` action を page 下部へ移す。
 
-Reason:
+理由:
 
-- Users should naturally review tasting notes and memo content before saving the version.
+- ユーザーは tasting notes と memo content を確認してから version を保存するのが自然です。
 
-Notes:
+メモ:
 
-- The save disabled message should stay close enough to the save button to be understood.
-- The save action should remain visually clear and reachable.
+- save disabled message は、save button と近い位置に保ち、意味が伝わるようにする。
+- save action は視覚的に明確で、届きやすい状態を保つ。
 
-### History Labels And Export Visibility
+### History のラベルと export 表示 / History labels and export visibility
 
-Requested changes:
+要望:
 
-- Change `Archived` to `アーカイブ`.
-- Remove archive count display.
-- Hide JSON and CSV export buttons for now.
+- `Archived` を `アーカイブ` に変更する。
+- archive count display を削除する。
+- JSON と CSV export button は現時点では非表示にする。
 
-Notes:
+メモ:
 
-- Export behavior can stay in code for later use.
-- Tests should reflect that JSON and CSV are not part of the current visible History UI.
+- export behavior は将来のために code に残してよい。
+- test は JSON と CSV が現在の visible History UI に含まれないことを反映する。
 
-## Future Brew Data
+## 将来の Brew data
 
-These fields are candidates for future RecipeVersion or BrewMethod data. They should be added only when they strengthen recording, comparison, or repeatability.
+これらの field は、将来の RecipeVersion または BrewMethod data の候補です。記録、比較、再現性を強める場合にのみ追加します。
 
-### Grind Size
+### 挽き目 / Grind size
 
-Goal:
+目標:
 
-- Record grind size.
+- grind size を記録する。
 
-Possible options:
+候補:
 
 - 細挽き
 - 中細挽き
 - 中挽き
 - 粗挽き
 
-Open question:
+未決事項:
 
-- Should this be a fixed option set, free text, or both?
+- 固定 options、free text、またはその両方のどれにするか。
 
 ### Equipment
 
-Goal:
+目標:
 
-- Record the brewing equipment or device.
+- brewing equipment または device を記録する。
 
-Examples:
+例:
 
 - ペーパードリップ
 - フレンチプレス
 - サイフォン
 
-Open question:
+未決事項:
 
-- Should equipment be part of BrewMethod master data, or stored directly on each RecipeVersion?
+- equipment は BrewMethod master data に含めるのか、各 RecipeVersion に直接保存するのか。
 
-### Brew Temperature
+### 抽出温度 / Brew temperature
 
-Goal:
+目標:
 
-- Record brew temperature.
+- brew temperature を記録する。
 
-Recommended initial shape:
+推奨する初期形:
 
-- Celsius-only numeric value.
-- Optional field.
+- 摂氏のみの numeric value。
+- optional field。
 
-Open question:
+未決事項:
 
-- Should brew temperature be shown only in Brew, or also summarized in History?
+- brew temperature は Brew のみに表示するのか、History にも summary として表示するのか。
 
-## Brew Stopwatch
+## Brew stopwatch
 
-Goal:
+目標:
 
-- Add a stopwatch under the Brew section.
+- Brew section の下に stopwatch を追加する。
 
-Behavior:
+挙動:
 
-- Start begins a 3 second countdown.
-- Measurement starts after countdown.
-- Reset returns the stopwatch to idle.
-- Stopwatch automatically resets at 5 minutes.
+- Start で3秒 countdown を開始する。
+- countdown 後に計測を開始する。
+- Reset で idle に戻る。
+- stopwatch は5分で自動 reset する。
 
-Expected states:
+期待する state:
 
 - idle
 - countdown
 - running
 - auto-reset
 
-Controls:
+操作:
 
 - Start
 - Reset
 
-Notes:
+メモ:
 
-- The stopwatch should not block recording or saving.
-- Keep it simple before adding step-by-step brew guidance.
+- stopwatch は記録や保存を妨げない。
+- step-by-step brew guidance を追加する前に、まず単純に保つ。
 
-## Suggested UI Implementation Order
+## 推奨 UI 実装順
 
-1. Clean up History labels and hide JSON/CSV.
-2. Add `次へ` actions on Blend and Brew.
-3. Move the Record save action to the bottom.
-4. Add a safe reset action with confirmation.
-5. Add the Brew stopwatch.
-6. Add grind size, equipment, and brew temperature fields.
-
+1. History labels を整理し、JSON/CSV を非表示にする。
+2. Blend と Brew に `次へ` action を追加する。
+3. Record save action を下部へ移す。
+4. confirmation 付きの安全な reset action を追加する。
+5. Brew stopwatch を追加する。
+6. grind size、equipment、brew temperature fields を追加する。

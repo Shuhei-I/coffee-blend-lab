@@ -1,48 +1,48 @@
-# Coffee Blend Lab Agent Guide
+# Coffee Blend Lab エージェントガイド
 
-## Product direction
+## プロダクト方針
 
-Coffee Blend Lab is not merely a recipe storage application.
+Coffee Blend Lab は、単なるレシピ保存アプリではありません。
 
-Its core purpose is to help users:
+このプロダクトの中心的な目的は、ユーザーが次の流れを進められるようにすることです。
 
-1. create a coffee blend
-2. test it
-3. record the result
-4. compare it with previous versions
-5. refine it over time
-6. discover their personal preferred blend
+1. コーヒーブレンドを作る
+2. 試す
+3. 結果を記録する
+4. 過去のバージョンと比較する
+5. 時間をかけて改善する
+6. 自分の好みに合うブレンドを見つける
 
-The product should preserve and support the user's process of exploration.
+プロダクトは、ユーザーの探索プロセスを保存し、支えるものであるべきです。
 
-Before making product, UX, or architecture decisions, read:
+プロダクト、UX、アーキテクチャに関する判断を行う前に、以下を読んでください。
 
 - `docs/product-vision.md`
 - `docs/roadmap.md`
-- `docs/ui-architecture.md` when working on UI
+- UI に関わる作業では `docs/ui-architecture.md`
 
-## Product decision rule
+## プロダクト判断ルール
 
-Prefer changes that strengthen this cycle:
+次のサイクルを強める変更を優先してください。
 
 Create → Taste → Record → Compare → Refine
 
-Do not prioritize features merely because they are technically interesting.
+技術的に面白いという理由だけで、機能を優先しないでください。
 
-## Current priorities
+## 現在の優先順位
 
-1. Release stability
-2. Responsive UI
-3. Clear navigation
-4. Recipe version comparison
-5. Tasting notes and evaluation
-6. Sharing experiments
+1. リリース安定性
+2. レスポンシブ UI
+3. 明確なナビゲーション
+4. レシピバージョン比較
+5. テイスティングノートと評価
+6. 実験の共有
 
-## Implementation constraints
+## 実装上の制約
 
-- Preserve existing Supabase architecture
-- Do not reintroduce localStorage, SQLite, or the legacy Node API
-- Preserve RLS and authenticated user boundaries
-- Keep domain logic independent from UI and persistence where practical
-- Add or update tests for behavior changes
-- Do not commit or push unless explicitly instructed
+- 既存の Supabase アーキテクチャを維持する
+- localStorage、SQLite、レガシー Node API を再導入しない
+- RLS と認証済みユーザー境界を維持する
+- 可能な範囲で、ドメインロジックを UI と永続化から独立させる
+- 振る舞いが変わる場合はテストを追加または更新する
+- 明示的に依頼されない限り、commit や push は行わない
