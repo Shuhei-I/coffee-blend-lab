@@ -1,77 +1,75 @@
-# Coffee Blend Lab Roadmap
+# Coffee Blend Lab ロードマップ
 
-## Current state
+## 現在の状態
 
-The application has completed its migration to Supabase.
+アプリケーションは Supabase への移行を完了しています。
 
-Completed:
+完了済み:
 
 - Authentication
 - Supabase repositories
-- Beans persistence
-- Brew method persistence
-- Recipe series and version persistence
-- App settings persistence
-- Removal of SQLite runtime
-- Removal of localStorage fallback
-- Removal of legacy Node API
-- Automated tests
+- 豆データの永続化
+- 抽出方法データの永続化
+- Recipe series と version の永続化
+- App settings の永続化
+- SQLite runtime の削除
+- localStorage fallback の削除
+- レガシー Node API の削除
+- 自動テスト
 - Production build
 
-## v1.0 goal
+## v1.0 の目標
 
-A new user can:
+新規ユーザーが、混乱せずに次のことを行える状態にします。
 
-1. register beans
-2. register a brew method
-3. create a blend
-4. save it as a recipe
-5. create another version
-6. compare and reuse previous versions
+1. 豆を登録する
+2. 抽出方法を登録する
+3. ブレンドを作成する
+4. レシピとして保存する
+5. 別バージョンを作成する
+6. 以前のバージョンを比較し、再利用する
 
-without confusion.
+## リリース優先度
 
-## Release priorities
-
-### P0 — Required before public release
+### P0 — 公開前に必須
 
 - Production smoke test
-- Responsive navigation
-- Mobile layout
-- Clear loading and error states
-- Reliable save confirmation
+- レスポンシブナビゲーション
+- モバイルレイアウト
+- 明確な loading / error state
+- 信頼できる保存確認
 - Privacy policy
 - Terms of use
 - Contact or feedback route
 
-Contact route note:
+Contact route のメモ:
 
-- The initial route may show a "preparing" state until a private feedback channel is available.
-- Do not expose a personal email address in frontend source or built assets.
-- Future feedback/contact should use a server-side relay, such as a Supabase Edge Function, with the destination address stored outside the client bundle.
+- 非公開のフィードバック窓口が利用可能になるまでは、初期ルートで「準備中」状態を表示してよい。
+- 個人メールアドレスを frontend source や built assets に含めない。
+- 将来の feedback/contact は、Supabase Edge Function などの server-side relay を使い、宛先アドレスを client bundle の外に置く。
 
-### P1 — Core product experience
+### P1 — コアプロダクト体験
 
-- Tasting notes
-- Rating or preference evaluation
-- Version comparison
-- Clear previous-version changes
-- Continue experiment action
-- Recent experiments on home screen
+- テイスティングノート
+- 評価または好みの記録
+- バージョン比較
+- 前バージョンからの変更点の明確化
+- 実験を続ける action
+- ホーム画面の最近の実験
 
-### P2 — Sharing
+### P2 — 共有
 
-- Public or link-based recipe sharing
-- Share version history
-- Copy a shared recipe
+- 公開またはリンクベースのレシピ共有
+- バージョン履歴の共有
+- 共有レシピのコピー
 - Attribution
-- Branch or remix concept
+- Branch または remix の概念
 
-### P3 — Later exploration
+### P3 — 後続の探索
 
 - AI blend suggestions
 - Inventory management
 - PDF export
 - Images
 - Community features
-- App-home structure based on `docs/future-home-ui-structure.md`
+- `docs/future-home-ui-structure.md` に基づく app-home structure

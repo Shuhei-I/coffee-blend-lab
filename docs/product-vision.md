@@ -1,92 +1,83 @@
-# Coffee Blend Lab Product Vision
+# Coffee Blend Lab プロダクトビジョン
 
-## Core idea
+## 中心となる考え
 
-Coffee Blend Lab is a research notebook for coffee blending.
+Coffee Blend Lab は、コーヒーブレンドのための研究ノートです。
 
-It is not primarily a tool for storing completed recipes.
+完成したレシピを保存することだけを目的としたツールではありません。
 
-The value of the product lies in helping a user repeatedly test,
-record, compare, and refine blends until they discover a coffee
-that matches their own preferences.
+このプロダクトの価値は、ユーザーが自分の好みに合うコーヒーを見つけるまで、ブレンドを繰り返し試し、記録し、比較し、改善できるようにすることにあります。
 
-## Core experience
+## 中心体験
 
-The central experience is:
+中心となる体験は次の流れです。
 
-1. Start with an idea
-2. Create or duplicate a blend
-3. Brew and taste it
-4. Record observations
-5. Compare it with earlier versions
-6. Form a new hypothesis
-7. Create the next version
+1. アイデアから始める
+2. ブレンドを作成、または複製する
+3. 抽出して味わう
+4. 気づきを記録する
+5. 以前のバージョンと比較する
+6. 新しい仮説を立てる
+7. 次のバージョンを作る
 
-Versions are not merely history.
+バージョンは単なる履歴ではありません。
 
-They represent the user's path of discovery.
+それは、ユーザーの発見の道筋を表します。
 
-## Product promise
+## プロダクトの約束
 
-Coffee Blend Lab helps users discover their preferred coffee
-through visible, comparable, and shareable experimentation.
+Coffee Blend Lab は、見える化され、比較でき、共有できる実験を通じて、ユーザーが自分の好みに合うコーヒーを見つけることを支援します。
 
-## Primary user value
+## 主要なユーザー価値
 
-The user should be able to answer:
+ユーザーは次の問いに答えられるべきです。
 
-- What did I change?
-- Why did I change it?
-- How did the taste change?
-- Which version did I prefer?
-- What should I try next?
+- 何を変えたのか
+- なぜ変えたのか
+- 味はどう変わったのか
+- どのバージョンを好んだのか
+- 次に何を試すべきか
 
-## Sharing
+## 共有
 
-Sharing should eventually include more than a finished recipe.
+共有は、最終的には完成したレシピだけに留まるべきではありません。
 
-Users should be able to share:
+ユーザーは次の情報を共有できるべきです。
 
-- the final blend
-- the sequence of versions
-- tasting notes
-- changes between versions
-- the reasoning behind each experiment
+- 最終的なブレンド
+- バージョンの流れ
+- テイスティングノート
+- バージョン間の変更点
+- 各実験の理由
 
-A shared blend may later be copied or branched by another user,
-while preserving attribution and origin.
+共有されたブレンドは、将来的に別のユーザーがコピーまたは分岐できるようにし、その際に attribution と origin を保持します。
 
-## Product principles
+## プロダクト原則
 
-### Exploration over storage
+### 保存より探索
 
-Recording data is useful only when it supports further exploration.
+データの記録は、次の探索につながる場合に価値があります。
 
-### Comparison over accumulation
+### 蓄積より比較
 
-Users should not merely collect recipes.
-They should understand the differences between versions.
+ユーザーは単にレシピを集めるのではなく、バージョン間の違いを理解できるべきです。
 
-### Standard interaction, distinctive experience
+### 標準的な操作、特徴的な体験
 
-Navigation and basic controls should follow familiar conventions.
+ナビゲーションと基本操作は、馴染みのある慣習に従います。
 
-Product identity should come from:
+プロダクトらしさは、次の要素から生まれるべきです。
 
-- blend visualization
-- version comparison
-- tasting records
-- experimentation history
-- sharing the discovery process
+- ブレンドの可視化
+- バージョン比較
+- テイスティング記録
+- 実験履歴
+- 発見プロセスの共有
 
-### Preserve context
+### 文脈を保つ
 
-Snapshots and historical versions should remain understandable
-even when source beans or brew methods are later changed or deleted.
+元の豆や抽出方法が後から変更または削除されても、snapshot と過去バージョンは理解できる状態を保つべきです。
 
-## North-star experience
+## 北極星となる体験 / North-star experience
 
-A user opens the application, continues a previous experiment,
-adjusts one or more variables, brews the new version, records the
-result, compares it with the previous version, and decides what to
-try next.
+ユーザーがアプリを開き、以前の実験を続け、1つ以上の変数を調整し、新しいバージョンを抽出し、結果を記録し、前回のバージョンと比較し、次に何を試すかを決められること。
