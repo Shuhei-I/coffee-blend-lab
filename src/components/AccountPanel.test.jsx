@@ -40,6 +40,19 @@ describe("AccountPanel", () => {
     expect(onSignOut).toHaveBeenCalledTimes(1);
   });
 
+  test("opens legal and feedback pages", () => {
+    const onOpenLegalPage = vi.fn();
+    renderAccountPanel({ onOpenLegalPage });
+
+    click(buttonByText("Privacy Policy"));
+    click(buttonByText("Terms of Use"));
+    click(buttonByText("Contact / Feedback"));
+
+    expect(onOpenLegalPage).toHaveBeenNthCalledWith(1, "privacy");
+    expect(onOpenLegalPage).toHaveBeenNthCalledWith(2, "terms");
+    expect(onOpenLegalPage).toHaveBeenNthCalledWith(3, "contact");
+  });
+
   test("keeps a fallback label when email is unavailable", () => {
     renderAccountPanel({ email: "" });
 
@@ -50,6 +63,7 @@ describe("AccountPanel", () => {
 function renderAccountPanel(overrides = {}) {
   const props = {
     email: "user@example.com",
+    onOpenLegalPage: vi.fn(),
     onSignOut: vi.fn(),
     ...overrides,
   };
@@ -60,4 +74,14 @@ function renderAccountPanel(overrides = {}) {
   });
 
   return props;
+}
+
+function click(element) {
+  act(() => {
+    element.click();
+  });
+}
+
+function buttonByText(text) {
+  return [...document.querySelectorAll("button")].find((button) => button.textContent === text);
 }

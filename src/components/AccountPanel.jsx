@@ -1,6 +1,6 @@
 import React from "react";
 
-export function AccountPanel({ email, onSignOut }) {
+export function AccountPanel({ email, onOpenLegalPage, onSignOut }) {
   return (
     <section className="panel account-panel" aria-labelledby="accountTitle">
       <div className="section-heading">
@@ -16,6 +16,17 @@ export function AccountPanel({ email, onSignOut }) {
         </div>
         <button className="account-signout-button" type="button" onClick={onSignOut}>
           ログアウト
+        </button>
+      </div>
+      <div className="support-links" aria-label="サポートリンク">
+        <button className="ghost-button" type="button" onClick={() => onOpenLegalPage?.("privacy")}>
+          Privacy Policy
+        </button>
+        <button className="ghost-button" type="button" onClick={() => onOpenLegalPage?.("terms")}>
+          Terms of Use
+        </button>
+        <button className="ghost-button" type="button" onClick={() => onOpenLegalPage?.("contact")}>
+          Contact / Feedback
         </button>
       </div>
     </section>
