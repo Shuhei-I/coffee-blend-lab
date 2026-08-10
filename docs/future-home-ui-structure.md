@@ -1,32 +1,32 @@
-# Future Home UI Structure
+# 将来の Home UI 構造
 
-This document records the ideal long-term UI direction inspired by `site-image.png`.
+この文書は、`site-image.png` に着想を得た長期的な UI 方針を記録します。
 
-It is not the immediate v1.0 implementation target. The current v1.0 navigation remains focused on the experiment workflow:
+これは直近の v1.0 実装対象ではありません。現在の v1.0 navigation は、次の実験 workflow に集中します。
 
 Create -> Brew -> Record -> Review -> Refine
 
-The future structure described here should be considered after the core workflow, release stability, and version comparison experience are reliable.
+ここで説明する将来構造は、core workflow、release stability、version comparison experience が十分に信頼できる状態になってから検討します。
 
-## Design Intent
+## Design intent / 設計意図
 
-The ideal UI is an app-like home experience rather than a single workbench screen.
+理想的な UI は、単一の workbench screen ではなく、app-like な home experience です。
 
-Its purpose is to help users return to their coffee exploration with context:
+目的は、ユーザーが文脈を持ってコーヒー探索に戻れるようにすることです。
 
-- Continue recent experiments
-- Review recent blend records
-- Discover blend ideas or testing themes
-- Enter the recording flow quickly
-- Access beans, brew methods, settings, and account information without crowding the main workflow
+- 最近の実験を続ける
+- 最近の blend records を確認する
+- blend ideas や testing themes を見つける
+- recording flow に素早く入る
+- メイン workflow を混雑させずに、beans、brew methods、settings、account information へアクセスする
 
-This direction should preserve the product promise:
+この方向性は、次の product promise を保つ必要があります。
 
-Coffee Blend Lab helps users discover their preferred coffee through visible, comparable, and shareable experimentation.
+Coffee Blend Lab は、見える化され、比較でき、共有できる実験を通じて、ユーザーが自分の好みに合うコーヒーを見つけることを支援します。
 
-## Target Top-Level Structure
+## 目標とする top-level structure
 
-The future top-level navigation may use these primary sections:
+将来の top-level navigation では、次の primary sections を使う可能性があります。
 
 1. Home
 2. Record
@@ -34,7 +34,7 @@ The future top-level navigation may use these primary sections:
 4. Discover
 5. My Page
 
-Japanese labels:
+日本語ラベル:
 
 1. ホーム
 2. 記録する
@@ -42,51 +42,51 @@ Japanese labels:
 4. 見つける
 5. マイページ
 
-This is a broader information architecture than the current v1.0 phase navigation.
+これは現在の v1.0 phase navigation より広い information architecture です。
 
-Do not switch to this structure until each section has enough real product surface to justify it.
+各 section に、それを正当化できるだけの実際の product surface が揃うまでは、この構造に切り替えないでください。
 
 ## Home
 
-Purpose:
+目的:
 
-Give users a high-context entry point into their ongoing blending work.
+進行中のブレンド作業へ、文脈を持って入れる入口を提供する。
 
-Expected content:
+期待する内容:
 
-- Featured or recommended blend idea
-- Recent blend records
-- Continue experiment action
-- Shortcuts to the latest active series
-- Optional product announcements or prompts
+- featured または recommended blend idea
+- 最近の blend records
+- continue experiment action
+- 最新の active series への shortcuts
+- optional product announcements または prompts
 
-Home should not become a generic marketing page. It should answer:
+Home は一般的な marketing page になってはいけません。次の問いに答えるべきです。
 
-- What was I working on?
-- What changed recently?
-- What should I try next?
+- 何に取り組んでいたのか
+- 最近何が変わったのか
+- 次に何を試すべきか
 
 ## Record
 
-Purpose:
+目的:
 
-Enter the active experiment workflow.
+active experiment workflow に入る。
 
-This section may contain an internal step flow based on the current v1.0 structure:
+この section は、現在の v1.0 structure に基づいた内部 step flow を持つ可能性があります。
 
 1. 配合
 2. 抽出
 3. 記録
 
-The current `Blend`, `Brew`, and `Record` screens should eventually become steps inside this section rather than all being top-level destinations.
+現在の `Blend`, `Brew`, `Record` screens は、最終的にはすべて top-level destinations ではなく、この section 内の steps になるべきです。
 
 ## Library
 
-Purpose:
+目的:
 
-Organize reusable and historical material.
+再利用できる情報と履歴を整理する。
 
-Expected content:
+期待する内容:
 
 - Recipe history
 - Bean library
@@ -94,31 +94,31 @@ Expected content:
 - Saved blend versions
 - Archived series
 
-This section should support comparison and reuse, not merely storage.
+この section は、単なる storage ではなく、comparison と reuse を支えるべきです。
 
 ## Discover
 
-Purpose:
+目的:
 
-Expose ideas that help users decide what to test next.
+ユーザーが次に何を試すかを決める助けになる ideas を提示する。
 
-Possible future content:
+将来考えられる内容:
 
 - Shared experiments
 - Public blend histories
 - Testing themes
 - Brewing technique articles
-- Community or curated blend examples
+- Community または curated blend examples
 
-This section depends on sharing and discovery features. It should not be introduced as an empty shell.
+この section は sharing と discovery features に依存します。空の shell として導入しないでください。
 
 ## My Page
 
-Purpose:
+目的:
 
-Collect account-level and personal context.
+account-level と personal context をまとめる。
 
-Expected content:
+期待する内容:
 
 - Profile
 - Settings
@@ -126,25 +126,25 @@ Expected content:
 - Preferences
 - Privacy and account controls
 
-## Visual Direction
+## Visual direction / 視覚方針
 
-The ideal visual direction from `site-image.png` includes:
+`site-image.png` から得た理想的な visual direction には、次の要素が含まれます。
 
-- A light app shell with a strong centered brand header
-- Clear icon-based top utilities such as notifications and account
-- Rounded content cards with restrained borders
-- A large visual feature area near the top of Home
-- Recent blend cards with real coffee imagery
-- Topic or discovery cards for future community and learning surfaces
-- A persistent bottom navigation on mobile
+- 強い centered brand header を持つ light app shell
+- notifications や account などの明確な icon-based top utilities
+- 控えめな border を持つ rounded content cards
+- Home 上部付近の大きな visual feature area
+- 実際の coffee imagery を使った recent blend cards
+- 将来の community や learning surfaces のための topic/discovery cards
+- モバイルでの persistent bottom navigation
 
-Use this visual direction as inspiration, not as a literal requirement.
+この visual direction は inspiration として使い、文字どおりの要件としては扱いません。
 
-Coffee Blend Lab should still feel like a practical blending notebook. Visual richness should support experimentation and comparison.
+Coffee Blend Lab は、実用的な blending notebook の感覚を保つべきです。視覚的な豊かさは、experimentation と comparison を支えるために使います。
 
-## Current v1.0 Bridge
+## 現在の v1.0 との橋渡し
 
-Until the future Home structure is justified, keep the current top-level workflow navigation:
+将来の Home structure を正当化できるまでは、現在の top-level workflow navigation を維持します。
 
 1. 配合
 2. 抽出
@@ -152,32 +152,32 @@ Until the future Home structure is justified, keep the current top-level workflo
 4. 履歴
 5. 管理
 
-This current structure is better for v1.0 because it directly supports:
+この現在の structure は、次を直接支えるため v1.0 に適しています。
 
-- Creating a blend
-- Brewing it
-- Recording the result
-- Reviewing previous versions
-- Managing beans and brew methods
+- ブレンドを作る
+- 抽出する
+- 結果を記録する
+- 過去の version を確認する
+- beans と brew methods を管理する
 
-The future structure should be treated as a later product evolution, not as a reason to delay release readiness.
+将来構造は、release readiness を遅らせる理由ではなく、後続の product evolution として扱います。
 
-## Migration Path
+## Migration path / 移行手順
 
-A practical transition path:
+実用的な移行手順:
 
-1. Stabilize the current five-phase workflow navigation.
-2. Improve History with version comparison and continue-experiment actions.
-3. Add recent experiments as a lightweight Home-like panel or section.
-4. Introduce a real Home screen once recent experiments, featured prompts, and shortcuts have enough value.
-5. Move 配合, 抽出, and 記録 under 記録する as an internal flow.
-6. Reorganize 履歴, 豆マスタ, and 淹れ方マスタ under ライブラリ where appropriate.
-7. Add 見つける only when sharing or curated discovery exists.
+1. 現在の five-phase workflow navigation を安定させる。
+2. History に version comparison と continue-experiment actions を追加する。
+3. recent experiments を軽量な Home-like panel または section として追加する。
+4. recent experiments、featured prompts、shortcuts に十分な価値が出た段階で、実際の Home screen を導入する。
+5. 配合、抽出、記録を `記録する` の内部 flow に移す。
+6. 履歴、豆マスタ、抽出方法マスタを、適切な範囲で `ライブラリ` の下に再編成する。
+7. sharing または curated discovery が存在する場合にのみ、`見つける` を追加する。
 
-## Decision Rule
+## Decision rule / 判断ルール
 
-Adopt the future home structure only when it strengthens the exploration cycle:
+将来の Home structure は、次の exploration cycle を強める場合にのみ採用します。
 
 Create -> Taste -> Record -> Compare -> Refine
 
-Do not adopt it merely because it looks more complete or app-like.
+見た目がより完成している、または app-like に見えるという理由だけで採用しないでください。
