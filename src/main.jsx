@@ -31,6 +31,7 @@ import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
+import { WorkspaceStatus } from "./components/WorkspaceStatus.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
 import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
@@ -98,6 +99,9 @@ function App({ authUser, authError, onSignOut }) {
     brewMethods,
     recipeSeries,
     selectedBrewMethodId,
+    loading,
+    loadError,
+    saveError,
     masterSaveStatus,
     setSelectedBrewMethodId,
     saveSelectedBrewMethodId,
@@ -338,6 +342,7 @@ function App({ authUser, authError, onSignOut }) {
       </nav>
 
       <main className={`workspace ${activePage !== "blend" ? "single-page" : ""}`}>
+        <WorkspaceStatus loading={loading} loadError={loadError} saveError={saveError} />
         {activePage === "blend" && (
           <>
             <BlendBuilder

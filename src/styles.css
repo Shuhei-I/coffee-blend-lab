@@ -194,6 +194,36 @@ textarea {
   grid-template-columns: 1fr;
 }
 
+.workspace-status {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-status-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #bdd9d7;
+  border-radius: 8px;
+  color: var(--teal);
+  background: #f1fbfa;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.workspace-status-item[data-status="error"] {
+  border-color: #ebc5bd;
+  color: var(--coral);
+  background: #fff7f5;
+}
+
+.workspace-status-item span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .panel {
   padding: 22px;
   border: 1px solid var(--line);
