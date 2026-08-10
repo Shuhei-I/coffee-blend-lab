@@ -31,6 +31,7 @@ import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
+import { isLegalPage, LegalPage } from "./components/LegalPages.jsx";
 import { WorkspaceStatus } from "./components/WorkspaceStatus.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
@@ -343,6 +344,7 @@ function App({ authUser, authError, onSignOut }) {
 
       <main className={`workspace ${activePage !== "blend" ? "single-page" : ""}`}>
         <WorkspaceStatus loading={loading} loadError={loadError} saveError={saveError} />
+        {isLegalPage(activePage) && <LegalPage page={activePage} onBack={() => setActivePage("manage")} />}
         {activePage === "blend" && (
           <>
             <BlendBuilder
@@ -414,7 +416,7 @@ function App({ authUser, authError, onSignOut }) {
           <>
             <BeanMaster beans={beans} saveStatus={masterSaveStatus.beans} onAdd={addBean} onDelete={deleteBean} onSave={saveBean} />
             <BrewMethodMaster methods={brewMethods} saveStatus={masterSaveStatus.brewMethods} onAdd={addBrewMethod} onDelete={deleteBrewMethod} onSave={saveBrewMethod} />
-            <AccountPanel email={authUser?.email} onSignOut={onSignOut} />
+            <AccountPanel email={authUser?.email} onOpenLegalPage={setActivePage} onSignOut={onSignOut} />
           </>
         )}
       </main>

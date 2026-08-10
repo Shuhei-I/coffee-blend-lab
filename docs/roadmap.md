@@ -44,6 +44,12 @@ without confusion.
 - Terms of use
 - Contact or feedback route
 
+Contact route note:
+
+- The initial route may show a "preparing" state until a private feedback channel is available.
+- Do not expose a personal email address in frontend source or built assets.
+- Future feedback/contact should use a server-side relay, such as a Supabase Edge Function, with the destination address stored outside the client bundle.
+
 ### P1 — Core product experience
 
 - Tasting notes
