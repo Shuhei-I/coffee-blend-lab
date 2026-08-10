@@ -1,21 +1,21 @@
 # Coffee Blend Lab
 
-Coffee Blend Lab is a React/Vite web app for designing coffee blends and managing recipe history.
+Coffee Blend Lab は、コーヒーブレンドの設計とレシピ履歴の管理を行う React/Vite web app です。完成レシピを保存するだけでなく、試作、記録、比較、改善の流れを支えることを目的としています。
 
-It supports:
+対応していること:
 
-- Coffee bean master data
-- Brew method master data
-- Blend ratio design
-- Roast level notes per blend bean
-- Cost, profile, dose, target brew amount, and pour schedule calculations
-- RecipeSeries and RecipeVersion history
-- Bean and brew method snapshots for saved recipes
+- コーヒー豆のマスタデータ
+- 抽出方法のマスタデータ
+- ブレンド比率の設計
+- ブレンド内の豆ごとの焙煎度メモ
+- コスト、プロファイル、粉量、目標抽出量、注湯スケジュールの計算
+- RecipeSeries と RecipeVersion の履歴
+- 保存済みレシピ用の豆 snapshot と抽出方法 snapshot
 - JSON / CSV export
 
-## Current Runtime
+## 現在の runtime
 
-Coffee Blend Lab now uses Supabase as its persistence layer.
+Coffee Blend Lab は、永続化層として Supabase を使います。
 
 ```text
 Frontend: React + Vite
@@ -24,35 +24,35 @@ Data:     Supabase Auth + Supabase Postgres + RLS
 RPC:      Supabase PostgreSQL functions
 ```
 
-The old Node API, file-based persistence, and browser fallback storage are no longer part of the runtime path. The old local version should be referenced from Git history or the local release tag if needed.
+古い Node API、file-based persistence、browser fallback storage は、現在の runtime path には含まれません。古い local version が必要な場合は、Git history または local release tag を参照してください。
 
-## Requirements
+## 必要なもの
 
 - Node.js 24 recommended
 - npm
 - Supabase project
 - Supabase publishable key
 
-`package.json` does not currently define an `engines` field. CI uses Node.js 24.
+`package.json` には現在 `engines` field を定義していません。CI では Node.js 24 を使用します。
 
-## Install
+## インストール
 
 ```bash
 npm install
 ```
 
-## Environment Variables
+## 環境変数
 
-Create a local environment file such as `.env.local` and set:
+`.env.local` などの local environment file を作成し、次を設定します。
 
 | Variable | Description |
 | --- | --- |
 | `VITE_SUPABASE_URL` | Supabase project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable client key |
 
-Do not put Supabase service role keys, database passwords, or other secrets in frontend environment variables.
+Supabase service role keys、database passwords、その他の secrets を frontend environment variables に入れないでください。
 
-Example:
+例:
 
 ```powershell
 $env:VITE_SUPABASE_URL = "https://your-project.supabase.co"
@@ -60,43 +60,43 @@ $env:VITE_SUPABASE_PUBLISHABLE_KEY = "your-publishable-key"
 npm run dev
 ```
 
-## Development
+## 開発
 
-Start the Vite frontend:
+Vite frontend を起動します。
 
 ```bash
 npm run dev
 ```
 
-The app usually runs at:
+通常、アプリは次の URL で動作します。
 
 ```text
 http://127.0.0.1:5173
 ```
 
-Vite may choose another port if the default port is already in use.
+default port が既に使われている場合、Vite は別の port を選ぶことがあります。
 
-## Scripts
+## スクリプト
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the Vite development server |
-| `npm test` | Run the Vitest suite |
-| `npm run build` | Build the production frontend into `dist/` |
-| `npm run preview` | Preview the built frontend locally |
+| `npm run dev` | Vite development server を起動する |
+| `npm test` | Vitest suite を実行する |
+| `npm run build` | production frontend を `dist/` に build する |
+| `npm run preview` | build 済み frontend を local preview する |
 
-`npm run preview` is a Vite static preview server. It does not create or manage Supabase resources.
+`npm run preview` は Vite の static preview server です。Supabase resources の作成や管理は行いません。
 
-## Testing and CI
+## テストと CI
 
-Local checks:
+local checks:
 
 ```bash
 npm test
 npm run build
 ```
 
-GitHub Actions runs:
+GitHub Actions は次を実行します。
 
 - `npm ci`
 - `npm test`
@@ -104,19 +104,19 @@ GitHub Actions runs:
 
 ## Supabase
 
-Supabase is the source of truth for:
+Supabase は次の情報の source of truth です。
 
 - Auth sessions
 - Beans
 - BrewMethods
 - RecipeSeries / RecipeVersions / RecipeVersionBeans
-- App settings, including `selectedBrewMethodId`
+- `selectedBrewMethodId` を含む App settings
 
-Database schema and RPC changes are managed as SQL migrations under `supabase/migrations/`.
+Database schema と RPC の変更は、`supabase/migrations/` 配下の SQL migrations として管理します。
 
-The frontend uses the Supabase JavaScript client with the publishable key only. It does not use `service_role`, secret keys, or database passwords.
+frontend は publishable key のみで Supabase JavaScript client を使います。`service_role`、secret keys、database passwords は使いません。
 
-## Architecture
+## アーキテクチャ
 
 ```text
 src/
@@ -130,53 +130,54 @@ supabase/
   migrations/ PostgreSQL schema, RLS, and RPC migrations
 ```
 
-Responsibilities:
+責務:
 
-- `domain/` has no React, browser API, repository, or Supabase dependency.
-- `hooks/` manages React state and connects app operations to repositories.
-- `data/` maps between app data shapes and Supabase rows/RPC payloads.
-- `main.jsx` composes the application UI and wires handlers.
+- `domain/` は React、browser API、repository、Supabase に依存しません。
+- `hooks/` は React state を管理し、アプリ操作を repositories へ接続します。
+- `data/` は app data shape と Supabase rows/RPC payloads を相互に map します。
+- `main.jsx` は application UI を組み立て、handlers を接続します。
 
-## Recipe Data Model
+## レシピデータモデル
 
-Recipes are stored as `RecipeSeries` with multiple versions.
+Recipes は、複数 version を持つ `RecipeSeries` として保存されます。
 
-- `RecipeSeries` has `active` or `archived` status.
-- `RecipeVersion` is immutable history for a saved recipe version.
-- Saved recipe versions include bean snapshots and brew method snapshots.
-- Master beans or brew methods can be deleted without deleting historical recipe information.
-- `currentVersionId` is derived in the repository mapper from the latest version.
+- `RecipeSeries` は `active` または `archived` status を持ちます。
+- `RecipeVersion` は保存済み recipe version の immutable history です。
+- 保存済み recipe versions には bean snapshots と brew method snapshots が含まれます。
+- Master beans や brew methods を削除しても、historical recipe information は削除されません。
+- `currentVersionId` は、repository mapper が latest version から導出します。
 
-## Export
+## エクスポート
 
-Saved recipes can be exported as JSON or CSV.
+保存済みレシピは JSON または CSV として export できます。
 
 | Format | Filename | Notes |
 | --- | --- | --- |
-| JSON | `coffee-blend-recipes.json` | Includes archived series and snapshots |
-| CSV | `coffee-blend-recipes.csv` | Includes archived series, snapshots, and roast level |
+| JSON | `coffee-blend-recipes.json` | archived series と snapshots を含む |
+| CSV | `coffee-blend-recipes.csv` | archived series、snapshots、roast level を含む |
 
-CSV is UTF-8 with BOM so Windows Excel can open Japanese text directly.
+CSV は UTF-8 BOM 付きのため、Windows Excel で日本語テキストを直接開けます。
 
-## Deployment
+## デプロイ
 
-The current architecture is suitable for a static frontend deployment such as Vercel with Supabase as the backend.
+現在の architecture は、Supabase を backend とする Vercel などの static frontend deployment に適しています。
 
-Deployment requirements:
+deployment requirements:
 
-- Configure `VITE_SUPABASE_URL`
-- Configure `VITE_SUPABASE_PUBLISHABLE_KEY`
-- Apply Supabase migrations to the target project
-- Configure Supabase Auth settings for the deployment URL
-- Keep RLS enabled on public user-owned tables
+- `VITE_SUPABASE_URL` を設定する
+- `VITE_SUPABASE_PUBLISHABLE_KEY` を設定する
+- 対象 project に Supabase migrations を適用する
+- deployment URL 用に Supabase Auth settings を設定する
+- public user-owned tables で RLS を有効に保つ
 
-## Known Limitations
+## 既知の制限
 
-- Browser E2E tests are not yet present.
-- Import/migration from old local data is not automated in the runtime.
-- Offline editing fallback is not implemented.
-- Supabase Auth email settings depend on project configuration.
+- Browser E2E tests はまだありません。
+- 古い local data からの import/migration は runtime 上で自動化されていません。
+- Offline editing fallback は実装されていません。
+- Supabase Auth email settings は project configuration に依存します。
+- Contact / Feedback の問い合わせ窓口は準備中です。
 
-## Manual Smoke Test
+## 手動スモークテスト
 
-Use [docs/release-smoke-test.md](docs/release-smoke-test.md) before release.
+リリース前に [docs/release-smoke-test.md](docs/release-smoke-test.md) を使用してください。
