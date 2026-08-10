@@ -1,6 +1,6 @@
-# Supabase PostgreSQL Schema Design
+# Supabase PostgreSQL スキーマ設計
 
-Status: This document is retained as a schema design and migration reference. References to the former local Node API, SQLite schema, and browser fallback describe the pre-migration model used for comparison and data migration planning, not the current runtime.
+状態: この文書は、スキーマ設計と migration の参照資料として保持しています。旧 local Node API、SQLite schema、browser fallback への言及は、比較とデータ移行計画のための移行前モデルを説明するものであり、現在の runtime を表すものではありません。
 
 この文書は、Coffee Blend LabをSupabase PostgreSQLへ移行する前のスキーマ設計レポートです。現時点ではmigration SQLは作成せず、現在のdomainモデルと永続化構造を正本として、PostgreSQL化の方針を整理します。
 
@@ -38,7 +38,7 @@ Status: This document is retained as a schema design and migration reference. Re
 
 ### beans
 
-| Column | SQLite type | Current meaning |
+| Column | SQLite type | 現在の意味 |
 | --- | --- | --- |
 | `id` | `TEXT` | Bean ID |
 | `name` | `TEXT NOT NULL` | 豆名 |
@@ -57,7 +57,7 @@ Status: This document is retained as a schema design and migration reference. Re
 
 ### brew_methods
 
-| Column | SQLite type | Current meaning |
+| Column | SQLite type | 現在の意味 |
 | --- | --- | --- |
 | `id` | `TEXT` | BrewMethod ID |
 | `name` | `TEXT NOT NULL` | 抽出方法名 |
@@ -102,7 +102,7 @@ Legacy tableです。
 
 ### recipe_series
 
-| Column | SQLite type | Current meaning |
+| Column | SQLite type | 現在の意味 |
 | --- | --- | --- |
 | `id` | `TEXT` | Series ID |
 | `name` | `TEXT NOT NULL` | Series名 |
@@ -114,7 +114,7 @@ Legacy tableです。
 
 ### recipe_versions
 
-| Column | SQLite type | Current meaning |
+| Column | SQLite type | 現在の意味 |
 | --- | --- | --- |
 | `id` | `TEXT` | Version ID |
 | `series_id` | `TEXT NOT NULL` | 親series ID |
@@ -135,7 +135,7 @@ Legacy tableです。
 
 ### recipe_version_beans
 
-| Column | SQLite type | Current meaning |
+| Column | SQLite type | 現在の意味 |
 | --- | --- | --- |
 | `version_id` | `TEXT NOT NULL` | 親version ID |
 | `bean_id` | `TEXT NOT NULL` | Bean参照ID |
@@ -145,7 +145,7 @@ Legacy tableです。
 
 ### app_settings
 
-| Column | SQLite type | Current meaning |
+| Column | SQLite type | 現在の意味 |
 | --- | --- | --- |
 | `key` | `TEXT` | 設定key |
 | `value` | `TEXT NOT NULL` | 設定値 |
@@ -167,7 +167,7 @@ Legacy tableです。
 
 ## 5. 現在の外部キー
 
-| Table | Foreign key | Delete behavior |
+| Table | Foreign key | 削除時の挙動 |
 | --- | --- | --- |
 | `blend_recipe_beans` | `recipe_id -> blend_recipes(id)` | `ON DELETE CASCADE` |
 | `recipe_versions` | `series_id -> recipe_series(id)` | `ON DELETE CASCADE` |
@@ -399,104 +399,104 @@ Legacy tableである`blend_recipes`と`blend_recipe_beans`は新schemaには作
 
 ### beans
 
-| Column | Purpose |
+| Column | 目的 |
 | --- | --- |
 | `id` | UUID primary key |
-| `user_id` | Owner user |
-| `name` | Bean name |
-| `note` | Note |
-| `color` | UI color |
-| `ratio` | Current compatibility field |
-| `visible_in_recipes` | Selectable flag |
-| `cost_per_kg` | Cost |
+| `user_id` | 所有ユーザー |
+| `name` | 豆名 |
+| `note` | メモ |
+| `color` | UI 表示色 |
+| `ratio` | 現在の互換用 field |
+| `visible_in_recipes` | 選択可能 flag |
+| `cost_per_kg` | 原価 |
 | `acidity` | Profile |
 | `sweetness` | Profile |
 | `bitterness` | Profile |
 | `body` | Profile |
 | `aroma` | Profile |
-| `created_at` | Created timestamp |
-| `updated_at` | Updated timestamp |
+| `created_at` | 作成 timestamp |
+| `updated_at` | 更新 timestamp |
 
 ### brew_methods
 
-| Column | Purpose |
+| Column | 目的 |
 | --- | --- |
 | `id` | UUID primary key |
-| `user_id` | Owner user |
-| `name` | Method name |
-| `note` | Note |
-| `bloom_percent` | Bloom ratio |
-| `pour1_percent` | Pour ratio |
-| `pour2_percent` | Pour ratio |
-| `pour3_percent` | Pour ratio |
-| `bloom_seconds` | Bloom seconds |
-| `created_at` | Created timestamp |
-| `updated_at` | Updated timestamp |
+| `user_id` | 所有ユーザー |
+| `name` | 抽出方法名 |
+| `note` | メモ |
+| `bloom_percent` | 蒸らし比率 |
+| `pour1_percent` | 注湯比率 |
+| `pour2_percent` | 注湯比率 |
+| `pour3_percent` | 注湯比率 |
+| `bloom_seconds` | 蒸らし秒数 |
+| `created_at` | 作成 timestamp |
+| `updated_at` | 更新 timestamp |
 
 ### recipe_series
 
-| Column | Purpose |
+| Column | 目的 |
 | --- | --- |
 | `id` | UUID primary key |
-| `user_id` | Owner user |
-| `name` | Series name |
-| `goal` | Series goal/note |
+| `user_id` | 所有ユーザー |
+| `name` | Series 名 |
+| `goal` | Series の目的/メモ |
 | `status` | `active` or `archived` |
-| `current_version_id` | Current version |
-| `created_at` | Created timestamp |
-| `updated_at` | Updated timestamp |
+| `current_version_id` | 現在の version |
+| `created_at` | 作成 timestamp |
+| `updated_at` | 更新 timestamp |
 
 ### recipe_versions
 
-| Column | Purpose |
+| Column | 目的 |
 | --- | --- |
 | `id` | UUID primary key |
-| `user_id` | Owner user |
-| `series_id` | Parent series |
-| `version` | Version number |
-| `name` | Recipe name |
-| `change_note` | Change note |
-| `tasting_note` | Memo/tasting note |
-| `dose_gram` | Dose |
-| `brew_ratio` | Brew ratio |
-| `target_brew_gram` | Target brew gram |
-| `blend_cost` | Cost |
-| `brew_method_id` | Nullable live BrewMethod reference |
-| `brew_method_snapshot` | Immutable jsonb snapshot |
+| `user_id` | 所有ユーザー |
+| `series_id` | 親 series |
+| `version` | version 番号 |
+| `name` | recipe 名 |
+| `change_note` | 変更メモ |
+| `tasting_note` | メモ/tasting note |
+| `dose_gram` | 粉量 |
+| `brew_ratio` | 抽出比 |
+| `target_brew_gram` | 目標抽出量 |
+| `blend_cost` | 原価 |
+| `brew_method_id` | nullable な live BrewMethod reference |
+| `brew_method_snapshot` | 不変の jsonb snapshot |
 | `sensory` | jsonb sensory values |
-| `saved_at` | Saved timestamp |
-| `created_at` | Created timestamp |
-| `updated_at` | Updated timestamp |
+| `saved_at` | 保存 timestamp |
+| `created_at` | 作成 timestamp |
+| `updated_at` | 更新 timestamp |
 
 ### recipe_version_beans
 
-| Column | Purpose |
+| Column | 目的 |
 | --- | --- |
 | `id` | UUID primary key |
-| `user_id` | Owner user |
-| `version_id` | Parent recipe version |
-| `bean_id` | Nullable live Bean reference |
-| `ratio` | Blend ratio |
-| `roast_level` | Roast level at recipe save |
-| `bean_snapshot` | Immutable jsonb snapshot |
-| `position` | Optional row order |
-| `created_at` | Created timestamp |
-| `updated_at` | Updated timestamp |
+| `user_id` | 所有ユーザー |
+| `version_id` | 親 recipe version |
+| `bean_id` | nullable な live Bean reference |
+| `ratio` | ブレンド比率 |
+| `roast_level` | recipe 保存時点の roast level |
+| `bean_snapshot` | 不変の jsonb snapshot |
+| `position` | optional な row order |
+| `created_at` | 作成 timestamp |
+| `updated_at` | 更新 timestamp |
 
 SQLiteでは`(version_id, bean_id)`がprimary keyですが、Supabaseでは`bean_id`をnullableにするため、別UUID primary keyを推奨します。
 
 ### app_settings
 
-| Column | Purpose |
+| Column | 目的 |
 | --- | --- |
-| `user_id` | UUID primary key and owner |
-| `selected_brew_method_id` | Nullable selected BrewMethod |
-| `created_at` | Created timestamp |
-| `updated_at` | Updated timestamp |
+| `user_id` | UUID primary key 兼 owner |
+| `selected_brew_method_id` | nullable な selected BrewMethod |
+| `created_at` | 作成 timestamp |
+| `updated_at` | 更新 timestamp |
 
 ## 19. 各カラムのPostgreSQL型
 
-| Current concept | PostgreSQL type |
+| 現在の概念 | PostgreSQL type |
 | --- | --- |
 | IDs | `uuid` |
 | user owner | `uuid` |
