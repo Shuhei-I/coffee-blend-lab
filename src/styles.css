@@ -696,6 +696,49 @@ input[type="range"] {
   line-height: 1.25;
 }
 
+.brew-stopwatch-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 16px;
+  align-items: center;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.brew-stopwatch-copy {
+  min-width: 0;
+}
+
+.brew-stopwatch-copy .eyebrow,
+.brew-stopwatch-copy h2,
+.brew-stopwatch-copy p {
+  margin-bottom: 0;
+}
+
+.brew-stopwatch-copy p:last-child {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.brew-stopwatch-readout {
+  min-width: 112px;
+  color: var(--teal);
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.brew-stopwatch-actions {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 8px;
+}
+
 .profile-grid {
   display: grid;
   grid-template-columns: minmax(260px, 1fr) minmax(190px, 0.75fr);
@@ -1431,6 +1474,23 @@ canvas {
 
   .page-action-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .brew-stopwatch-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .brew-stopwatch-readout {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .brew-stopwatch-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .brew-stopwatch-actions button {
+    width: 100%;
   }
 
   .reset-page-button,

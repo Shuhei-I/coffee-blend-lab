@@ -26,6 +26,7 @@ import { AccountPanel } from "./components/AccountPanel.jsx";
 import { BeanMaster } from "./components/BeanMaster.jsx";
 import { BlendBuilder } from "./components/BlendBuilder.jsx";
 import { BrewMethodMaster } from "./components/BrewMethodMaster.jsx";
+import { BrewStopwatch } from "./components/BrewStopwatch.jsx";
 import { Dosing } from "./components/Dosing.jsx";
 import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
@@ -378,6 +379,7 @@ function App({ authUser, authError, onSignOut }) {
               onRatioChange={setBrewRatio}
               onMethodChange={changeSelectedBrewMethod}
             />
+            <BrewStopwatch />
             <WorkflowPageActions onReset={resetWorkflowInput} onNext={() => setActivePage("record")} />
           </>
         )}
