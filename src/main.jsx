@@ -30,6 +30,7 @@ import { BrewStopwatch } from "./components/BrewStopwatch.jsx";
 import { Dosing } from "./components/Dosing.jsx";
 import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { ProfileSettingsPanel } from "./components/ProfileSettingsPanel.jsx";
+import { PublicShell } from "./components/PublicShell.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
@@ -470,6 +471,10 @@ function createClientId() {
 
 function Root() {
   const auth = useAuth();
+
+  if (!auth.loading && !auth.session) {
+    return <PublicShell auth={auth} logoSrc={logoImage} />;
+  }
 
   return (
     <AuthGate auth={auth}>

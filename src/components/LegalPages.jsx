@@ -57,30 +57,32 @@ export function LegalPage({ page, onBack }) {
   const content = pageContent[page] || pageContent.contact;
 
   return (
-    <section className="panel legal-panel" aria-labelledby="legalPageTitle">
-      <div className="section-heading">
-        <div>
+    <div className="legal-page-layout">
+      <section className="panel legal-panel" aria-labelledby="legalPageTitle">
+        <div className="legal-heading">
           <p className="eyebrow">{content.eyebrow}</p>
           <h2 id="legalPageTitle">{content.title}</h2>
         </div>
+        <div className="legal-content">
+          {content.sections.map((section) => (
+            <section className="legal-section" key={section.heading}>
+              <h3>{section.heading}</h3>
+              <p>{section.body}</p>
+            </section>
+          ))}
+          {content.action && (
+            <a className="legal-action-link" href={content.action.href} target="_blank" rel="noreferrer">
+              {content.action.label}
+            </a>
+          )}
+        </div>
+      </section>
+      <div className="legal-page-actions">
         <button className="ghost-button" type="button" onClick={onBack}>
-          管理へ戻る
+          戻る
         </button>
       </div>
-      <div className="legal-content">
-        {content.sections.map((section) => (
-          <section className="legal-section" key={section.heading}>
-            <h3>{section.heading}</h3>
-            <p>{section.body}</p>
-          </section>
-        ))}
-        {content.action && (
-          <a className="legal-action-link" href={content.action.href} target="_blank" rel="noreferrer">
-            {content.action.label}
-          </a>
-        )}
-      </div>
-    </section>
+    </div>
   );
 }
 
