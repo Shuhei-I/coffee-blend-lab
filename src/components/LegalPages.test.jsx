@@ -50,9 +50,11 @@ describe("LegalPage", () => {
     expect(document.body.textContent).toContain("認証情報、パスワード、個人情報");
   });
 
-  test("calls back to Manage", () => {
+  test("calls back from legal pages", () => {
     const onBack = vi.fn();
     renderLegalPage({ onBack });
+
+    expect(document.querySelector("button").textContent).toBe("戻る");
 
     act(() => {
       document.querySelector("button").click();
