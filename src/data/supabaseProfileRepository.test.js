@@ -138,7 +138,7 @@ describe("supabaseProfileRepository", () => {
 
     await expect(
       createSupabaseProfileRepository({ client: createClient() }).saveOwnProfile({ username: "no" }),
-    ).rejects.toThrow("Username must be 3-20 lowercase letters, numbers, or underscores.");
+    ).rejects.toThrow("ユーザー名は3〜20文字の半角英小文字・数字・アンダースコアで入力してください。");
 
     await expect(
       createSupabaseProfileRepository({ client: createClient({ mutationError: new Error("upsert failed") }) }).saveOwnProfile({
