@@ -29,6 +29,7 @@ import { BrewMethodMaster } from "./components/BrewMethodMaster.jsx";
 import { BrewStopwatch } from "./components/BrewStopwatch.jsx";
 import { Dosing } from "./components/Dosing.jsx";
 import { ProfilePanel } from "./components/ProfilePanel.jsx";
+import { ProfileSettingsPanel } from "./components/ProfileSettingsPanel.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
@@ -36,6 +37,7 @@ import { isLegalPage, LegalPage } from "./components/LegalPages.jsx";
 import { WorkspaceStatus } from "./components/WorkspaceStatus.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
+import { useProfile } from "./hooks/useProfile.js";
 import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import { downloadFile } from "./services/downloadFile.js";
 import "./styles.css";
@@ -64,6 +66,7 @@ function App({ authUser, authError, onSignOut }) {
   const [activePage, setActivePage] = useState("blend");
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
   const editor = useRecipeEditor();
+  const profileState = useProfile();
   const {
     blendName,
     setBlendName,
@@ -418,6 +421,14 @@ function App({ authUser, authError, onSignOut }) {
           <>
             <BeanMaster beans={beans} saveStatus={masterSaveStatus.beans} onAdd={addBean} onDelete={deleteBean} onSave={saveBean} />
             <BrewMethodMaster methods={brewMethods} saveStatus={masterSaveStatus.brewMethods} onAdd={addBrewMethod} onDelete={deleteBrewMethod} onSave={saveBrewMethod} />
+            <ProfileSettingsPanel
+              profile={profileState.profile}
+              loading={profileState.loading}
+              loadError={profileState.loadError}
+              saveError={profileState.saveError}
+              saveStatus={profileState.saveStatus}
+              onSave={profileState.saveProfile}
+            />
             <AccountPanel email={authUser?.email} onOpenLegalPage={setActivePage} onSignOut={onSignOut} />
           </>
         )}
