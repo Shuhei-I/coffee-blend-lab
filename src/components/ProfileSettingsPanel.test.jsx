@@ -59,7 +59,7 @@ describe("ProfileSettingsPanel", () => {
     renderProfileSettingsPanel({ profile: { username: "no" }, onSave });
 
     expect(document.querySelector("button[type='submit']").disabled).toBe(true);
-    expect(document.querySelector("[role='status']").textContent).toContain("Username must be 3-20");
+    expect(document.querySelector("[role='status']").textContent).toContain("ユーザー名は3〜20文字");
     await submit();
 
     expect(onSave).not.toHaveBeenCalled();

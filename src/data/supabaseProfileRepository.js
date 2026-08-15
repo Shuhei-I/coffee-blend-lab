@@ -84,7 +84,7 @@ export function validateProfileInput({ username, displayName = "", bio = "" } = 
   if (!/^[a-z0-9_]{3,20}$/.test(normalizedUsername)) {
     return {
       valid: false,
-      reason: "Username must be 3-20 lowercase letters, numbers, or underscores.",
+      reason: "ユーザー名は3〜20文字の半角英小文字・数字・アンダースコアで入力してください。",
     };
   }
   if (String(displayName || "").trim().length > 60) {
