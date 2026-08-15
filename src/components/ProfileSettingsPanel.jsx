@@ -55,7 +55,7 @@ export function ProfileSettingsPanel({ profile, loading, loadError, saveError, s
           <input
             type="text"
             value={draft.username}
-            placeholder="shuhey_inoue"
+            placeholder="your_coffee_name"
             autoComplete="off"
             onChange={(event) => updateField("username", event.target.value)}
           />
@@ -65,7 +65,7 @@ export function ProfileSettingsPanel({ profile, loading, loadError, saveError, s
           <input
             type="text"
             value={draft.displayName}
-            placeholder="Shuhey"
+            placeholder="あなたのニックネーム"
             maxLength={60}
             onChange={(event) => updateField("displayName", event.target.value)}
           />
