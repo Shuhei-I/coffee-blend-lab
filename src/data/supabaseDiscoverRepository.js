@@ -24,8 +24,36 @@ export function createSupabaseDiscoverRepository({ client } = {}) {
     return mapPublishResultRow(row);
   }
 
+  async function getOwnPostsForVersions(versionIds = []) {
+    const uniqueVersionIds = [...new Set(versionIds.filter(Boolean))];
+    if (uniqueVersionIds.length === 0) return [];
+
+    const supabase = await getClient();
+    const userId = await getAuthenticatedUserId(supabase);
+    const { data, error } = await supabase
+      .from("posts")
+      .select("id,snapshot_id,source_version_id,content,status,published_at")
+      .eq("user_id", userId)
+      .in("source_version_id", uniqueVersionIds);
+
+    if (error) throw error;
+    return (data || []).map(mapPostRow);
+  }
+
   return {
+    getOwnPostsForVersions,
     publishRecipeVersion,
+  };
+}
+
+export function mapPostRow(row) {
+  return {
+    postId: row.id,
+    snapshotId: row.snapshot_id,
+    versionId: row.source_version_id,
+    content: row.content || "",
+    status: row.status,
+    publishedAt: row.published_at || null,
   };
 }
 

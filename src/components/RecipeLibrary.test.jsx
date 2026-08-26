@@ -119,6 +119,106 @@ describe("RecipeLibrary", () => {
     click(buttonByText("Delete"));
     expect(onDeleteVersion).toHaveBeenCalledWith("series-1700000000000", "recipe-1700000001000");
   });
+
+  test("publishes a recipe version with an optional comment", async () => {
+    const onSavePublication = vi.fn(async (input) => ({ ...input, postId: "post-1" }));
+    renderRecipeLibrary({ recipeSeries: [seriesFixture()], onSavePublication });
+
+    click(document.querySelector(".toggle-versions-button"));
+    click(buttonByText("公開"));
+
+    expect(document.querySelector(".publication-dialog")).toBeTruthy();
+    expect(document.querySelector(".publication-summary").textContent).toContain("Morning Blend v2");
+    change(document.querySelector("#publicationContent"), "夏向けに軽く調整しました");
+    await submit(document.querySelector(".publication-dialog form"));
+
+    expect(onSavePublication).toHaveBeenCalledWith({
+      versionId: "recipe-1700000001000",
+      content: "夏向けに軽く調整しました",
+      status: "published",
+    });
+    expect(document.querySelector(".publication-dialog")).toBeNull();
+    expect(document.body.textContent).toContain("Morning Blend v2 を公開しました");
+  });
+
+  test("shows current publication state and makes an existing post private", async () => {
+    const recipeId = "recipe-1700000001000";
+    const onSavePublication = vi.fn(async (input) => ({ ...input, postId: "post-1" }));
+    renderRecipeLibrary({
+      recipeSeries: [seriesFixture()],
+      publicationsByVersionId: {
+        [recipeId]: { versionId: recipeId, content: "公開中のコメント", status: "published" },
+      },
+      onSavePublication,
+    });
+
+    click(document.querySelector(".toggle-versions-button"));
+    expect(document.querySelector(".publication-status").textContent).toBe("公開中");
+    click(buttonByText("公開設定"));
+    expect(document.querySelector("#publicationContent").value).toBe("公開中のコメント");
+    click(document.querySelector("#publicationStatus"));
+    expect(buttonByText("非公開にする")).toBeTruthy();
+    await submit(document.querySelector(".publication-dialog form"));
+
+    expect(onSavePublication).toHaveBeenCalledWith({
+      versionId: recipeId,
+      content: "公開中のコメント",
+      status: "private",
+    });
+    expect(document.body.textContent).toContain("Morning Blend v2 を非公開にしました");
+  });
+
+  test("re-publishes the existing post for a private recipe version", async () => {
+    const recipeId = "recipe-1700000001000";
+    const onSavePublication = vi.fn(async (input) => ({ ...input, postId: "post-1" }));
+    renderRecipeLibrary({
+      recipeSeries: [seriesFixture()],
+      publicationsByVersionId: {
+        [recipeId]: { versionId: recipeId, content: "再調整しました", status: "private" },
+      },
+      onSavePublication,
+    });
+
+    click(document.querySelector(".toggle-versions-button"));
+    expect(document.querySelector(".publication-status").textContent).toBe("非公開");
+    click(buttonByText("公開設定"));
+    expect(document.querySelector("#publicationStatus").checked).toBe(false);
+    click(document.querySelector("#publicationStatus"));
+    expect(buttonByText("再公開する")).toBeTruthy();
+    await submit(document.querySelector(".publication-dialog form"));
+
+    expect(onSavePublication).toHaveBeenCalledWith({
+      versionId: recipeId,
+      content: "再調整しました",
+      status: "published",
+    });
+  });
+
+  test("disables publication controls when publication state cannot be loaded", () => {
+    renderRecipeLibrary({
+      recipeSeries: [seriesFixture()],
+      publicationLoadError: new Error("load failed"),
+    });
+
+    click(document.querySelector(".toggle-versions-button"));
+    expect(buttonByText("公開").disabled).toBe(true);
+    expect(document.body.textContent).toContain("公開状態を読み込めませんでした");
+  });
+
+  test("keeps the publication dialog open and shows a save error", async () => {
+    renderRecipeLibrary({
+      recipeSeries: [seriesFixture()],
+      publicationSaveError: new Error("save failed"),
+      onSavePublication: vi.fn(async () => null),
+    });
+
+    click(document.querySelector(".toggle-versions-button"));
+    click(buttonByText("公開"));
+    await submit(document.querySelector(".publication-dialog form"));
+
+    expect(document.querySelector(".publication-dialog")).toBeTruthy();
+    expect(document.body.textContent).toContain("公開設定を保存できませんでした");
+  });
 });
 
 function renderRecipeLibrary(overrides = {}) {
@@ -130,6 +230,7 @@ function renderRecipeLibrary(overrides = {}) {
     onArchive: vi.fn(),
     onRestore: vi.fn(),
     onDeleteVersion: vi.fn(),
+    onSavePublication: vi.fn(async (input) => input),
     onExport: vi.fn(),
     onLoaded: vi.fn(),
     ...overrides,
@@ -154,6 +255,23 @@ function click(element) {
   act(() => {
     element.click();
   });
+}
+
+function change(element, value) {
+  act(() => {
+    reactProps(element).onChange({ target: { value } });
+  });
+}
+
+async function submit(form) {
+  await act(async () => {
+    await reactProps(form).onSubmit({ preventDefault: vi.fn() });
+  });
+}
+
+function reactProps(element) {
+  const key = Object.keys(element).find((item) => item.startsWith("__reactProps$"));
+  return element[key];
 }
 
 function buttonByText(text) {
