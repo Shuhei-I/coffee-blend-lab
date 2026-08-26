@@ -38,6 +38,7 @@ import { isLegalPage, LegalPage } from "./components/LegalPages.jsx";
 import { WorkspaceStatus } from "./components/WorkspaceStatus.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import { useCoffeeData } from "./hooks/useCoffeeData.js";
+import { useDiscoverPublishing } from "./hooks/useDiscoverPublishing.js";
 import { useProfile } from "./hooks/useProfile.js";
 import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import { downloadFile } from "./services/downloadFile.js";
@@ -125,6 +126,11 @@ function App({ authUser, authError, onSignOut }) {
     savedRecipeBrewMethod,
     onBeansReplaced: replaceBlendRatiosForBeans,
   });
+  const recipeVersionIds = useMemo(
+    () => recipeSeries.flatMap((series) => series.versions.map((version) => version.id)),
+    [recipeSeries],
+  );
+  const publicationState = useDiscoverPublishing({ versionIds: recipeVersionIds });
 
   const recipeBeanIds = useMemo(() => new Set(selectedBlendBeanIds), [selectedBlendBeanIds]);
   const recipeBeans = useMemo(
@@ -410,10 +416,16 @@ function App({ authUser, authError, onSignOut }) {
             recipeSeries={recipeSeries}
             beans={beans}
             brewMethods={brewMethods}
+            publicationsByVersionId={publicationState.publicationsByVersionId}
+            publicationLoading={publicationState.loading}
+            publicationLoadError={publicationState.loadError}
+            publicationSaveError={publicationState.saveError}
+            publishingVersionId={publicationState.savingVersionId}
             onLoad={loadRecipe}
             onArchive={archiveRecipeSeries}
             onRestore={restoreRecipeSeries}
             onDeleteVersion={deleteRecipeVersion}
+            onSavePublication={publicationState.savePublication}
             onExport={exportRecipes}
             onLoaded={() => setActivePage("blend")}
           />
