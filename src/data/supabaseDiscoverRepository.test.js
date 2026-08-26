@@ -1,5 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
-import { createSupabaseDiscoverRepository, mapPostRow, mapPublishResultRow } from "./supabaseDiscoverRepository.js";
+import {
+  createSupabaseDiscoverRepository,
+  mapPostRow,
+  mapPublishResultRow,
+} from "./supabaseDiscoverRepository.js";
 
 const userId = "11111111-1111-4111-8111-111111111111";
 const versionId = "22222222-2222-4222-8222-222222222222";
@@ -160,7 +164,13 @@ describe("supabaseDiscoverRepository", () => {
   });
 });
 
-function createClient({ authUser = { id: userId }, rpcData = null, rpcError = null, queryData = [], queryError = null } = {}) {
+function createClient({
+  authUser = { id: userId },
+  rpcData = null,
+  rpcError = null,
+  queryData = [],
+  queryError = null,
+} = {}) {
   const query = {};
   query.select = vi.fn(() => query);
   query.eq = vi.fn(() => query);

@@ -116,7 +116,7 @@ h2 {
   left: 0;
   z-index: 15;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 4px;
   min-height: 64px;
   padding: 8px max(12px, calc((100vw - 1180px) / 2));
@@ -403,6 +403,193 @@ textarea {
   color: #fff;
   background: var(--teal);
   font-weight: 900;
+}
+
+.discover-page {
+  display: grid;
+  gap: 16px;
+}
+
+.discover-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  padding: 4px 2px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.discover-heading h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.discover-order-label {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.discover-login-button {
+  min-height: 42px;
+  padding: 0 16px;
+  color: #fff;
+  background: var(--teal);
+}
+
+.discover-state {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  min-height: 140px;
+  margin: 0;
+  padding: 28px 2px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.discover-state p {
+  margin: 0;
+}
+
+.discover-feed {
+  display: grid;
+  gap: 12px;
+}
+
+.discover-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.discover-card-header,
+.discover-blend-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+}
+
+.discover-author {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.discover-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--coral);
+  font-weight: 900;
+}
+
+.discover-author strong,
+.discover-author span {
+  display: block;
+}
+
+.discover-author span,
+.discover-card time {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.discover-card time {
+  white-space: nowrap;
+}
+
+.discover-comment,
+.discover-blend-goal {
+  margin: 0;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.discover-comment {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.discover-blend-heading h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.discover-blend-heading h2 span {
+  color: var(--coral);
+  font-size: 0.86rem;
+}
+
+.discover-blend-goal {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.discover-bean-list {
+  display: grid;
+  gap: 9px;
+}
+
+.discover-bean-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.85fr) minmax(90px, 1fr) 48px;
+  gap: 10px;
+  align-items: center;
+  min-height: 26px;
+  font-size: 0.84rem;
+}
+
+.discover-bean-row > span:first-child {
+  overflow-wrap: anywhere;
+}
+
+.discover-bean-row > strong {
+  color: var(--teal);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.discover-ratio-track {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eee5d8;
+}
+
+.discover-ratio-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+}
+
+.discover-bean-row:nth-child(3n + 2) .discover-ratio-track > span {
+  background: var(--coral);
+}
+
+.discover-bean-row:nth-child(3n) .discover-ratio-track > span {
+  background: var(--gold);
+}
+
+.discover-page-error {
+  margin: 0;
+}
+
+.discover-more-button {
+  justify-self: center;
+  min-width: 160px;
 }
 
 button:disabled {
@@ -1658,6 +1845,28 @@ canvas {
 
   .public-discover-panel button {
     width: 100%;
+  }
+
+  .discover-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .discover-login-button {
+    width: 100%;
+  }
+
+  .discover-card {
+    padding: 15px;
+  }
+
+  .discover-card-header {
+    align-items: center;
+  }
+
+  .discover-bean-row {
+    grid-template-columns: minmax(84px, 0.8fr) minmax(70px, 1fr) 44px;
+    gap: 8px;
   }
 
   .legal-page-actions {

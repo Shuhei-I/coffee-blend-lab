@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import { AuthScreen } from "./AuthScreen.jsx";
 import { isLegalPage, LegalPage } from "./LegalPages.jsx";
+
+const DiscoverTimeline = lazy(() => import("./DiscoverTimeline.jsx"));
 
 const publicPages = [
   ["discover", "Discover"],
@@ -10,7 +12,7 @@ const publicPages = [
   ["login", "Login"],
 ];
 
-export function PublicShell({ auth, logoSrc, initialPage = "discover" }) {
+export function PublicShell({ auth, logoSrc, initialPage = "discover", discoverRepository }) {
   const [activePage, setActivePage] = useState(initialPage);
 
   return (
@@ -45,27 +47,14 @@ export function PublicShell({ auth, logoSrc, initialPage = "discover" }) {
         />
       ) : (
         <main className="workspace single-page public-workspace">
-          {activePage === "discover" && <PublicDiscoverIntro onLogin={() => setActivePage("login")} />}
+          {activePage === "discover" && (
+            <Suspense fallback={<p className="discover-state" role="status">Discoverを読み込んでいます...</p>}>
+              <DiscoverTimeline discoverRepository={discoverRepository} onLogin={() => setActivePage("login")} />
+            </Suspense>
+          )}
           {isLegalPage(activePage) && <LegalPage page={activePage} onBack={() => setActivePage("discover")} />}
         </main>
       )}
     </>
-  );
-}
-
-function PublicDiscoverIntro({ onLogin }) {
-  return (
-    <section className="panel public-discover-panel" aria-labelledby="publicDiscoverTitle">
-      <div>
-        <p className="eyebrow">Discover</p>
-        <h1 id="publicDiscoverTitle">公開ブレンド</h1>
-        <p>
-          他のユーザーが公開したブレンド記録を見つけ、自分の実験へ取り込める場所です。投稿一覧は次の実装フェーズで追加します。
-        </p>
-      </div>
-      <button type="button" onClick={onLogin}>
-        ログインして始める
-      </button>
-    </section>
   );
 }

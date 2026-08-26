@@ -27,35 +27,37 @@ afterEach(() => {
 });
 
 describe("PublicShell", () => {
-  test("renders Discover for unauthenticated visitors", () => {
-    renderPublicShell();
+  test("renders Discover for unauthenticated visitors", async () => {
+    await renderPublicShell();
 
     expect(document.querySelector(".brand-logo").getAttribute("alt")).toBe("Coffee Blend Lab");
-    expect(document.querySelector("#publicDiscoverTitle").textContent).toBe("公開ブレンド");
-    expect(document.querySelector(".public-discover-panel").textContent).toContain("投稿一覧は次の実装フェーズ");
+    expect(document.querySelector("#discoverTitle").textContent).toBe("公開ブレンド");
+    expect(document.body.textContent).toContain("まだ公開ブレンドはありません");
   });
 
-  test("opens the auth screen from the Discover call to action", () => {
-    renderPublicShell();
+  test("opens the auth screen from the Discover call to action", async () => {
+    await renderPublicShell();
 
-    click(buttonByText("ログインして始める"));
+    click(buttonByText("ブレンドを公開する"));
 
     expect(document.querySelector("#authTitle").textContent).toBe("Coffee Blend Lab");
     expect(document.querySelector("form.auth-form")).toBeTruthy();
   });
 
-  test("opens public legal pages from the public navigation", () => {
-    renderPublicShell();
+  test("opens public legal pages from the public navigation", async () => {
+    await renderPublicShell();
 
     click(buttonByText("Privacy"));
     expect(document.querySelector(".legal-panel")).toBeTruthy();
 
     click(buttonByText("Discover"));
-    expect(document.querySelector("#publicDiscoverTitle")).toBeTruthy();
+    await flush();
+    expect(document.querySelector("#discoverTitle")).toBeTruthy();
   });
 });
 
-function renderPublicShell(overrides = {}) {
+async function renderPublicShell(overrides = {}) {
+  await import("./DiscoverTimeline.jsx");
   const auth = {
     error: "",
     signIn: vi.fn(),
@@ -66,8 +68,16 @@ function renderPublicShell(overrides = {}) {
 
   act(() => {
     root = createRoot(container);
-    root.render(<PublicShell auth={auth} logoSrc="/logo.png" initialPage={overrides.initialPage || "discover"} />);
+    root.render(
+      <PublicShell
+        auth={auth}
+        logoSrc="/logo.png"
+        initialPage={overrides.initialPage || "discover"}
+        discoverRepository={overrides.discoverRepository || createDiscoverRepository()}
+      />,
+    );
   });
+  await flush();
 
   return auth;
 }
@@ -80,4 +90,18 @@ function click(element) {
 
 function buttonByText(text) {
   return [...document.querySelectorAll("button")].find((button) => button.textContent === text);
+}
+
+function createDiscoverRepository() {
+  return {
+    listDiscoverPosts: vi.fn(async () => ({ posts: [], hasMore: false, nextCursor: null })),
+  };
+}
+
+async function flush() {
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
 }

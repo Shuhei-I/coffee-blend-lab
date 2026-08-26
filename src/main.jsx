@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { lazy, Suspense, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import logoImage from "../assets/cbl-logo.png";
 import {
@@ -44,11 +44,14 @@ import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import { downloadFile } from "./services/downloadFile.js";
 import "./styles.css";
 
+const DiscoverTimeline = lazy(() => import("./components/DiscoverTimeline.jsx"));
+
 const pages = [
   ["blend", "配合"],
   ["brew", "抽出"],
   ["record", "記録"],
   ["history", "履歴"],
+  ["discover", "発見"],
   ["manage", "管理"],
 ];
 
@@ -429,6 +432,11 @@ function App({ authUser, authError, onSignOut }) {
             onExport={exportRecipes}
             onLoaded={() => setActivePage("blend")}
           />
+        )}
+        {activePage === "discover" && (
+          <Suspense fallback={<p className="discover-state" role="status">Discoverを読み込んでいます...</p>}>
+            <DiscoverTimeline />
+          </Suspense>
         )}
         {activePage === "manage" && (
           <>
