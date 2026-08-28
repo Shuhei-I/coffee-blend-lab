@@ -106,7 +106,11 @@ export function RecipeLibrary({
                       onClick={() => toggleSeries(series.id)}
                     />
                     <div>
-                      <strong>{series.name}{archived && <span className="status-pill">Archived</span>}</strong>
+                      <strong>
+                        {series.name}
+                        {series.sourceLabel && <span className="status-pill">Discoverから追加</span>}
+                        {archived && <span className="status-pill">Archived</span>}
+                      </strong>
                       {series.goal && <span className="recipe-series-goal">{series.goal}</span>}
                       {latest && <span className="recipe-latest-summary">{summarizeRecipe(latest, beans)} / v{latest.version}</span>}
                       {brewMethod && <span className="recipe-brew-method recipe-latest-summary">{summarizeBrewMethod(brewMethod)}</span>}

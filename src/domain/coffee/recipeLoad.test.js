@@ -30,6 +30,8 @@ describe("recipe loading editor state", () => {
       changeNote: recipe.changeNote,
       doseGram: recipe.doseGram,
       brewRatio: recipe.brewRatio,
+      grindSize: recipe.grindSize,
+      brewTemperatureC: recipe.brewTemperatureC,
       editingRecipeSource: { seriesId: "series-1700000000000", versionId: "recipe-1700000001000" },
       sensory: recipe.sensory,
       memo: recipe.memo,
@@ -53,6 +55,7 @@ describe("recipe loading editor state", () => {
       seriesId: undefined,
       doseGram: 0,
       brewRatio: 0,
+      brewTemperatureC: null,
       brewMethodSnapshot: null,
       sensory: { fragrance: 9 },
       memo: "",
@@ -70,6 +73,8 @@ describe("recipe loading editor state", () => {
     expect(result.editorState.changeNote).toBe("");
     expect(result.editorState.doseGram).toBe(20);
     expect(result.editorState.brewRatio).toBe(16);
+    expect(result.editorState.grindSize).toBe("medium_fine");
+    expect(result.editorState.brewTemperatureC).toBe(90);
     expect(result.editorState.savedRecipeBrewMethod).toBeNull();
     expect(result.editorState.editingRecipeSource).toEqual({ seriesId: undefined, versionId: "recipe-1700000000000" });
     expect(result.editorState.sensory).toEqual({ ...initialSensory, fragrance: 9 });

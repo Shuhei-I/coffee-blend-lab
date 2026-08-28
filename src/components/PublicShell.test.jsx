@@ -57,7 +57,7 @@ describe("PublicShell", () => {
 });
 
 async function renderPublicShell(overrides = {}) {
-  await import("./DiscoverTimeline.jsx");
+  await import("./DiscoverPage.jsx");
   const auth = {
     error: "",
     signIn: vi.fn(),

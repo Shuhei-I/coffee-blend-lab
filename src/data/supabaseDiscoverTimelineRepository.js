@@ -60,7 +60,30 @@ export function createSupabaseDiscoverTimelineRepository({ client } = {}) {
     };
   }
 
-  return { listDiscoverPosts };
+  async function getDiscoverPost(postId) {
+    const normalizedPostId = String(postId || "").trim();
+    if (!isUuid(normalizedPostId)) return null;
+
+    const supabase = await getClient();
+    const { data, error } = await supabase
+      .from("posts")
+      .select(DISCOVER_POST_COLUMNS)
+      .eq("id", normalizedPostId)
+      .eq("status", "published")
+      .not("published_at", "is", null)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    const profilesByUserId = await loadPublicProfiles(
+      supabase,
+      data.user_id ? [data.user_id] : [],
+    );
+    return mapDiscoverPostRow(data, profilesByUserId.get(data.user_id));
+  }
+
+  return { listDiscoverPosts, getDiscoverPost };
 }
 
 export function buildDiscoverCursorFilter({ publishedAt, postId }) {
@@ -88,6 +111,7 @@ export function mapDiscoverPostRow(row, profileRow = null) {
       version: Number(snapshot.version ?? snapshotRow?.source_version_number) || 1,
       versionName: snapshot.versionName || snapshotRow?.version_name || "",
       beans: mapPublicSnapshotBeans(snapshot.beans),
+      brew: mapPublicSnapshotBrew(snapshot.brew),
     },
   };
 }
@@ -111,4 +135,46 @@ function mapPublicSnapshotBeans(beans) {
     ratio: Number(bean?.ratio) || 0,
     roastLevel: bean?.roastLevel || "",
   }));
+}
+
+function mapPublicSnapshotBrew(brew) {
+  if (!brew || typeof brew !== "object" || Array.isArray(brew)) return null;
+
+  const methodSnapshot = brew.brewMethodSnapshot;
+  const method = methodSnapshot && typeof methodSnapshot === "object" && !Array.isArray(methodSnapshot)
+    ? {
+        name: methodSnapshot.name || "",
+        extractionType: methodSnapshot.extractionType || "",
+        equipmentName: methodSnapshot.equipmentName || "",
+        bloomPercent: optionalNumber(methodSnapshot.bloomPercent),
+        bloomSeconds: optionalNumber(methodSnapshot.bloomSeconds),
+        pour1Percent: optionalNumber(methodSnapshot.pour1Percent),
+        pour2Percent: optionalNumber(methodSnapshot.pour2Percent),
+        pour3Percent: optionalNumber(methodSnapshot.pour3Percent),
+      }
+    : null;
+
+  const mapped = {
+    doseGram: optionalNumber(brew.doseGram),
+    brewRatio: optionalNumber(brew.brewRatio),
+    targetBrewGram: optionalNumber(brew.targetBrewGram),
+    grindSize: brew.grindSize || "",
+    temperatureC: optionalNumber(brew.temperatureC),
+    totalBrewSeconds: optionalNumber(brew.totalBrewSeconds),
+    method: method && Object.values(method).some((value) => value !== "" && value !== null)
+      ? method
+      : null,
+  };
+
+  return Object.values(mapped).some((value) => value !== "" && value !== null) ? mapped : null;
+}
+
+function optionalNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }

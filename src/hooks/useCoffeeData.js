@@ -337,6 +337,32 @@ export function useCoffeeData({
     }
   }, []);
 
+  const copyPublishedBlend = useCallback(async (postId) => {
+    try {
+      const copied = await recipeRepositoryRef.current.copyPublishedBlend(postId);
+      const [nextBeans, nextRecipeSeries] = await Promise.all([
+        beanRepositoryRef.current.getBeans(),
+        recipeRepositoryRef.current.getRecipeSeries(),
+      ]);
+      const copiedSeries = nextRecipeSeries.find((series) => series.id === copied.seriesId);
+      const copiedVersion = copiedSeries?.versions.find((version) => version.id === copied.versionId);
+      if (!copiedSeries || !copiedVersion) {
+        throw new Error("Copied recipe was not found after reload");
+      }
+
+      savedBeansSnapshot.current = serializeMaster(nextBeans);
+      setBeans(nextBeans);
+      onBeansReplacedRef.current?.(nextBeans);
+      setRecipeSeries(nextRecipeSeries);
+      setSaveError(null);
+      return { ...copied, series: copiedSeries, version: copiedVersion };
+    } catch (error) {
+      console.error("Failed to copy published blend", error);
+      setSaveError(error);
+      return null;
+    }
+  }, []);
+
   const saveSelectedBrewMethodId = useCallback(async (brewMethodId) => {
     if (savedRecipeBrewMethod?.id === brewMethodId) {
       setSelectedBrewMethodId(brewMethodId);
@@ -412,6 +438,7 @@ export function useCoffeeData({
     setSelectedBrewMethodId,
     saveSelectedBrewMethodId,
     saveRecipeVersion,
+    copyPublishedBlend,
     archiveRecipeSeries,
     restoreRecipeSeries,
     deleteRecipeVersion,

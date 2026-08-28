@@ -34,8 +34,28 @@ describe("supabaseDiscoverTimelineRepository", () => {
           { name: "Brazil", ratio: 50, roastLevel: "medium" },
           { name: "Ethiopia", ratio: 50, roastLevel: "light" },
         ],
+        brew: {
+          doseGram: 15,
+          brewRatio: 16,
+          targetBrewGram: 240,
+          grindSize: "medium_fine",
+          temperatureC: 92,
+          totalBrewSeconds: null,
+          method: {
+            name: "V60 4投式",
+            extractionType: "pour_over",
+            equipmentName: "V60",
+            bloomPercent: 12,
+            bloomSeconds: 30,
+            pour1Percent: 28,
+            pour2Percent: 30,
+            pour3Percent: 30,
+          },
+        },
       },
     });
+
+    expect(JSON.stringify(mapDiscoverPostRow(discoverPostRow()))).not.toContain("internal-");
   });
 
   test("builds a stable published-at and post-id cursor filter", () => {
@@ -85,11 +105,39 @@ describe("supabaseDiscoverTimelineRepository", () => {
     expect(result.hasMore).toBe(false);
     expect(result.nextCursor).toBeNull();
   });
+
+  test("loads one published post by id", async () => {
+    const client = createClient({
+      detailData: discoverPostRow(),
+      profileData: [{ user_id: userId, username: "shuhey", display_name: "Shuhey", avatar_path: null }],
+    });
+    const repository = createSupabaseDiscoverTimelineRepository({ client });
+
+    await expect(repository.getDiscoverPost(postId)).resolves.toMatchObject({
+      postId,
+      author: { username: "shuhey" },
+      blend: { name: "Summer Blend", version: 3 },
+    });
+    expect(client.query.eq).toHaveBeenNthCalledWith(1, "id", postId);
+    expect(client.query.eq).toHaveBeenNthCalledWith(2, "status", "published");
+    expect(client.query.not).toHaveBeenCalledWith("published_at", "is", null);
+    expect(client.query.maybeSingle).toHaveBeenCalledTimes(1);
+  });
+
+  test("returns not found without querying for an invalid post id", async () => {
+    const client = createClient();
+    const repository = createSupabaseDiscoverTimelineRepository({ client });
+
+    await expect(repository.getDiscoverPost("not-a-post-id")).resolves.toBeNull();
+    expect(client.from).not.toHaveBeenCalled();
+  });
 });
 
 function createClient({
   timelineData = [],
   timelineError = null,
+  detailData = null,
+  detailError = null,
   profileData = [],
   profileError = null,
 } = {}) {
@@ -100,6 +148,7 @@ function createClient({
   query.order = vi.fn(() => query);
   query.or = vi.fn(() => query);
   query.limit = vi.fn(async () => ({ data: timelineData, error: timelineError }));
+  query.maybeSingle = vi.fn(async () => ({ data: detailData, error: detailError }));
 
   const profileQuery = {};
   profileQuery.select = vi.fn(() => profileQuery);
@@ -133,6 +182,26 @@ function discoverPostRow(patch = {}) {
           { beanId: "internal-brazil", ratio: 50, roastLevel: "medium", beanSnapshot: { id: "internal-brazil", name: "Brazil" } },
           { beanId: "internal-ethiopia", ratio: 50, roastLevel: "light", beanSnapshot: { id: "internal-ethiopia", name: "Ethiopia" } },
         ],
+        brew: {
+          doseGram: 15,
+          brewRatio: 16,
+          targetBrewGram: 240,
+          grindSize: "medium_fine",
+          temperatureC: 92,
+          brewMethodId: "internal-method",
+          brewMethodSnapshot: {
+            id: "internal-method",
+            name: "V60 4投式",
+            note: "private note",
+            extractionType: "pour_over",
+            equipmentName: "V60",
+            bloomPercent: 12,
+            bloomSeconds: 30,
+            pour1Percent: 28,
+            pour2Percent: 30,
+            pour3Percent: 30,
+          },
+        },
       },
     },
     ...patch,

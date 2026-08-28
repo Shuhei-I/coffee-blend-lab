@@ -1,5 +1,5 @@
 const BREW_METHOD_COLUMNS =
-  "id, system_key, name, note, bloom_percent, pour1_percent, pour2_percent, pour3_percent, bloom_seconds, created_at, updated_at";
+  "id, system_key, name, note, extraction_type, equipment_name, bloom_percent, pour1_percent, pour2_percent, pour3_percent, bloom_seconds, created_at, updated_at";
 
 const DEFAULT_SYSTEM_KEY_ORDER = ["standard-4-pour", "sweet-forward"];
 
@@ -68,6 +68,8 @@ export function mapBrewMethodRowToBrewMethod(row) {
     id: row.id,
     name: row.name || "",
     note: row.note || "",
+    extractionType: row.extraction_type || "",
+    equipmentName: row.equipment_name || "",
     bloomPercent: Number(row.bloom_percent) || 0,
     pour1Percent: Number(row.pour1_percent) || 0,
     pour2Percent: Number(row.pour2_percent) || 0,
@@ -98,6 +100,8 @@ export function mapBrewMethodToUpdatePayload(brewMethod) {
   return {
     name: brewMethod.name || "",
     note: brewMethod.note || "",
+    extraction_type: brewMethod.extractionType || "",
+    equipment_name: brewMethod.equipmentName || "",
     bloom_percent: Number(brewMethod.bloomPercent) || 0,
     pour1_percent: Number(brewMethod.pour1Percent) || 0,
     pour2_percent: Number(brewMethod.pour2Percent) || 0,

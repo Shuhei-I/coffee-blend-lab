@@ -36,6 +36,8 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.changeNote).toBe("");
     expect(rendered.current.doseGram).toBe(20);
     expect(rendered.current.brewRatio).toBe(16);
+    expect(rendered.current.grindSize).toBe("");
+    expect(rendered.current.brewTemperatureC).toBe(90);
     expect(rendered.current.savedRecipeBrewMethod).toBeNull();
     expect(rendered.current.editingRecipeSource).toBeNull();
     expect(rendered.current.sensory).toEqual(initialSensory);
@@ -56,6 +58,8 @@ describe("useRecipeEditor", () => {
       rendered.current.setChangeNote("Note");
       rendered.current.setDoseGram(24);
       rendered.current.setBrewRatio(15);
+      rendered.current.setGrindSize("medium_fine");
+      rendered.current.setBrewTemperatureC(92);
       rendered.current.setSavedRecipeBrewMethod(savedMethod);
       rendered.current.setEditingRecipeSource(source);
       rendered.current.setSensory({ fragrance: 8, flavor: 7, aftertaste: 6, balance: 5 });
@@ -70,6 +74,8 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.changeNote).toBe("Note");
     expect(rendered.current.doseGram).toBe(24);
     expect(rendered.current.brewRatio).toBe(15);
+    expect(rendered.current.grindSize).toBe("medium_fine");
+    expect(rendered.current.brewTemperatureC).toBe(92);
     expect(rendered.current.savedRecipeBrewMethod).toBe(savedMethod);
     expect(rendered.current.editingRecipeSource).toBe(source);
     expect(rendered.current.sensory).toEqual({ fragrance: 8, flavor: 7, aftertaste: 6, balance: 5 });
@@ -183,6 +189,8 @@ describe("useRecipeEditor", () => {
         changeNote: "Changed",
         doseGram: 30,
         brewRatio: 12,
+        grindSize: "coarse",
+        brewTemperatureC: 88,
         savedRecipeBrewMethod: { id: "saved" },
         editingRecipeSource: { seriesId: "series", versionId: "version" },
         sensory: { fragrance: 1, flavor: 2, aftertaste: 3, balance: 4 },
@@ -199,6 +207,8 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.changeNote).toBe("");
     expect(rendered.current.doseGram).toBe(20);
     expect(rendered.current.brewRatio).toBe(16);
+    expect(rendered.current.grindSize).toBe("");
+    expect(rendered.current.brewTemperatureC).toBe(90);
     expect(rendered.current.savedRecipeBrewMethod).toBeNull();
     expect(rendered.current.editingRecipeSource).toBeNull();
     expect(rendered.current.sensory).toEqual(initialSensory);
@@ -216,6 +226,8 @@ describe("useRecipeEditor", () => {
       changeNote: "",
       doseGram: 18,
       brewRatio: 14,
+      grindSize: "fine",
+      brewTemperatureC: 90,
       savedRecipeBrewMethod: { id: "saved-brew-recipe" },
       editingRecipeSource: { seriesId: "series-2", versionId: "recipe-2" },
       sensory: { fragrance: 8, flavor: 8, aftertaste: 7, balance: 8 },
@@ -234,6 +246,8 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.changeNote).toBe(nextState.changeNote);
     expect(rendered.current.doseGram).toBe(nextState.doseGram);
     expect(rendered.current.brewRatio).toBe(nextState.brewRatio);
+    expect(rendered.current.grindSize).toBe(nextState.grindSize);
+    expect(rendered.current.brewTemperatureC).toBe(nextState.brewTemperatureC);
     expect(rendered.current.savedRecipeBrewMethod).toBe(nextState.savedRecipeBrewMethod);
     expect(rendered.current.editingRecipeSource).toBe(nextState.editingRecipeSource);
     expect(rendered.current.sensory).toBe(nextState.sensory);

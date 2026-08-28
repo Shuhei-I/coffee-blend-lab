@@ -49,23 +49,32 @@ describe("Dosing", () => {
       ["standard", "Standard"],
       ["saved-recipe", "Saved recipe"],
     ]);
+    expect(selects[2].value).toBe("medium_fine");
+    expect(document.querySelectorAll("input")[1].value).toBe("92");
   });
 
   test("calls input callbacks with existing conversion rules", () => {
     const onDoseChange = vi.fn();
     const onRatioChange = vi.fn();
     const onMethodChange = vi.fn();
-    renderDosing({ onDoseChange, onRatioChange, onMethodChange });
+    const onGrindSizeChange = vi.fn();
+    const onBrewTemperatureChange = vi.fn();
+    renderDosing({ onDoseChange, onRatioChange, onMethodChange, onGrindSizeChange, onBrewTemperatureChange });
     const doseInput = document.querySelector("input");
+    const temperatureInput = document.querySelectorAll("input")[1];
     const selects = document.querySelectorAll("select");
 
     change(doseInput, "25");
     change(selects[0], "14");
     change(selects[1], "saved-recipe");
+    change(selects[2], "coarse");
+    change(temperatureInput, "88");
 
     expect(onDoseChange).toHaveBeenCalledWith(25);
     expect(onRatioChange).toHaveBeenCalledWith(14);
     expect(onMethodChange).toHaveBeenCalledWith("saved-recipe");
+    expect(onGrindSizeChange).toHaveBeenCalledWith("coarse");
+    expect(onBrewTemperatureChange).toHaveBeenCalledWith(88);
   });
 
   test("allows temporarily empty dose input while editing", () => {
@@ -140,6 +149,8 @@ function renderDosing(overrides = {}) {
   const props = {
     doseGram: 20,
     brewRatio: 16,
+    grindSize: "medium_fine",
+    brewTemperatureC: 92,
     targetBrewGram: 320,
     blendCost: 24.56,
     pourTotal: 100,
@@ -159,6 +170,8 @@ function renderDosing(overrides = {}) {
     selectedBrewMethodId: "standard",
     onDoseChange: vi.fn(),
     onRatioChange: vi.fn(),
+    onGrindSizeChange: vi.fn(),
+    onBrewTemperatureChange: vi.fn(),
     onMethodChange: vi.fn(),
     ...overrides,
   };

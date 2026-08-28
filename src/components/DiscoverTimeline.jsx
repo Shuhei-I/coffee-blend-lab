@@ -1,11 +1,11 @@
 import React from "react";
 import { useDiscoverTimeline } from "../hooks/useDiscoverTimeline.js";
 
-export function DiscoverTimeline({ discoverRepository, onLogin }) {
+export function DiscoverTimeline({ discoverRepository, hidden = false, onLogin, onOpenPost }) {
   const timeline = useDiscoverTimeline({ discoverRepository });
 
   return (
-    <section className="discover-page" aria-labelledby="discoverTitle">
+    <section className="discover-page" aria-labelledby="discoverTitle" hidden={hidden}>
       <header className="discover-heading">
         <div>
           <p className="eyebrow">Discover</p>
@@ -31,7 +31,13 @@ export function DiscoverTimeline({ discoverRepository, onLogin }) {
       ) : (
         <>
           <div className="discover-feed">
-            {timeline.posts.map((post) => <DiscoverCard key={post.postId} post={post} />)}
+            {timeline.posts.map((post) => (
+              <DiscoverCard
+                key={post.postId}
+                post={post}
+                onOpen={(trigger) => onOpenPost?.(post.postId, trigger)}
+              />
+            ))}
           </div>
           {timeline.error && (
             <p className="inline-warning discover-page-error" role="alert">次の公開ブレンドを読み込めませんでした。</p>
@@ -49,9 +55,11 @@ export function DiscoverTimeline({ discoverRepository, onLogin }) {
 
 export default DiscoverTimeline;
 
-function DiscoverCard({ post }) {
+function DiscoverCard({ post, onOpen }) {
   const displayName = post.author.displayName || post.author.username || "Coffee Explorer";
   const initial = Array.from(displayName)[0]?.toUpperCase() || "C";
+  const visibleBeans = post.blend.beans.slice(0, 3);
+  const hiddenBeanCount = Math.max(0, post.blend.beans.length - visibleBeans.length);
 
   return (
     <article className="discover-card">
@@ -66,29 +74,49 @@ function DiscoverCard({ post }) {
         <time dateTime={post.publishedAt}>{formatPublishedAt(post.publishedAt)}</time>
       </header>
 
-      {post.content && <p className="discover-comment">{post.content}</p>}
-
       <div className="discover-blend-heading">
         <div>
           <p className="eyebrow">Blend</p>
           <h2>{post.blend.name} <span>v{post.blend.version}</span></h2>
         </div>
+        {onOpen && (
+          <button
+            className="discover-open-button"
+            type="button"
+            aria-label={`「${post.blend.name} v${post.blend.version}」の詳細を見る`}
+            title="詳細を見る"
+            onClick={(event) => onOpen(event.currentTarget)}
+          >
+            <span aria-hidden="true">›</span>
+          </button>
+        )}
       </div>
-      {post.blend.goal && <p className="discover-blend-goal">{post.blend.goal}</p>}
 
-      <div className="discover-bean-list" aria-label="豆の配合">
-        {post.blend.beans.map((bean, index) => (
-          <div className="discover-bean-row" key={`${bean.name}-${index}`}>
-            <span>{bean.name}</span>
-            <span className="discover-ratio-track" aria-hidden="true">
-              <span style={{ width: `${clampRatio(bean.ratio)}%` }} />
+      {post.content && <p className="discover-comment">{post.content}</p>}
+
+      <div className="discover-composition" aria-label={buildCompositionLabel(post.blend.beans)}>
+        <span className="discover-composition-bar" aria-hidden="true">
+          {post.blend.beans.map((bean, index) => (
+            <span key={`${bean.name}-${index}`} style={{ width: `${clampRatio(bean.ratio)}%` }} />
+          ))}
+        </span>
+        <div className="discover-composition-legend">
+          {visibleBeans.map((bean, index) => (
+            <span key={`${bean.name}-${index}`}>
+              <i aria-hidden="true" />
+              <span>{bean.name}</span>
+              <strong>{formatRatio(bean.ratio)}%</strong>
             </span>
-            <strong>{formatRatio(bean.ratio)}%</strong>
-          </div>
-        ))}
+          ))}
+          {hiddenBeanCount > 0 && <span className="discover-more-beans">ほか{hiddenBeanCount}種</span>}
+        </div>
       </div>
     </article>
   );
+}
+
+function buildCompositionLabel(beans) {
+  return beans.map((bean) => `${bean.name} ${formatRatio(bean.ratio)}%`).join("、");
 }
 
 function clampRatio(value) {

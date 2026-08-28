@@ -34,10 +34,11 @@ describe("DiscoverTimeline", () => {
     expect(document.querySelector(".discover-card").textContent).toContain("@shuhey");
     expect(document.querySelector(".discover-card").textContent).toContain("Summer Blend v3");
     expect(document.querySelector(".discover-card").textContent.match(/Summer Blend/g)).toHaveLength(1);
-    expect([...document.querySelectorAll(".discover-bean-row")].map((row) => row.textContent)).toEqual([
+    expect([...document.querySelectorAll(".discover-composition-legend > span")].map((row) => row.textContent)).toEqual([
       "Brazil50%",
       "Ethiopia50%",
     ]);
+    expect(document.querySelectorAll(".discover-composition-bar > span")).toHaveLength(2);
 
     click(buttonByText("ブレンドを公開する"));
     expect(onLogin).toHaveBeenCalledTimes(1);
@@ -47,6 +48,43 @@ describe("DiscoverTimeline", () => {
     await renderTimeline({ repository: createRepository([{ posts: [], hasMore: false, nextCursor: null }]) });
 
     expect(document.body.textContent).toContain("まだ公開ブレンドはありません");
+  });
+
+  test("opens a post from its card", async () => {
+    const onOpenPost = vi.fn();
+    await renderTimeline({
+      repository: createRepository([{ posts: [postFixture()], hasMore: false, nextCursor: null }]),
+      onOpenPost,
+    });
+
+    click(buttonByLabel("「Summer Blend v3」の詳細を見る"));
+
+    expect(onOpenPost).toHaveBeenCalledWith("post-1", expect.anything());
+  });
+
+  test("keeps compositions compact when a blend has many beans", async () => {
+    const post = postFixture({
+      blend: {
+        ...postFixture().blend,
+        beans: [
+          { name: "Brazil", ratio: 30, roastLevel: "medium" },
+          { name: "Ethiopia", ratio: 25, roastLevel: "light" },
+          { name: "Colombia", ratio: 20, roastLevel: "medium" },
+          { name: "Guatemala", ratio: 15, roastLevel: "dark" },
+          { name: "Kenya", ratio: 10, roastLevel: "light" },
+        ],
+      },
+    });
+    await renderTimeline({ repository: createRepository([{ posts: [post], hasMore: false, nextCursor: null }]) });
+
+    expect(document.querySelectorAll(".discover-composition-bar > span")).toHaveLength(5);
+    expect([...document.querySelectorAll(".discover-composition-legend > span")].map((item) => item.textContent)).toEqual([
+      "Brazil30%",
+      "Ethiopia25%",
+      "Colombia20%",
+      "ほか2種",
+    ]);
+    expect(document.querySelector(".discover-card").textContent).not.toContain("軽い後味");
   });
 
   test("loads another page from the timeline", async () => {
@@ -81,10 +119,16 @@ describe("DiscoverTimeline", () => {
   });
 });
 
-async function renderTimeline({ repository, onLogin } = {}) {
+async function renderTimeline({ repository, onLogin, onOpenPost } = {}) {
   act(() => {
     root = createRoot(container);
-    root.render(<DiscoverTimeline discoverRepository={repository} onLogin={onLogin} />);
+    root.render(
+      <DiscoverTimeline
+        discoverRepository={repository}
+        onLogin={onLogin}
+        onOpenPost={onOpenPost}
+      />,
+    );
   });
   await flush();
 }
@@ -141,4 +185,8 @@ async function flush() {
 
 function buttonByText(text) {
   return [...document.querySelectorAll("button")].find((button) => button.textContent === text);
+}
+
+function buttonByLabel(label) {
+  return [...document.querySelectorAll("button")].find((button) => button.getAttribute("aria-label") === label);
 }

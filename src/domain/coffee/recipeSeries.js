@@ -139,6 +139,8 @@ export function createRecipeVersionData({
   blendBeans,
   doseGram,
   brewRatio,
+  grindSize,
+  brewTemperatureC,
   targetBrewGram,
   blendCost,
   selectedBrewMethod,
@@ -171,6 +173,10 @@ export function createRecipeVersionData({
       })),
     doseGram,
     brewRatio,
+    grindSize: grindSize || "",
+    brewTemperatureC: brewTemperatureC === "" || brewTemperatureC === null || brewTemperatureC === undefined
+      ? null
+      : Number(brewTemperatureC),
     targetBrewGram,
     blendCost,
     brewMethodId: persistedBrewMethodId !== undefined ? persistedBrewMethodId : getRecipeBrewMethodId(selectedBrewMethod),

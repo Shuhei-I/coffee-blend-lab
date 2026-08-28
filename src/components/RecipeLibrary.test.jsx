@@ -34,6 +34,12 @@ describe("RecipeLibrary", () => {
     expect(document.body.textContent).toContain("保存したブレンドシリーズがここに並びます。比率を決めたら Save を押してください。");
   });
 
+  test("shows attribution for a blend copied from Discover", () => {
+    renderRecipeLibrary({ recipeSeries: [seriesFixture({ sourceLabel: "Summer Blend" })] });
+
+    expect(document.querySelector(".recipe-series-summary .status-pill").textContent).toBe("Discoverから追加");
+  });
+
   test("toggles archived recipes without changing visible ordering", () => {
     renderRecipeLibrary({ recipeSeries: [seriesFixture({ name: "Active" }), seriesFixture({ id: "archived", name: "Archived Series", status: "archived" })] });
 
