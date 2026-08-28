@@ -1,8 +1,8 @@
 import React from "react";
 import { useDiscoverTimeline } from "../hooks/useDiscoverTimeline.js";
 
-export function DiscoverTimeline({ discoverRepository, hidden = false, onLogin, onOpenPost }) {
-  const timeline = useDiscoverTimeline({ discoverRepository });
+export function DiscoverTimeline({ discoverRepository, interactionRepository, hidden = false, onLogin, onOpenPost }) {
+  const timeline = useDiscoverTimeline({ discoverRepository, interactionRepository });
 
   return (
     <section className="discover-page" aria-labelledby="discoverTitle" hidden={hidden}>
@@ -110,6 +110,11 @@ function DiscoverCard({ post, onOpen }) {
           ))}
           {hiddenBeanCount > 0 && <span className="discover-more-beans">ほか{hiddenBeanCount}種</span>}
         </div>
+      </div>
+
+      <div className="discover-card-engagement" aria-label="Post engagement">
+        <span aria-label={`Likes ${post.engagement?.likeCount || 0}`}>♡ {post.engagement?.likeCount || 0}</span>
+        <span aria-label={`Comments ${post.engagement?.commentCount || 0}`}>コメント {post.engagement?.commentCount || 0}</span>
       </div>
     </article>
   );

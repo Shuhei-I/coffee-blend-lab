@@ -576,6 +576,14 @@ textarea {
   -webkit-line-clamp: 2;
 }
 
+.discover-card-engagement {
+  display: flex;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .discover-blend-heading h2 {
   margin: 0;
   overflow-wrap: anywhere;
@@ -821,6 +829,139 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+}
+
+.discover-engagement {
+  display: grid;
+  gap: 12px;
+  padding: 16px 0 2px;
+  border-top: 1px solid var(--line);
+}
+
+.discover-engagement-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+}
+
+.discover-engagement-toolbar h2 {
+  margin: 0 auto 0 0;
+  font-size: 1rem;
+}
+
+.discover-like-button {
+  min-width: 66px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: #fff;
+  font-weight: 800;
+}
+
+.discover-like-button.is-liked {
+  border-color: var(--coral);
+  color: var(--coral);
+  background: #fff8f5;
+}
+
+.discover-comment-count {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.discover-comment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.discover-comment-item {
+  display: grid;
+  gap: 7px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.discover-comment-item.is-hidden {
+  opacity: 0.7;
+}
+
+.discover-comment-item header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  align-items: baseline;
+}
+
+.discover-comment-item header span,
+.discover-comment-item header time {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.discover-comment-item header time {
+  margin-left: auto;
+}
+
+.discover-comment-item p {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.discover-comment-item p small {
+  margin-left: 6px;
+  color: var(--muted);
+}
+
+.discover-comment-form {
+  display: grid;
+  gap: 8px;
+}
+
+.discover-comment-form textarea,
+.discover-comment-item textarea {
+  width: 100%;
+  min-height: 76px;
+  resize: vertical;
+}
+
+.discover-comment-form .primary-button {
+  justify-self: start;
+}
+
+.discover-comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.discover-comment-actions .text-button {
+  padding: 0;
+  border: 0;
+  color: var(--teal);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.discover-engagement-error {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: var(--danger);
+  font-size: 0.82rem;
+}
+
+.discover-empty-comments {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .discover-detail-heading {
