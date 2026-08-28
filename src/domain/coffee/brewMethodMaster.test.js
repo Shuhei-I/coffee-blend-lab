@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   canDeleteBrewMethod,
   createBrewMethod,
+  createBrewMethodFromPublicSnapshot,
   deleteBrewMethodById,
   deleteBrewMethodData,
   getSelectedBrewMethodIdAfterDelete,
@@ -14,11 +15,58 @@ describe("brew method master domain operations", () => {
       id: "brew-1",
       name: "新しい淹れ方",
       note: "抽出意図を入力",
+      extractionType: "",
+      equipmentName: "",
       bloomPercent: 12,
       pour1Percent: 28,
       pour2Percent: 30,
       pour3Percent: 30,
       bloomSeconds: 30,
+    });
+  });
+
+  test("creates an independent brew method from public snapshot fields", () => {
+    expect(createBrewMethodFromPublicSnapshot({
+      name: " V60 4投式 ",
+      note: "公開されないメモ",
+      extractionType: "pour_over",
+      equipmentName: " V60 ",
+      bloomPercent: 12,
+      bloomSeconds: 30,
+      pour1Percent: 28,
+      pour2Percent: 30,
+      pour3Percent: 30,
+      id: "source-id",
+    }, { id: "copy-id" })).toEqual({
+      id: "copy-id",
+      name: "V60 4投式",
+      note: "",
+      extractionType: "pour_over",
+      equipmentName: "V60",
+      bloomPercent: 12,
+      bloomSeconds: 30,
+      pour1Percent: 28,
+      pour2Percent: 30,
+      pour3Percent: 30,
+    });
+  });
+
+  test("normalizes invalid public brew method fields to private defaults", () => {
+    const result = createBrewMethodFromPublicSnapshot({
+      name: " ",
+      extractionType: "unknown",
+      bloomPercent: 200,
+      bloomSeconds: -10,
+      pour1Percent: "invalid",
+    }, { id: "copy-id" });
+
+    expect(result).toMatchObject({
+      id: "copy-id",
+      name: "公開された淹れ方",
+      extractionType: "",
+      bloomPercent: 100,
+      bloomSeconds: 0,
+      pour1Percent: 28,
     });
   });
 

@@ -81,7 +81,7 @@ export function BrewMethodMaster({ methods, saveStatus, onAdd, onDelete, onSave 
               <div className="master-primary-cell" data-label="名称">
                 <div>
                   <h3>{method.name}</h3>
-                  <p>{method.note || "メモなし"}</p>
+                  <p>{buildBrewMethodSummary(method)}</p>
                 </div>
                 <button
                   className="master-expand-button"
@@ -179,6 +179,18 @@ function BrewMethodFields({ draft, onChange }) {
     <>
       <label>名称<input value={draft.name} onChange={(event) => onChange((current) => ({ ...current, name: event.target.value }))} /></label>
       <label>メモ<textarea rows="3" value={draft.note} onChange={(event) => onChange((current) => ({ ...current, note: event.target.value }))} /></label>
+      <label>
+        抽出方式
+        <select value={draft.extractionType} onChange={(event) => onChange((current) => ({ ...current, extractionType: event.target.value }))}>
+          <option value="">未設定</option>
+          <option value="pour_over">ドリップ</option>
+          <option value="immersion">浸漬</option>
+          <option value="pressure">加圧</option>
+          <option value="vacuum">サイフォン</option>
+          <option value="other">その他</option>
+        </select>
+      </label>
+      <label>使用器具<input placeholder="V60、Kalita Waveなど" value={draft.equipmentName} onChange={(event) => onChange((current) => ({ ...current, equipmentName: event.target.value }))} /></label>
       <label>蒸らし %<input type="number" min="0" max="100" step="1" value={draft.bloomPercent} onChange={(event) => onChange((current) => ({ ...current, bloomPercent: normalizePercent(event.target.value) }))} /></label>
       <label>蒸らし 秒<input type="number" min="0" step="5" value={draft.bloomSeconds} onChange={(event) => onChange((current) => ({ ...current, bloomSeconds: Math.max(0, Number(event.target.value) || 0) }))} /></label>
       <label>1投目 %<input type="number" min="0" max="100" step="1" value={draft.pour1Percent} onChange={(event) => onChange((current) => ({ ...current, pour1Percent: normalizePercent(event.target.value) }))} /></label>
@@ -193,6 +205,8 @@ function normalizeBrewMethodDraft(draft) {
     ...draft,
     name: draft.name.trim(),
     note: draft.note.trim(),
+    extractionType: draft.extractionType || "",
+    equipmentName: (draft.equipmentName || "").trim(),
     bloomPercent: normalizePercent(draft.bloomPercent),
     pour1Percent: normalizePercent(draft.pour1Percent),
     pour2Percent: normalizePercent(draft.pour2Percent),
@@ -205,10 +219,23 @@ function createBrewMethodDraft() {
   return {
     name: "",
     note: "",
+    extractionType: "",
+    equipmentName: "",
     bloomPercent: 12,
     pour1Percent: 28,
     pour2Percent: 30,
     pour3Percent: 30,
     bloomSeconds: 30,
   };
+}
+
+function buildBrewMethodSummary(method) {
+  const extractionLabel = {
+    pour_over: "ドリップ",
+    immersion: "浸漬",
+    pressure: "加圧",
+    vacuum: "サイフォン",
+    other: "その他",
+  }[method.extractionType];
+  return [extractionLabel, method.equipmentName].filter(Boolean).join(" · ") || method.note || "詳細未設定";
 }

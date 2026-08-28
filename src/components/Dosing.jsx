@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 export function Dosing({
   doseGram,
   brewRatio,
+  grindSize,
+  brewTemperatureC,
   targetBrewGram,
   blendCost,
   pourTotal,
@@ -13,6 +15,8 @@ export function Dosing({
   selectedBrewMethodId,
   onDoseChange,
   onRatioChange,
+  onGrindSizeChange,
+  onBrewTemperatureChange,
   onMethodChange,
 }) {
   const [doseInputValue, setDoseInputValue] = useState(String(doseGram));
@@ -80,6 +84,30 @@ export function Dosing({
               <option value={method.id} key={method.id}>{method.displayName || method.name}</option>
             ))}
           </select>
+        </label>
+        <label>
+          挽き目
+          <select value={grindSize} onChange={(event) => onGrindSizeChange(event.target.value)}>
+            <option value="">未設定</option>
+            <option value="fine">細挽き</option>
+            <option value="medium_fine">中細挽き</option>
+            <option value="medium">中挽き</option>
+            <option value="medium_coarse">中粗挽き</option>
+            <option value="coarse">粗挽き</option>
+          </select>
+        </label>
+        <label>
+          湯温 ℃
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            max="100"
+            step="1"
+            placeholder="未設定"
+            value={brewTemperatureC}
+            onChange={(event) => onBrewTemperatureChange(event.target.value === "" ? "" : Number(event.target.value))}
+          />
         </label>
       </div>
       <div className="dose-summary">

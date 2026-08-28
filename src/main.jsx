@@ -13,10 +13,12 @@ import {
 import { createRecipeVersionData, resolvePersistedBrewMethodId, validateRecipeSaveInput } from "./domain/coffee/recipeSeries.js";
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
+import { getInitialAppPage } from "./domain/discover/navigation.js";
 import { canDeleteBean, createBean } from "./domain/coffee/beanMaster.js";
 import {
   canDeleteBrewMethod,
   createBrewMethod,
+  createBrewMethodFromPublicSnapshot,
   deleteBrewMethodData,
 } from "./domain/coffee/brewMethodMaster.js";
 import { profileMetricKeys } from "./domain/coffee/profile.js";
@@ -33,6 +35,7 @@ import { ProfileSettingsPanel } from "./components/ProfileSettingsPanel.jsx";
 import { PublicShell } from "./components/PublicShell.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
+import { RecordSaveAction } from "./components/RecordSaveAction.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
 import { isLegalPage, LegalPage } from "./components/LegalPages.jsx";
 import { WorkspaceStatus } from "./components/WorkspaceStatus.jsx";
@@ -44,7 +47,7 @@ import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
 import { downloadFile } from "./services/downloadFile.js";
 import "./styles.css";
 
-const DiscoverTimeline = lazy(() => import("./components/DiscoverTimeline.jsx"));
+const DiscoverPage = lazy(() => import("./components/DiscoverPage.jsx"));
 
 const pages = [
   ["blend", "配合"],
@@ -68,7 +71,7 @@ function beansWithRatios(beans, ratios, roastLevels) {
 }
 
 function App({ authUser, authError, onSignOut }) {
-  const [activePage, setActivePage] = useState("blend");
+  const [activePage, setActivePage] = useState(() => getInitialAppPage(window.location.search));
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
   const editor = useRecipeEditor();
   const profileState = useProfile();
@@ -83,6 +86,10 @@ function App({ authUser, authError, onSignOut }) {
     setDoseGram,
     brewRatio,
     setBrewRatio,
+    grindSize,
+    setGrindSize,
+    brewTemperatureC,
+    setBrewTemperatureC,
     savedRecipeBrewMethod,
     editingRecipeSource,
     sensory,
@@ -116,6 +123,7 @@ function App({ authUser, authError, onSignOut }) {
     setSelectedBrewMethodId,
     saveSelectedBrewMethodId,
     saveRecipeVersion: saveRecipeVersionToSupabase,
+    copyPublishedBlend,
     archiveRecipeSeries: archiveRecipeSeriesInSupabase,
     restoreRecipeSeries: restoreRecipeSeriesInSupabase,
     deleteRecipeVersion: deleteRecipeVersionInSupabase,
@@ -226,6 +234,21 @@ function App({ authUser, authError, onSignOut }) {
     return Boolean(savedBrewMethod);
   }
 
+  async function copyPublicBrewMethod(method) {
+    const copiedMethod = createBrewMethodFromPublicSnapshot(method, { id: createClientId() });
+    return createBrewMethodMaster(copiedMethod);
+  }
+
+  async function copyPublicBlend(postId) {
+    return copyPublishedBlend(postId);
+  }
+
+  function openCopiedBlend(copiedBlend) {
+    if (!copiedBlend?.series || !copiedBlend?.version) return;
+    loadRecipe(copiedBlend.version, copiedBlend.series);
+    setActivePage("blend");
+  }
+
   async function deleteBrewMethod(id) {
     if (!canDeleteBrewMethod(brewMethods)) return;
     const method = brewMethods.find((item) => item.id === id);
@@ -244,7 +267,6 @@ function App({ authUser, authError, onSignOut }) {
   async function saveRecipe(event) {
     event?.preventDefault?.();
     if (!recipeSaveValidation.valid) {
-      setRecipeSaveMessage(recipeSaveValidation.reason);
       return;
     }
 
@@ -258,6 +280,8 @@ function App({ authUser, authError, onSignOut }) {
       blendBeans,
       doseGram,
       brewRatio,
+      grindSize,
+      brewTemperatureC,
       targetBrewGram,
       blendCost,
       selectedBrewMethod,
@@ -282,9 +306,8 @@ function App({ authUser, authError, onSignOut }) {
       (editingRecipeSource?.seriesId && updatedRecipeSeries.find((series) => series.id === editingRecipeSource.seriesId)) ||
       updatedRecipeSeries[0];
     const savedRecipe = savedSeries?.versions[0];
-    setRecipeSaveMessage(`${savedRecipe?.name || blendName.trim()} v${savedRecipe?.version || ""} を登録しました`);
+    setRecipeSaveMessage(`「${savedRecipe?.name || blendName.trim()} v${savedRecipe?.version || ""}」を履歴に保存しました。`);
     resetRecipeInput();
-    window.setTimeout(() => setRecipeSaveMessage(""), 3200);
   }
 
   function resetRecipeInput() {
@@ -380,6 +403,8 @@ function App({ authUser, authError, onSignOut }) {
             <Dosing
               doseGram={doseGram}
               brewRatio={brewRatio}
+              grindSize={grindSize}
+              brewTemperatureC={brewTemperatureC}
               targetBrewGram={targetBrewGram}
               blendCost={blendCost}
               pourTotal={pourTotal}
@@ -390,6 +415,8 @@ function App({ authUser, authError, onSignOut }) {
               selectedBrewMethodId={selectedBrewMethodId}
               onDoseChange={setDoseGram}
               onRatioChange={setBrewRatio}
+              onGrindSizeChange={setGrindSize}
+              onBrewTemperatureChange={setBrewTemperatureC}
               onMethodChange={changeSelectedBrewMethod}
             />
             <BrewStopwatch />
@@ -411,6 +438,10 @@ function App({ authUser, authError, onSignOut }) {
               disabledReason={recipeSaveValidation.reason}
               saveMessage={recipeSaveMessage}
               onSave={saveRecipe}
+              onViewHistory={() => {
+                setRecipeSaveMessage("");
+                setActivePage("history");
+              }}
             />
           </>
         )}
@@ -435,7 +466,11 @@ function App({ authUser, authError, onSignOut }) {
         )}
         {activePage === "discover" && (
           <Suspense fallback={<p className="discover-state" role="status">Discoverを読み込んでいます...</p>}>
-            <DiscoverTimeline />
+            <DiscoverPage
+              onCopyBrewMethod={copyPublicBrewMethod}
+              onCopyBlend={copyPublicBlend}
+              onOpenCopiedBlend={openCopiedBlend}
+            />
           </Suspense>
         )}
         {activePage === "manage" && (
@@ -467,20 +502,6 @@ function WorkflowPageActions({ onReset, onNext }) {
       <button className="next-page-button" type="button" onClick={onNext}>
         次へ
       </button>
-    </div>
-  );
-}
-
-function RecordSaveAction({ disabled, disabledReason, saveMessage, onSave }) {
-  return (
-    <div className="record-save-action">
-      {disabled && disabledReason && (
-        <p className="inline-warning" role="status">{disabledReason}</p>
-      )}
-      <button className="save-page-button" type="button" title={disabledReason || "保存"} disabled={disabled} onClick={onSave}>
-        保存
-      </button>
-      {saveMessage && <div className="save-toast" role="status">{saveMessage}</div>}
     </div>
   );
 }

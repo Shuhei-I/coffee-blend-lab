@@ -11,6 +11,8 @@ export function buildRecipeEditorState({ recipe, series, beans, brewMethods }) {
       changeNote: recipe.changeNote || "",
       doseGram: recipe.doseGram || 20,
       brewRatio: recipe.brewRatio || 16,
+      grindSize: recipe.grindSize || "",
+      brewTemperatureC: recipe.brewTemperatureC ?? 90,
       savedRecipeBrewMethod,
       editingRecipeSource: { seriesId: recipe.seriesId || series?.id, versionId: recipe.id },
       sensory: { ...initialSensory, ...(recipe.sensory || {}) },

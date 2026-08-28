@@ -92,6 +92,28 @@ describe("supabaseRecipeRepository", () => {
     ).rejects.toThrow("rpc failed");
   });
 
+  test("copies a published blend through the transactional RPC", async () => {
+    const client = createClient({
+      rpcData: [{ copied_series_id: seriesId, copied_version_id: versionId }],
+    });
+
+    await expect(createSupabaseRecipeRepository({ client }).copyPublishedBlend("post-id")).resolves.toEqual({
+      seriesId,
+      versionId,
+    });
+    expect(client.rpc).toHaveBeenCalledWith("copy_published_blend", { p_post_id: "post-id" });
+  });
+
+  test("rejects failed or empty published blend copy results", async () => {
+    await expect(
+      createSupabaseRecipeRepository({ client: createClient({ rpcError: new Error("copy failed") }) })
+        .copyPublishedBlend("post-id"),
+    ).rejects.toThrow("copy failed");
+    await expect(
+      createSupabaseRecipeRepository({ client: createClient({ rpcData: [] }) }).copyPublishedBlend("post-id"),
+    ).rejects.toThrow("Published blend was not copied");
+  });
+
   test("passes null brew method FK to RPC while preserving brew method snapshot", async () => {
     const client = createClient({
       tableData: {
@@ -287,6 +309,8 @@ function seriesRow(overrides = {}) {
     name: "Morning Blend",
     goal: "",
     status: "active",
+    source_post_id: null,
+    source_label: "",
     created_at: "2026-01-01T00:00:00.000Z",
     updated_at: "2026-01-02T00:00:00.000Z",
     ...overrides,
@@ -305,6 +329,8 @@ function versionRow(overrides = {}) {
     brew_ratio: 15,
     target_brew_gram: 225,
     blend_cost: 0,
+    grind_size: "",
+    brew_temperature_c: null,
     brew_method_id: null,
     brew_method_snapshot: null,
     sensory: {},

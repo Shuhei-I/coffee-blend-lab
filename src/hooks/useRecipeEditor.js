@@ -10,6 +10,8 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
   const [changeNote, setChangeNote] = useState("");
   const [doseGram, setDoseGram] = useState(20);
   const [brewRatio, setBrewRatio] = useState(16);
+  const [grindSize, setGrindSize] = useState("");
+  const [brewTemperatureC, setBrewTemperatureC] = useState(90);
   const [savedRecipeBrewMethod, setSavedRecipeBrewMethod] = useState(null);
   const [editingRecipeSource, setEditingRecipeSource] = useState(null);
   const [sensory, setSensory] = useState(initialSensory);
@@ -56,6 +58,8 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setSelectedBlendBeanIds([]);
     setDoseGram(20);
     setBrewRatio(16);
+    setGrindSize("");
+    setBrewTemperatureC(90);
     setSavedRecipeBrewMethod(null);
     setEditingRecipeSource(null);
     setSensory(initialSensory);
@@ -68,6 +72,8 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setChangeNote(nextState.changeNote);
     setDoseGram(nextState.doseGram);
     setBrewRatio(nextState.brewRatio);
+    setGrindSize(nextState.grindSize || "");
+    setBrewTemperatureC(nextState.brewTemperatureC ?? 90);
     setSavedRecipeBrewMethod(nextState.savedRecipeBrewMethod);
     setEditingRecipeSource(nextState.editingRecipeSource);
     setSensory(nextState.sensory);
@@ -100,6 +106,10 @@ export function useRecipeEditor({ initialBeans = [] } = {}) {
     setDoseGram,
     brewRatio,
     setBrewRatio,
+    grindSize,
+    setGrindSize,
+    brewTemperatureC,
+    setBrewTemperatureC,
     savedRecipeBrewMethod,
     setSavedRecipeBrewMethod,
     editingRecipeSource,

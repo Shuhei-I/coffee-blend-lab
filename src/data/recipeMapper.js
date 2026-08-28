@@ -12,6 +12,8 @@ export function toRecipeSeries(seriesRows = [], versionRows = [], beanRows = [])
       name: seriesRow.name || "",
       goal: seriesRow.goal || "",
       status: seriesRow.status || "active",
+      sourcePostId: seriesRow.source_post_id || null,
+      sourceLabel: seriesRow.source_label || "",
       currentVersionId: versions[0]?.id || null,
       createdAt: seriesRow.created_at,
       updatedAt: seriesRow.updated_at,
@@ -32,6 +34,8 @@ export function toRecipeVersion(versionRow, beanRows = []) {
     brewRatio: Number(versionRow.brew_ratio) || 0,
     targetBrewGram: Number(versionRow.target_brew_gram) || 0,
     blendCost: Number(versionRow.blend_cost) || 0,
+    grindSize: versionRow.grind_size || "",
+    brewTemperatureC: optionalNumber(versionRow.brew_temperature_c),
     brewMethodId: versionRow.brew_method_id || null,
     brewMethodSnapshot: versionRow.brew_method_snapshot ?? null,
     sensory: versionRow.sensory ?? {},
@@ -65,6 +69,8 @@ export function toSavePayload(recipeInput) {
     brewRatio: recipeInput.brewRatio,
     targetBrewGram: recipeInput.targetBrewGram,
     blendCost: recipeInput.blendCost,
+    grindSize: recipeInput.grindSize || "",
+    brewTemperatureC: optionalNumber(recipeInput.brewTemperatureC),
     brewMethodId: normalizeNullableId(recipeInput.brewMethodId),
     brewMethodSnapshot: recipeInput.brewMethodSnapshot ?? null,
     sensory: recipeInput.sensory ?? {},
@@ -81,6 +87,12 @@ export function toSavePayload(recipeInput) {
 
 function normalizeNullableId(value) {
   return value || null;
+}
+
+function optionalNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 function groupBy(rows, key) {

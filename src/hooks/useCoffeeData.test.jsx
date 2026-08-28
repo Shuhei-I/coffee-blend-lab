@@ -431,6 +431,67 @@ describe("useCoffeeData", () => {
     console.error.mockRestore();
   });
 
+  test("copies a published blend and reloads its recipe and imported beans together", async () => {
+    const copiedVersion = { ...currentRecipeSeriesFixture.versions[0], id: "copied-version", seriesId: "copied-series" };
+    const copiedSeries = { ...currentRecipeSeriesFixture, id: "copied-series", versions: [copiedVersion] };
+    const importedBeans = [{ ...defaultBeans[0], id: "imported-bean", name: "Imported" }];
+    const recipeRepository = createRecipeRepositoryMock({
+      getRecipeSeries: vi.fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([copiedSeries]),
+      copyPublishedBlend: vi.fn(async () => ({ seriesId: "copied-series", versionId: "copied-version" })),
+    });
+    const beanRepository = createBeanRepository({
+      getBeans: vi.fn()
+        .mockResolvedValueOnce(defaultBeans)
+        .mockResolvedValueOnce(importedBeans),
+    });
+    const onBeansReplaced = vi.fn();
+    const rendered = await renderHook(createRepository(), { recipeRepository, beanRepository, onBeansReplaced });
+    onBeansReplaced.mockClear();
+
+    let copied;
+    await act(async () => {
+      copied = await rendered.current.copyPublishedBlend("post-1");
+    });
+
+    expect(recipeRepository.copyPublishedBlend).toHaveBeenCalledWith("post-1");
+    expect(copied).toEqual({
+      seriesId: "copied-series",
+      versionId: "copied-version",
+      series: copiedSeries,
+      version: copiedVersion,
+    });
+    expect(rendered.current.recipeSeries).toEqual([copiedSeries]);
+    expect(rendered.current.beans).toEqual(importedBeans);
+    expect(onBeansReplaced).toHaveBeenCalledWith(importedBeans);
+    expect(rendered.current.saveError).toBeNull();
+  });
+
+  test("keeps local coffee data unchanged when a published blend copy fails", async () => {
+    const error = new Error("copy failed");
+    const recipeRepository = createRecipeRepositoryMock({
+      recipeSeries: [currentRecipeSeriesFixture],
+      copyPublishedBlend: vi.fn(async () => {
+        throw error;
+      }),
+    });
+    const rendered = await renderHook(createRepository(), { recipeRepository });
+    const initialBeans = rendered.current.beans;
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    let copied;
+    await act(async () => {
+      copied = await rendered.current.copyPublishedBlend("post-1");
+    });
+
+    expect(copied).toBeNull();
+    expect(rendered.current.recipeSeries).toEqual([currentRecipeSeriesFixture]);
+    expect(rendered.current.beans).toBe(initialBeans);
+    expect(rendered.current.saveError).toBe(error);
+    console.error.mockRestore();
+  });
+
   test("archives restores and deletes recipes through Supabase Recipe Repository", async () => {
     const archived = [{ ...currentRecipeSeriesFixture, status: "archived" }];
     const restored = [currentRecipeSeriesFixture];
@@ -804,6 +865,7 @@ function createRecipeRepositoryMock(overrides = {}) {
   return {
     getRecipeSeries: vi.fn(async () => recipeSeries),
     saveRecipeVersion: vi.fn(async () => recipeSeries),
+    copyPublishedBlend: vi.fn(async () => ({ seriesId: "copied-series", versionId: "copied-version" })),
     archiveRecipeSeries: vi.fn(async () => recipeSeries),
     restoreRecipeSeries: vi.fn(async () => recipeSeries),
     deleteRecipeVersion: vi.fn(async () => recipeSeries),

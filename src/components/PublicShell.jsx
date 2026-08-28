@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useState } from "react";
 import { AuthScreen } from "./AuthScreen.jsx";
 import { isLegalPage, LegalPage } from "./LegalPages.jsx";
 
-const DiscoverTimeline = lazy(() => import("./DiscoverTimeline.jsx"));
+const DiscoverPage = lazy(() => import("./DiscoverPage.jsx"));
 
 const publicPages = [
   ["discover", "Discover"],
@@ -49,7 +49,7 @@ export function PublicShell({ auth, logoSrc, initialPage = "discover", discoverR
         <main className="workspace single-page public-workspace">
           {activePage === "discover" && (
             <Suspense fallback={<p className="discover-state" role="status">Discoverを読み込んでいます...</p>}>
-              <DiscoverTimeline discoverRepository={discoverRepository} onLogin={() => setActivePage("login")} />
+              <DiscoverPage discoverRepository={discoverRepository} onLogin={() => setActivePage("login")} />
             </Suspense>
           )}
           {isLegalPage(activePage) && <LegalPage page={activePage} onBack={() => setActivePage("discover")} />}

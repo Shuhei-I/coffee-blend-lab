@@ -1,8 +1,8 @@
 import { toRecipeSeries, toSavePayload } from "./recipeMapper.js";
 
-const RECIPE_SERIES_COLUMNS = "id, name, goal, status, created_at, updated_at";
+const RECIPE_SERIES_COLUMNS = "id, name, goal, status, source_post_id, source_label, created_at, updated_at";
 const RECIPE_VERSION_COLUMNS =
-  "id, series_id, version_number, name, change_note, tasting_note, dose_gram, brew_ratio, target_brew_gram, blend_cost, brew_method_id, brew_method_snapshot, sensory, saved_at, created_at, updated_at";
+  "id, series_id, version_number, name, change_note, tasting_note, dose_gram, brew_ratio, target_brew_gram, blend_cost, grind_size, brew_temperature_c, brew_method_id, brew_method_snapshot, sensory, saved_at, created_at, updated_at";
 const RECIPE_VERSION_BEAN_COLUMNS =
   "id, recipe_version_id, bean_id, ratio, roast_level, bean_snapshot, position, created_at, updated_at";
 
@@ -31,6 +31,22 @@ export function createSupabaseRecipeRepository({ client } = {}) {
 
     if (error) throw error;
     return getRecipeSeries();
+  }
+
+  async function copyPublishedBlend(postId) {
+    const supabase = await getClient();
+    await getAuthenticatedUserId(supabase);
+    const { data, error } = await supabase.rpc("copy_published_blend", { p_post_id: postId });
+
+    if (error) throw error;
+    const copied = Array.isArray(data) ? data[0] : data;
+    if (!copied?.copied_series_id || !copied?.copied_version_id) {
+      throw new Error("Published blend was not copied");
+    }
+    return {
+      seriesId: copied.copied_series_id,
+      versionId: copied.copied_version_id,
+    };
   }
 
   async function archiveRecipeSeries(seriesId) {
@@ -69,6 +85,7 @@ export function createSupabaseRecipeRepository({ client } = {}) {
   return {
     getRecipeSeries,
     saveRecipeVersion,
+    copyPublishedBlend,
     archiveRecipeSeries,
     restoreRecipeSeries,
     deleteRecipeVersion,

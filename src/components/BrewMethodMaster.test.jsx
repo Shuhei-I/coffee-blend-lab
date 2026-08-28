@@ -36,6 +36,7 @@ describe("BrewMethodMaster", () => {
       "甘み重視",
     ]);
     expect(document.querySelector(".master-table-row input")).toBeNull();
+    expect(document.querySelector(".master-table-row p").textContent).toBe("ドリップ · V60");
     expect([...document.querySelectorAll(".master-table-head span")].map((cell) => cell.textContent)).toContain("合計");
   });
 
@@ -60,11 +61,13 @@ describe("BrewMethodMaster", () => {
     change(fields[0], "Updated method");
     expect(buttonByText("Save").disabled).toBe(false);
     change(fields[1], "Updated memo");
-    change(fields[2], "105");
-    change(fields[3], "45");
-    change(fields[4], "-1");
-    change(fields[5], "25");
-    change(fields[6], "bad");
+    change(form.querySelector("select"), "immersion");
+    change(fields[2], "French Press");
+    change(fields[3], "105");
+    change(fields[4], "45");
+    change(fields[5], "-1");
+    change(fields[6], "25");
+    change(fields[7], "bad");
 
     await submit(form);
 
@@ -72,6 +75,8 @@ describe("BrewMethodMaster", () => {
       ...fixtureBrewMethod,
       name: "Updated method",
       note: "Updated memo",
+      extractionType: "immersion",
+      equipmentName: "French Press",
       bloomPercent: 100,
       bloomSeconds: 45,
       pour1Percent: 0,
@@ -112,17 +117,21 @@ describe("BrewMethodMaster", () => {
     const fields = document.querySelector(".master-dialog-form").querySelectorAll("input, textarea");
     change(fields[0], "New Method");
     change(fields[1], "New note");
-    change(fields[2], "10");
-    change(fields[3], "35");
-    change(fields[4], "30");
+    change(document.querySelector(".master-dialog-form select"), "pour_over");
+    change(fields[2], "Kalita Wave");
+    change(fields[3], "10");
+    change(fields[4], "35");
     change(fields[5], "30");
     change(fields[6], "30");
+    change(fields[7], "30");
     await submit(document.querySelector(".master-dialog-form"));
     click(buttonByText("Delete"));
 
     expect(onAdd).toHaveBeenCalledWith({
       name: "New Method",
       note: "New note",
+      extractionType: "pour_over",
+      equipmentName: "Kalita Wave",
       bloomPercent: 10,
       bloomSeconds: 35,
       pour1Percent: 30,
