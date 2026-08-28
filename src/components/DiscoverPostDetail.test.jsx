@@ -147,6 +147,29 @@ describe("DiscoverPostDetail", () => {
     expect(document.querySelector(".discover-detail-actions [role=\"alert\"]").textContent).toContain("追加できませんでした");
     expect(buttonByText("自分のブレンドに追加").disabled).toBe(false);
   });
+  test("renders engagement and sends an authenticated like action", async () => {
+    const interactionRepository = {
+      getEngagement: vi.fn(async () => new Map([
+        [postFixture().postId, { likeCount: 4, commentCount: 1, likedByViewer: false }],
+      ])),
+      listComments: vi.fn(async () => [{
+        commentId: "comment-1",
+        content: "試してみます",
+        createdAt: "2026-08-27T00:00:00Z",
+        author: { displayName: "Coffee Explorer", username: "explorer", avatarPath: null },
+        isAuthor: false,
+        canHide: false,
+        status: "visible",
+      }]),
+      setLike: vi.fn(async () => {}),
+    };
+    await renderDetail({ repository: createRepository([postFixture()]), interactionRepository, isAuthenticated: true });
+
+    expect(document.querySelector('[aria-label="いいね"]').textContent).toContain("4");
+    expect(document.body.textContent).toContain("試してみます");
+    await clickAsync(buttonByLabel("いいね"));
+    expect(interactionRepository.setLike).toHaveBeenCalledWith(postFixture().postId, true);
+  });
 });
 
 async function renderDetail({
@@ -155,6 +178,8 @@ async function renderDetail({
   onCopyBlend,
   onOpenCopiedBlend,
   onLogin,
+  interactionRepository,
+  isAuthenticated = false,
   onClose = vi.fn(),
 }) {
   act(() => {
@@ -167,6 +192,8 @@ async function renderDetail({
         onCopyBlend={onCopyBlend}
         onOpenCopiedBlend={onOpenCopiedBlend}
         onLogin={onLogin}
+        interactionRepository={interactionRepository}
+        isAuthenticated={isAuthenticated}
         onClose={onClose}
       />,
     );

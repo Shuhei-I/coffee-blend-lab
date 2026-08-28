@@ -12,7 +12,7 @@ const publicPages = [
   ["login", "Login"],
 ];
 
-export function PublicShell({ auth, logoSrc, initialPage = "discover", discoverRepository }) {
+export function PublicShell({ auth, logoSrc, initialPage = "discover", discoverRepository, interactionRepository }) {
   const [activePage, setActivePage] = useState(initialPage);
 
   return (
@@ -49,7 +49,11 @@ export function PublicShell({ auth, logoSrc, initialPage = "discover", discoverR
         <main className="workspace single-page public-workspace">
           {activePage === "discover" && (
             <Suspense fallback={<p className="discover-state" role="status">Discoverを読み込んでいます...</p>}>
-              <DiscoverPage discoverRepository={discoverRepository} onLogin={() => setActivePage("login")} />
+              <DiscoverPage
+                discoverRepository={discoverRepository}
+                interactionRepository={interactionRepository}
+                onLogin={() => setActivePage("login")}
+              />
             </Suspense>
           )}
           {isLegalPage(activePage) && <LegalPage page={activePage} onBack={() => setActivePage("discover")} />}

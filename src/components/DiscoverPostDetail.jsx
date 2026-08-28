@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { getRoastLevelLabel } from "../domain/coffee/roast.js";
 import { useDiscoverPost } from "../hooks/useDiscoverPost.js";
+import { useDiscoverInteractions } from "../hooks/useDiscoverInteractions.js";
 import { ActionNotice } from "./ActionNotice.jsx";
 
 export function DiscoverPostDetail({
   postId,
   discoverRepository,
+  interactionRepository,
+  isAuthenticated = false,
   onCopyBrewMethod,
   onCopyBlend,
   onOpenCopiedBlend,
@@ -13,6 +16,7 @@ export function DiscoverPostDetail({
   onClose,
 }) {
   const detail = useDiscoverPost({ postId, discoverRepository });
+  const interactions = useDiscoverInteractions({ postId, interactionRepository, isAuthenticated, onLogin });
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -73,6 +77,7 @@ export function DiscoverPostDetail({
               onCopyBlend={onCopyBlend}
               onOpenCopiedBlend={onOpenCopiedBlend}
               onLogin={onLogin}
+              interactions={interactions}
             />
           )}
         </div>
@@ -81,7 +86,7 @@ export function DiscoverPostDetail({
   );
 }
 
-function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopiedBlend, onLogin }) {
+function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopiedBlend, onLogin, interactions }) {
   const [copyStatus, setCopyStatus] = useState("idle");
   const [blendCopyStatus, setBlendCopyStatus] = useState("idle");
   const [copiedBlend, setCopiedBlend] = useState(null);
@@ -142,6 +147,8 @@ function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopied
       </header>
 
       {post.content && <p className="discover-comment discover-detail-comment">{post.content}</p>}
+
+      <DiscoverEngagement interactions={interactions} onLogin={onLogin} />
 
       <div className="discover-detail-heading">
         <p className="eyebrow">Blend</p>
@@ -229,6 +236,116 @@ function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopied
       )}
     </article>
   );
+}
+
+function DiscoverEngagement({ interactions, onLogin }) {
+  const [draft, setDraft] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editingDraft, setEditingDraft] = useState("");
+
+  async function submitComment(event) {
+    event.preventDefault();
+    if (!draft.trim()) return;
+    const saved = await interactions.createComment(draft);
+    if (saved) setDraft("");
+  }
+
+  async function saveEdit(commentId) {
+    const saved = await interactions.updateComment(commentId, editingDraft);
+    if (saved) {
+      setEditingId(null);
+      setEditingDraft("");
+    }
+  }
+
+  return (
+    <section className="discover-engagement" aria-labelledby="discoverEngagementTitle">
+      <div className="discover-engagement-toolbar">
+        <h2 id="discoverEngagementTitle">反応</h2>
+        <button
+          className={`discover-like-button${interactions.likedByViewer ? " is-liked" : ""}`}
+          type="button"
+          aria-label="いいね"
+          aria-pressed={interactions.likedByViewer}
+          disabled={interactions.action === "like"}
+          onClick={interactions.toggleLike}
+        >
+          {interactions.likedByViewer ? "♥" : "♡"} {interactions.likeCount}
+        </button>
+        <span className="discover-comment-count">コメント {interactions.commentCount}</span>
+      </div>
+
+      {interactions.loading ? (
+        <p className="discover-state" role="status">反応を読み込んでいます...</p>
+      ) : interactions.error ? (
+        <div className="discover-engagement-error" role="alert">
+          <span>反応を読み込めませんでした。</span>
+          <button className="ghost-button" type="button" onClick={interactions.retry}>再試行</button>
+        </div>
+      ) : null}
+
+      <div className="discover-comment-list">
+        {interactions.comments.map((comment) => (
+          <article className={`discover-comment-item${comment.status === "hidden" ? " is-hidden" : ""}`} key={comment.commentId}>
+            <header>
+              <strong>{comment.author.displayName}</strong>
+              {comment.author.username && <span>@{comment.author.username}</span>}
+              <time dateTime={comment.createdAt}>{formatCommentDate(comment.createdAt)}</time>
+            </header>
+            {editingId === comment.commentId ? (
+              <>
+                <textarea value={editingDraft} onChange={(event) => setEditingDraft(event.target.value)} maxLength={2000} />
+                <div className="discover-comment-actions">
+                  <button className="primary-button" type="button" disabled={interactions.action === "comment" || !editingDraft.trim()} onClick={() => saveEdit(comment.commentId)}>保存</button>
+                  <button className="ghost-button" type="button" onClick={() => setEditingId(null)}>キャンセル</button>
+                </div>
+              </>
+            ) : (
+              <p>{comment.content}{comment.status === "hidden" && <small>（非表示）</small>}</p>
+            )}
+            {editingId !== comment.commentId && (comment.isAuthor || comment.canHide) && (
+              <div className="discover-comment-actions">
+                {comment.isAuthor && <button className="text-button" type="button" onClick={() => { setEditingId(comment.commentId); setEditingDraft(comment.content); }}>編集</button>}
+                {comment.isAuthor && <button className="text-button" type="button" onClick={() => interactions.deleteComment(comment.commentId)}>削除</button>}
+                {comment.canHide && <button className="text-button" type="button" onClick={() => interactions.hideComment(comment.commentId)}>非表示</button>}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+
+      {interactions.comments.length === 0 && !interactions.loading && !interactions.error && (
+        <p className="discover-empty-comments">まだコメントはありません。</p>
+      )}
+
+      {!interactions.isAuthenticated && onLogin && !interactions.loading ? (
+        <button className="primary-button" type="button" onClick={onLogin}>ログインしてコメント</button>
+      ) : interactions.isAuthenticated && !interactions.loading ? (
+        <form className="discover-comment-form" onSubmit={submitComment}>
+          <textarea
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            maxLength={2000}
+            placeholder="コメントを入力"
+            aria-label="コメント"
+            disabled={interactions.action === "comment"}
+          />
+          <button className="primary-button" type="submit" disabled={interactions.action === "comment" || !draft.trim()}>
+            コメントを投稿
+          </button>
+        </form>
+      ) : null}
+    </section>
+  );
+}
+
+function formatCommentDate(value) {
+  if (!value) return "";
+  try {
+    return new Intl.DateTimeFormat("ja-JP", { dateStyle: "short" }).format(new Date(value));
+  } catch {
+    return "";
+  }
 }
 
 function buildBrewFacts(brew) {

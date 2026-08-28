@@ -3,7 +3,7 @@ import { buildDiscoverUrl, readDiscoverPostId } from "../domain/discover/navigat
 import { DiscoverPostDetail } from "./DiscoverPostDetail.jsx";
 import { DiscoverTimeline } from "./DiscoverTimeline.jsx";
 
-export function DiscoverPage({ discoverRepository, onLogin, onCopyBrewMethod, onCopyBlend, onOpenCopiedBlend }) {
+export function DiscoverPage({ discoverRepository, interactionRepository, isAuthenticated = false, currentUserId = null, onLogin, onCopyBrewMethod, onCopyBlend, onOpenCopiedBlend }) {
   const initialPostId = readPostId();
   const [postId, setPostId] = useState(initialPostId);
   const [timelineMounted, setTimelineMounted] = useState(!initialPostId);
@@ -51,6 +51,7 @@ export function DiscoverPage({ discoverRepository, onLogin, onCopyBrewMethod, on
       {timelineMounted && (
         <DiscoverTimeline
           discoverRepository={discoverRepository}
+          interactionRepository={interactionRepository}
           hidden={Boolean(postId)}
           onLogin={onLogin}
           onOpenPost={openPost}
@@ -60,6 +61,9 @@ export function DiscoverPage({ discoverRepository, onLogin, onCopyBrewMethod, on
         <DiscoverPostDetail
           postId={postId}
           discoverRepository={discoverRepository}
+          interactionRepository={interactionRepository}
+          isAuthenticated={isAuthenticated}
+          currentUserId={currentUserId}
           onCopyBrewMethod={onCopyBrewMethod}
           onCopyBlend={onCopyBlend}
           onOpenCopiedBlend={openCopiedBlend}

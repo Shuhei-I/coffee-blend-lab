@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createSupabaseDiscoverTimelineRepository } from "../data/supabaseDiscoverTimelineRepository.js";
 
-export function useDiscoverTimeline({ discoverRepository } = {}) {
+export function useDiscoverTimeline({ discoverRepository, interactionRepository } = {}) {
   const repositoryRef = useRef(null);
+  const interactionRepositoryRef = useRef(interactionRepository || null);
   if (!repositoryRef.current) {
     repositoryRef.current = discoverRepository || createSupabaseDiscoverTimelineRepository();
   }
@@ -18,7 +19,7 @@ export function useDiscoverTimeline({ discoverRepository } = {}) {
     setLoading(true);
     setError(null);
     try {
-      const result = await repositoryRef.current.listDiscoverPosts();
+      const result = await loadPage(repositoryRef.current, interactionRepositoryRef.current);
       setPosts(result.posts);
       setCursor(result.nextCursor);
       setHasMore(result.hasMore);
@@ -38,7 +39,7 @@ export function useDiscoverTimeline({ discoverRepository } = {}) {
     let active = true;
 
     async function load() {
-      const result = await repositoryRef.current.listDiscoverPosts();
+      const result = await loadPage(repositoryRef.current, interactionRepositoryRef.current);
       if (!active) return;
       setPosts(result.posts);
       setCursor(result.nextCursor);
@@ -67,7 +68,7 @@ export function useDiscoverTimeline({ discoverRepository } = {}) {
     setLoadingMore(true);
     setError(null);
     try {
-      const result = await repositoryRef.current.listDiscoverPosts({ cursor });
+      const result = await loadPage(repositoryRef.current, interactionRepositoryRef.current, { cursor });
       setPosts((current) => mergePosts(current, result.posts));
       setCursor(result.nextCursor);
       setHasMore(result.hasMore);
@@ -89,6 +90,28 @@ export function useDiscoverTimeline({ discoverRepository } = {}) {
     retry: loadInitial,
     loadMore,
   };
+}
+
+async function loadPage(repository, interactionRepository, options) {
+  const result = await repository.listDiscoverPosts(options);
+  if (!interactionRepository || result.posts.length === 0) return result;
+
+  try {
+    const engagements = await interactionRepository.getEngagement(result.posts.map((post) => post.postId));
+    return {
+      ...result,
+      posts: result.posts.map((post) => ({
+        ...post,
+        engagement: engagements.get(post.postId) || emptyEngagement(),
+      })),
+    };
+  } catch {
+    return result;
+  }
+}
+
+function emptyEngagement() {
+  return { likeCount: 0, commentCount: 0, likedByViewer: false };
 }
 
 function mergePosts(current, next) {

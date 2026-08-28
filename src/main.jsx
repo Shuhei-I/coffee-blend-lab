@@ -44,10 +44,12 @@ import { useCoffeeData } from "./hooks/useCoffeeData.js";
 import { useDiscoverPublishing } from "./hooks/useDiscoverPublishing.js";
 import { useProfile } from "./hooks/useProfile.js";
 import { useRecipeEditor } from "./hooks/useRecipeEditor.js";
+import { createSupabaseDiscoverInteractionRepository } from "./data/supabaseDiscoverInteractionRepository.js";
 import { downloadFile } from "./services/downloadFile.js";
 import "./styles.css";
 
 const DiscoverPage = lazy(() => import("./components/DiscoverPage.jsx"));
+const discoverInteractionRepository = createSupabaseDiscoverInteractionRepository();
 
 const pages = [
   ["blend", "配合"],
@@ -467,6 +469,9 @@ function App({ authUser, authError, onSignOut }) {
         {activePage === "discover" && (
           <Suspense fallback={<p className="discover-state" role="status">Discoverを読み込んでいます...</p>}>
             <DiscoverPage
+              interactionRepository={discoverInteractionRepository}
+              isAuthenticated={Boolean(authUser)}
+              currentUserId={authUser?.id || null}
               onCopyBrewMethod={copyPublicBrewMethod}
               onCopyBlend={copyPublicBlend}
               onOpenCopiedBlend={openCopiedBlend}
@@ -514,7 +519,7 @@ function Root() {
   const auth = useAuth();
 
   if (!auth.loading && !auth.session) {
-    return <PublicShell auth={auth} logoSrc={logoImage} />;
+    return <PublicShell auth={auth} logoSrc={logoImage} interactionRepository={discoverInteractionRepository} />;
   }
 
   return (

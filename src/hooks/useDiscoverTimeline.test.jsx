@@ -72,13 +72,27 @@ describe("useDiscoverTimeline", () => {
     expect(rendered.current.posts).toEqual([post]);
     expect(rendered.current.error).toBeNull();
   });
+
+  test("adds public engagement counts when an interaction repository is provided", async () => {
+    const post = postFixture("post-1");
+    const repository = createRepository([{ posts: [post], hasMore: false, nextCursor: null }]);
+    const interactionRepository = {
+      getEngagement: vi.fn(async () => new Map([
+        [post.postId, { likeCount: 2, commentCount: 1, likedByViewer: false }],
+      ])),
+    };
+    const rendered = await renderHook(repository, interactionRepository);
+
+    expect(rendered.current.posts[0].engagement).toEqual({ likeCount: 2, commentCount: 1, likedByViewer: false });
+    expect(interactionRepository.getEngagement).toHaveBeenCalledWith([post.postId]);
+  });
 });
 
-async function renderHook(repository) {
+async function renderHook(repository, interactionRepository) {
   const rendered = { current: null };
 
   function TestComponent() {
-    rendered.current = useDiscoverTimeline({ discoverRepository: repository });
+    rendered.current = useDiscoverTimeline({ discoverRepository: repository, interactionRepository });
     return null;
   }
 
