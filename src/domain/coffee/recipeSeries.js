@@ -265,6 +265,16 @@ export function snapshotBean(bean) {
     visibleInRecipes: bean.visibleInRecipes !== false,
     costPerKg: bean.costPerKg,
     profile: bean.profile,
+    roasterName: bean.roasterName || "",
+    origin: bean.origin || "",
+    processMethod: bean.processMethod || "",
+    defaultRoastLevel: bean.defaultRoastLevel || "",
+    roastedAt: bean.roastedAt || "",
+    purchasedAt: bean.purchasedAt || "",
+    purchasePlace: bean.purchasePlace || "",
+    purchaseUrl: bean.purchaseUrl || "",
+    packageWeightGram: Number(bean.packageWeightGram) || 0,
+    purchasePrice: Number(bean.purchasePrice) || 0,
   };
 }
 

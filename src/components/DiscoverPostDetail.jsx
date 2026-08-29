@@ -161,10 +161,11 @@ function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopied
         <div className="discover-bean-list">
           {post.blend.beans.map((bean, index) => (
             <div className="discover-bean-row discover-detail-bean-row" key={`${bean.name}-${index}`}>
-              <span className="discover-bean-name">
+              <div className="discover-bean-name">
                 <span>{bean.name}</span>
                 {bean.roastLevel && <small>焙煎: {getRoastLevelLabel(bean.roastLevel)}</small>}
-              </span>
+                {bean.details && <BeanDetails details={bean.details} />}
+              </div>
               <span className="discover-ratio-track" aria-hidden="true">
                 <span style={{ width: `${clampRatio(bean.ratio)}%` }} />
               </span>
@@ -235,6 +236,20 @@ function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopied
         </footer>
       )}
     </article>
+  );
+}
+
+function BeanDetails({ details }) {
+  return (
+    <dl className="discover-bean-details">
+      {details.roasterName && <div><dt>焙煎店・ブランド</dt><dd>{details.roasterName}</dd></div>}
+      {details.origin && <div><dt>産地</dt><dd>{details.origin}</dd></div>}
+      {details.processMethod && <div><dt>精製方法</dt><dd>{details.processMethod}</dd></div>}
+      {details.purchasePlace && <div><dt>購入場所</dt><dd>{details.purchasePlace}</dd></div>}
+      {details.purchaseUrl && (
+        <div><dt>購入先</dt><dd><a href={details.purchaseUrl} target="_blank" rel="noreferrer">購入先を見る</a></dd></div>
+      )}
+    </dl>
   );
 }
 

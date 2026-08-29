@@ -66,6 +66,36 @@ describe("supabaseDiscoverTimelineRepository", () => {
     );
   });
 
+  test("maps explicitly published bean details without exposing private fields", () => {
+    const row = discoverPostRow();
+    row.published_blend_snapshots.snapshot.beans[0].beanSnapshot = {
+      id: "internal-brazil",
+      name: "Brazil",
+      roasterName: "Example Roastery",
+      origin: "Minas Gerais",
+      processMethod: "Natural",
+      purchasePlace: "Roastery online shop",
+      purchaseUrl: "https://example.com/brazil",
+      purchasePrice: 2400,
+      purchasedAt: "2026-08-01",
+    };
+
+    expect(mapDiscoverPostRow(row).blend.beans[0]).toEqual({
+      name: "Brazil",
+      ratio: 50,
+      roastLevel: "medium",
+      details: {
+        roasterName: "Example Roastery",
+        origin: "Minas Gerais",
+        processMethod: "Natural",
+        purchasePlace: "Roastery online shop",
+        purchaseUrl: "https://example.com/brazil",
+      },
+    });
+    expect(JSON.stringify(mapDiscoverPostRow(row).blend.beans[0])).not.toContain("purchasePrice");
+    expect(JSON.stringify(mapDiscoverPostRow(row).blend.beans[0])).not.toContain("purchasedAt");
+  });
+
   test("loads the newest 20 public posts and returns a cursor when more exist", async () => {
     const timelineData = Array.from({ length: 21 }, (_, index) => discoverPostRow({
       id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,

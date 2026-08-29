@@ -201,11 +201,13 @@ export function RecipeLibrary({
 function PublicationDialog({ recipe, series, beans, publication, saveError, saving, onClose, onSave }) {
   const initialContent = publication?.content || "";
   const initialPublished = publication ? publication.status === "published" : true;
+  const initialIncludeBeanDetails = publication?.includeBeanDetails === true;
   const [content, setContent] = useState(initialContent);
   const [published, setPublished] = useState(initialPublished);
+  const [includeBeanDetails, setIncludeBeanDetails] = useState(initialIncludeBeanDetails);
   const [submitted, setSubmitted] = useState(false);
   const normalizedContent = content.trim();
-  const dirty = !publication || normalizedContent !== initialContent || published !== initialPublished;
+  const dirty = !publication || normalizedContent !== initialContent || published !== initialPublished || includeBeanDetails !== initialIncludeBeanDetails;
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -214,6 +216,7 @@ function PublicationDialog({ recipe, series, beans, publication, saveError, savi
       versionId: recipe.id,
       content: normalizedContent,
       status: published ? "published" : "private",
+      includeBeanDetails,
     });
   }
 
@@ -250,6 +253,19 @@ function PublicationDialog({ recipe, series, beans, publication, saveError, savi
               />
               <span>Discoverに公開</span>
             </label>
+            <label className="publication-toggle" htmlFor="publicationBeanDetails">
+              <input
+                id="publicationBeanDetails"
+                type="checkbox"
+                checked={includeBeanDetails}
+                onChange={(event) => setIncludeBeanDetails(event.target.checked)}
+              />
+              <span>豆の詳細情報を公開する</span>
+            </label>
+            <p className="publication-field-note">
+              焙煎店・ブランド、産地、精製方法、購入場所、購入先URLを公開します。価格や日付は公開されません。
+              {publication && "変更すると公開スナップショットが更新されます。"}
+            </p>
           </div>
           {submitted && saveError && (
             <p className="inline-warning publication-message" role="alert">公開設定を保存できませんでした。時間をおいて再度お試しください。</p>

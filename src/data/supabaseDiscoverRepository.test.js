@@ -28,6 +28,7 @@ describe("supabaseDiscoverRepository", () => {
       content: "Summer blend",
       status: "private",
       publishedAt: null,
+      includeBeanDetails: false,
     });
   });
 
@@ -38,12 +39,14 @@ describe("supabaseDiscoverRepository", () => {
         snapshot_id: snapshotId,
         post_status: "published",
         post_published_at: "2026-08-16T00:00:00Z",
+        include_bean_details: true,
       }),
     ).toEqual({
       postId,
       snapshotId,
       status: "published",
       publishedAt: "2026-08-16T00:00:00Z",
+      includeBeanDetails: true,
     });
   });
 
@@ -55,6 +58,7 @@ describe("supabaseDiscoverRepository", () => {
           snapshot_id: snapshotId,
           post_status: "published",
           post_published_at: "2026-08-16T00:00:00Z",
+          include_bean_details: true,
         },
       ],
     });
@@ -65,12 +69,14 @@ describe("supabaseDiscoverRepository", () => {
         versionId,
         content: "Summer blend",
         status: "published",
+        includeBeanDetails: true,
       }),
     ).resolves.toEqual({
       postId,
       snapshotId,
       status: "published",
       publishedAt: "2026-08-16T00:00:00Z",
+      includeBeanDetails: true,
     });
     expect(client.auth.getUser).toHaveBeenCalledTimes(1);
     expect(client.rpc).toHaveBeenCalledWith("publish_recipe_version", {
@@ -78,6 +84,7 @@ describe("supabaseDiscoverRepository", () => {
         versionId,
         content: "Summer blend",
         status: "published",
+        includeBeanDetails: true,
       },
     });
   });
@@ -89,6 +96,7 @@ describe("supabaseDiscoverRepository", () => {
         snapshot_id: snapshotId,
         post_status: "published",
         post_published_at: "2026-08-16T00:00:00Z",
+        include_bean_details: false,
       },
     });
     const repository = createSupabaseDiscoverRepository({ client });
@@ -98,12 +106,14 @@ describe("supabaseDiscoverRepository", () => {
       snapshotId,
       status: "published",
       publishedAt: "2026-08-16T00:00:00Z",
+      includeBeanDetails: false,
     });
     expect(client.rpc).toHaveBeenCalledWith("publish_recipe_version", {
       payload: {
         versionId,
         content: "",
         status: "published",
+        includeBeanDetails: false,
       },
     });
   });
@@ -116,7 +126,9 @@ describe("supabaseDiscoverRepository", () => {
         source_version_id: versionId,
         content: "Summer blend",
         status: "published",
+        includeBeanDetails: true,
         published_at: "2026-08-16T00:00:00Z",
+        published_blend_snapshots: { include_bean_details: false },
       },
     ];
     const client = createClient({ queryData });
@@ -130,10 +142,11 @@ describe("supabaseDiscoverRepository", () => {
         content: "Summer blend",
         status: "published",
         publishedAt: "2026-08-16T00:00:00Z",
+        includeBeanDetails: false,
       },
     ]);
     expect(client.from).toHaveBeenCalledWith("posts");
-    expect(client.query.select).toHaveBeenCalledWith("id,snapshot_id,source_version_id,content,status,published_at");
+    expect(client.query.select).toHaveBeenCalledWith("id,snapshot_id,source_version_id,content,status,published_at,published_blend_snapshots!inner(include_bean_details)");
     expect(client.query.eq).toHaveBeenCalledWith("user_id", userId);
     expect(client.query.in).toHaveBeenCalledWith("source_version_id", [versionId]);
   });

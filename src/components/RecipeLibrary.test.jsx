@@ -136,12 +136,14 @@ describe("RecipeLibrary", () => {
     expect(document.querySelector(".publication-dialog")).toBeTruthy();
     expect(document.querySelector(".publication-summary").textContent).toContain("Morning Blend v2");
     change(document.querySelector("#publicationContent"), "夏向けに軽く調整しました");
+    click(document.querySelector("#publicationBeanDetails"));
     await submit(document.querySelector(".publication-dialog form"));
 
     expect(onSavePublication).toHaveBeenCalledWith({
       versionId: "recipe-1700000001000",
       content: "夏向けに軽く調整しました",
       status: "published",
+      includeBeanDetails: true,
     });
     expect(document.querySelector(".publication-dialog")).toBeNull();
     expect(document.body.textContent).toContain("Morning Blend v2 を公開しました");
@@ -162,6 +164,8 @@ describe("RecipeLibrary", () => {
     expect(document.querySelector(".publication-status").textContent).toBe("公開中");
     click(buttonByText("公開設定"));
     expect(document.querySelector("#publicationContent").value).toBe("公開中のコメント");
+    expect(document.querySelector("#publicationBeanDetails").disabled).toBe(false);
+    click(document.querySelector("#publicationBeanDetails"));
     click(document.querySelector("#publicationStatus"));
     expect(buttonByText("非公開にする")).toBeTruthy();
     await submit(document.querySelector(".publication-dialog form"));
@@ -170,6 +174,7 @@ describe("RecipeLibrary", () => {
       versionId: recipeId,
       content: "公開中のコメント",
       status: "private",
+      includeBeanDetails: true,
     });
     expect(document.body.textContent).toContain("Morning Blend v2 を非公開にしました");
   });
@@ -197,6 +202,7 @@ describe("RecipeLibrary", () => {
       versionId: recipeId,
       content: "再調整しました",
       status: "published",
+      includeBeanDetails: false,
     });
   });
 
