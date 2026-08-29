@@ -82,6 +82,7 @@ describe("supabaseProfileRepository", () => {
     expect(client.auth.getUser).toHaveBeenCalledTimes(1);
     expect(client.from).toHaveBeenCalledWith("profiles");
     expect(client.query.select).toHaveBeenCalled();
+    expect(client.query.eq).toHaveBeenCalledWith("user_id", userId);
     expect(client.query.maybeSingle).toHaveBeenCalled();
   });
 
@@ -161,6 +162,7 @@ function createClient({
 } = {}) {
   const query = {
     select: vi.fn(() => query),
+    eq: vi.fn(() => query),
     maybeSingle: vi.fn(async () => ({ data: selectData, error: selectError })),
     upsert: vi.fn(() => query),
     single: vi.fn(async () => ({ data: mutationData, error: mutationError })),
