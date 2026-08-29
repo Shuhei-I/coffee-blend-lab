@@ -349,7 +349,11 @@ function App({ authUser, authError, onSignOut }) {
     const series = recipeSeries.find((item) => item.id === seriesId);
     const version = series?.versions.find((item) => item.id === versionId);
     if (!series || !version || series.versions.length <= 1) return;
-    if (!confirmDeleteItem(`${series.name} v${version.version}`)) return;
+    const publication = publicationState.publicationsByVersionId[versionId];
+    const confirmationMessage = publication?.status === "published"
+      ? `「${series.name} v${version.version}」を履歴から削除しますか？公開中のDiscover投稿も削除されます。`
+      : `「${series.name} v${version.version}」を履歴から削除しますか？この操作は元に戻せません。`;
+    if (!window.confirm(confirmationMessage)) return;
 
     await deleteRecipeVersionInSupabase({ seriesId, versionId });
   }

@@ -75,10 +75,11 @@ export function createSupabaseRecipeRepository({ client } = {}) {
       throw new Error("Cannot delete the last recipe version");
     }
 
-    const { data, error } = await supabase.from("recipe_versions").delete().eq("id", versionId).select("id");
-
+    const { error } = await supabase.rpc("delete_recipe_version", {
+      p_series_id: seriesId,
+      p_version_id: versionId,
+    });
     if (error) throw error;
-    if (!Array.isArray(data) || data.length === 0) throw new Error("Recipe version was not found");
     return getRecipeSeries();
   }
 
@@ -107,6 +108,7 @@ async function loadRecipeRows(supabase) {
   const { data: versionRows, error: versionError } = await supabase
     .from("recipe_versions")
     .select(RECIPE_VERSION_COLUMNS)
+    .is("deleted_at", null)
     .order("version_number", { ascending: false })
     .order("saved_at", { ascending: false });
 
@@ -139,7 +141,11 @@ async function updateRecipeSeriesStatus(supabase, seriesId, status) {
 }
 
 async function loadVersionIdsForSeries(supabase, seriesId) {
-  const { data, error } = await supabase.from("recipe_versions").select("id").eq("series_id", seriesId);
+  const { data, error } = await supabase
+    .from("recipe_versions")
+    .select("id")
+    .eq("series_id", seriesId)
+    .is("deleted_at", null);
 
   if (error) throw error;
   return data || [];
