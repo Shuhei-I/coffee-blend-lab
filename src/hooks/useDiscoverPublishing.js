@@ -52,12 +52,12 @@ export function useDiscoverPublishing({ versionIds = [], discoverRepository } = 
     };
   }, [versionIdsKey]);
 
-  const savePublication = useCallback(async ({ versionId, content = "", status = "published" }) => {
+  const savePublication = useCallback(async ({ versionId, content = "", status = "published", includeBeanDetails = false }) => {
     setSavingVersionId(versionId);
     setSaveError(null);
     try {
-      const result = await repositoryRef.current.publishRecipeVersion({ versionId, content, status });
-      const publication = { ...result, versionId, content };
+      const result = await repositoryRef.current.publishRecipeVersion({ versionId, content, status, includeBeanDetails });
+      const publication = { ...result, versionId, content, includeBeanDetails: includeBeanDetails === true };
       setPublicationsByVersionId((current) => ({ ...current, [versionId]: publication }));
       return publication;
     } catch (error) {

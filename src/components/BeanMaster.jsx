@@ -42,6 +42,11 @@ export function BeanMaster({ beans, saveStatus, onAdd, onDelete, onSave }) {
     setSaving(true);
     setError("");
     const input = normalizeBeanDraft(draft);
+    if (input.purchaseUrl && !/^https?:\/\//i.test(input.purchaseUrl)) {
+      setError("購入先URLは http:// または https:// から入力してください。");
+      setSaving(false);
+      return;
+    }
     const saved = editing ? await onSave(input) : await onAdd(input);
     setSaving(false);
     if (saved === false) {
@@ -79,6 +84,9 @@ export function BeanMaster({ beans, saveStatus, onAdd, onDelete, onSave }) {
                 <div>
                   <h3>{bean.name}</h3>
                   <p>{bean.note || "メモなし"}</p>
+                  {(bean.roasterName || bean.origin) && (
+                    <small className="bean-secondary-meta">{[bean.roasterName, bean.origin].filter(Boolean).join(" / ")}</small>
+                  )}
                 </div>
                 <button
                   className="master-expand-button"
@@ -162,6 +170,24 @@ function BeanMasterDialog({ mode, draft, dirty, error, saving, onChange, onClose
               ))}
             </div>
           </div>
+          <div className="master-form-card">
+            <div>
+              <h4>購入・豆情報</h4>
+              <p>購入先や焙煎情報を記録します。これらの情報は個人用で、Discoverには公開されません。</p>
+            </div>
+            <div className="master-dialog-fields bean-dialog-fields">
+              <label>焙煎店・ブランド<input value={draft.roasterName} onChange={(event) => onChange((current) => ({ ...current, roasterName: event.target.value }))} /></label>
+              <label>産地<input value={draft.origin} onChange={(event) => onChange((current) => ({ ...current, origin: event.target.value }))} /></label>
+              <label>精製方法<input value={draft.processMethod} onChange={(event) => onChange((current) => ({ ...current, processMethod: event.target.value }))} /></label>
+              <label>標準焙煎度<input value={draft.defaultRoastLevel} placeholder="例：浅煎り" onChange={(event) => onChange((current) => ({ ...current, defaultRoastLevel: event.target.value }))} /></label>
+              <label>焙煎日<input type="date" value={draft.roastedAt} onChange={(event) => onChange((current) => ({ ...current, roastedAt: event.target.value }))} /></label>
+              <label>購入日<input type="date" value={draft.purchasedAt} onChange={(event) => onChange((current) => ({ ...current, purchasedAt: event.target.value }))} /></label>
+              <label>購入場所<input value={draft.purchasePlace} onChange={(event) => onChange((current) => ({ ...current, purchasePlace: event.target.value }))} /></label>
+              <label>購入先URL<input type="url" value={draft.purchaseUrl} placeholder="https://" onChange={(event) => onChange((current) => ({ ...current, purchaseUrl: event.target.value }))} /></label>
+              <label>内容量 g<input type="number" min="0" step="1" value={draft.packageWeightGram} onChange={(event) => onChange((current) => ({ ...current, packageWeightGram: nonNegativeNumber(event.target.value) }))} /></label>
+              <label>購入価格 円<input type="number" min="0" step="1" value={draft.purchasePrice} onChange={(event) => onChange((current) => ({ ...current, purchasePrice: nonNegativeNumber(event.target.value) }))} /></label>
+            </div>
+          </div>
           {error && <p className="inline-warning master-card-error">{error}</p>}
           <div className="button-row dialog-actions">
             <button className="ghost-button" type="button" disabled={saving} onClick={onClose}>
@@ -180,6 +206,16 @@ function BeanMasterDialog({ mode, draft, dirty, error, saving, onChange, onClose
 function cloneBean(bean) {
   return {
     ...bean,
+    roasterName: bean.roasterName || "",
+    origin: bean.origin || "",
+    processMethod: bean.processMethod || "",
+    defaultRoastLevel: bean.defaultRoastLevel || "",
+    roastedAt: bean.roastedAt || "",
+    purchasedAt: bean.purchasedAt || "",
+    purchasePlace: bean.purchasePlace || "",
+    purchaseUrl: bean.purchaseUrl || "",
+    packageWeightGram: Number(bean.packageWeightGram) || 0,
+    purchasePrice: Number(bean.purchasePrice) || 0,
     profile: { ...bean.profile },
   };
 }
@@ -191,6 +227,16 @@ function normalizeBeanDraft(bean) {
     note: bean.note.trim(),
     visibleInRecipes: bean.visibleInRecipes !== false,
     costPerKg: Math.max(0, Number(bean.costPerKg) || 0),
+    roasterName: String(bean.roasterName || "").trim(),
+    origin: String(bean.origin || "").trim(),
+    processMethod: String(bean.processMethod || "").trim(),
+    defaultRoastLevel: String(bean.defaultRoastLevel || "").trim(),
+    roastedAt: bean.roastedAt || "",
+    purchasedAt: bean.purchasedAt || "",
+    purchasePlace: String(bean.purchasePlace || "").trim(),
+    purchaseUrl: String(bean.purchaseUrl || "").trim(),
+    packageWeightGram: nonNegativeNumber(bean.packageWeightGram),
+    purchasePrice: nonNegativeNumber(bean.purchasePrice),
     profile: Object.fromEntries(profileLabels.map(([key]) => [key, clampProfile(bean.profile[key])])),
   };
 }
@@ -203,12 +249,26 @@ function clampProfile(value) {
   return Math.max(0, Math.min(100, Number(value) || 0));
 }
 
+function nonNegativeNumber(value) {
+  return Math.max(0, Number(value) || 0);
+}
+
 function createBeanDraft() {
   return {
     name: "",
     note: "",
     visibleInRecipes: true,
     costPerKg: 0,
+    roasterName: "",
+    origin: "",
+    processMethod: "",
+    defaultRoastLevel: "",
+    roastedAt: "",
+    purchasedAt: "",
+    purchasePlace: "",
+    purchaseUrl: "",
+    packageWeightGram: 0,
+    purchasePrice: 0,
     profile: Object.fromEntries(profileLabels.map(([key]) => [key, 50])),
   };
 }

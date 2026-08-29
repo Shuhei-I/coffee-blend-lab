@@ -63,6 +63,24 @@ describe("DiscoverPostDetail", () => {
     expect(document.body.textContent).toContain("公開ブレンドが見つかりませんでした");
   });
 
+  test("renders published bean details and purchase link in the detail dialog", async () => {
+    const post = postFixture();
+    post.blend.beans[0].details = {
+      roasterName: "Example Roastery",
+      origin: "Minas Gerais",
+      processMethod: "Natural",
+      purchasePlace: "Roastery online shop",
+      purchaseUrl: "https://example.com/brazil",
+    };
+    await renderDetail({ repository: createRepository([post]) });
+
+    expect(document.body.textContent).toContain("焙煎店・ブランドExample Roastery");
+    expect(document.body.textContent).toContain("産地Minas Gerais");
+    expect(document.body.textContent).toContain("精製方法Natural");
+    expect(document.body.textContent).toContain("購入場所Roastery online shop");
+    expect(document.querySelector('a[href="https://example.com/brazil"]').textContent).toBe("購入先を見る");
+  });
+
   test("retries after an error", async () => {
     const repository = createRepository([new Error("load failed"), postFixture()]);
     await renderDetail({ repository });

@@ -1,5 +1,5 @@
 const BEAN_COLUMNS =
-  "id, system_key, name, note, color, ratio, visible_in_recipes, cost_per_kg, acidity, sweetness, bitterness, body, aroma, created_at, updated_at";
+  "id, system_key, name, note, color, ratio, visible_in_recipes, cost_per_kg, acidity, sweetness, bitterness, body, aroma, roaster_name, origin, process_method, default_roast_level, roasted_at, purchased_at, purchase_place, purchase_url, package_weight_gram, purchase_price, created_at, updated_at";
 
 const DEFAULT_SYSTEM_KEY_ORDER = ["ethiopia", "brazil", "guatemala", "sumatra"];
 
@@ -67,6 +67,16 @@ export function mapBeanRowToBean(row) {
     ratio: Number(row.ratio) || 0,
     visibleInRecipes: row.visible_in_recipes !== false,
     costPerKg: Number(row.cost_per_kg) || 0,
+    roasterName: row.roaster_name || "",
+    origin: row.origin || "",
+    processMethod: row.process_method || "",
+    defaultRoastLevel: row.default_roast_level || "",
+    roastedAt: row.roasted_at || "",
+    purchasedAt: row.purchased_at || "",
+    purchasePlace: row.purchase_place || "",
+    purchaseUrl: row.purchase_url || "",
+    packageWeightGram: Number(row.package_weight_gram) || 0,
+    purchasePrice: Number(row.purchase_price) || 0,
     profile: {
       acidity: Number(row.acidity) || 0,
       sweetness: Number(row.sweetness) || 0,
@@ -94,6 +104,16 @@ export function mapBeanToUpdatePayload(bean) {
     ratio: Number(bean.ratio) || 0,
     visible_in_recipes: bean.visibleInRecipes !== false,
     cost_per_kg: Number(bean.costPerKg) || 0,
+    roaster_name: bean.roasterName || "",
+    origin: bean.origin || "",
+    process_method: bean.processMethod || "",
+    default_roast_level: bean.defaultRoastLevel || "",
+    roasted_at: bean.roastedAt || "",
+    purchased_at: bean.purchasedAt || "",
+    purchase_place: bean.purchasePlace || "",
+    purchase_url: bean.purchaseUrl || "",
+    package_weight_gram: Math.max(0, Number(bean.packageWeightGram) || 0),
+    purchase_price: Math.max(0, Number(bean.purchasePrice) || 0),
     acidity: Number(bean.profile?.acidity) || 0,
     sweetness: Number(bean.profile?.sweetness) || 0,
     bitterness: Number(bean.profile?.bitterness) || 0,

@@ -130,11 +130,23 @@ async function loadPublicProfiles(supabase, userIds) {
 
 function mapPublicSnapshotBeans(beans) {
   if (!Array.isArray(beans)) return [];
-  return beans.map((bean) => ({
-    name: bean?.beanSnapshot?.name || "名称未設定の豆",
-    ratio: Number(bean?.ratio) || 0,
-    roastLevel: bean?.roastLevel || "",
-  }));
+  return beans.map((bean) => {
+    const snapshot = bean?.beanSnapshot || {};
+    const details = {
+      roasterName: snapshot.roasterName || "",
+      origin: snapshot.origin || "",
+      processMethod: snapshot.processMethod || "",
+      purchasePlace: snapshot.purchasePlace || "",
+      purchaseUrl: isHttpUrl(snapshot.purchaseUrl) ? snapshot.purchaseUrl : "",
+    };
+    const hasDetails = Object.values(details).some(Boolean);
+    return {
+      name: snapshot.name || "名称未設定の豆",
+      ratio: Number(bean?.ratio) || 0,
+      roastLevel: bean?.roastLevel || "",
+      ...(hasDetails ? { details } : {}),
+    };
+  });
 }
 
 function mapPublicSnapshotBrew(brew) {
@@ -173,6 +185,10 @@ function optionalNumber(value) {
   if (value === null || value === undefined || value === "") return null;
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
+}
+
+function isHttpUrl(value) {
+  return typeof value === "string" && /^https?:\/\//i.test(value);
 }
 
 function isUuid(value) {

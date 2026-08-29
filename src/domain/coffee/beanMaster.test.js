@@ -69,6 +69,16 @@ describe("bean master domain operations", () => {
       ratio: 0,
       visibleInRecipes: true,
       costPerKg: 0,
+      roasterName: "",
+      origin: "",
+      processMethod: "",
+      defaultRoastLevel: "",
+      roastedAt: "",
+      purchasedAt: "",
+      purchasePlace: "",
+      purchaseUrl: "",
+      packageWeightGram: 0,
+      purchasePrice: 0,
       profile: { acidity: 50, sweetness: 50, bitterness: 50, body: 50, aroma: 50 },
     });
   });

@@ -44,13 +44,14 @@ describe("useDiscoverPublishing", () => {
 
     let result;
     await act(async () => {
-      result = await rendered.current.savePublication({ versionId, content: "新しいコメント", status: "private" });
+      result = await rendered.current.savePublication({ versionId, content: "新しいコメント", status: "private", includeBeanDetails: true });
     });
 
     expect(repository.publishRecipeVersion).toHaveBeenCalledWith({
       versionId,
       content: "新しいコメント",
       status: "private",
+      includeBeanDetails: true,
     });
     expect(result).toEqual(expect.objectContaining({ versionId, content: "新しいコメント", status: "private" }));
     expect(rendered.current.publicationsByVersionId[versionId]).toEqual(result);

@@ -1015,6 +1015,34 @@ textarea {
   font-weight: 700;
 }
 
+.discover-bean-details {
+  display: grid;
+  gap: 3px;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.discover-bean-details div {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.discover-bean-details dt::after {
+  content: ":";
+}
+
+.discover-bean-details dd {
+  margin: 0;
+}
+
+.discover-bean-details a {
+  color: var(--teal);
+  font-weight: 800;
+}
+
 .discover-detail-bean-row {
   grid-template-columns: minmax(140px, 0.7fr) minmax(140px, 1.4fr) 56px;
   min-height: 34px;
@@ -1882,6 +1910,13 @@ canvas {
   accent-color: var(--teal);
 }
 
+.publication-field-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
 .empty-state {
   margin: 0;
   color: var(--muted);
@@ -2058,6 +2093,13 @@ canvas {
   color: var(--muted);
   font-size: 0.88rem;
   line-height: 1.5;
+}
+
+.bean-secondary-meta {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .master-dialog-fields {

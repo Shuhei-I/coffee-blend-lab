@@ -63,6 +63,8 @@ describe("BeanMaster", () => {
     change(fields[2], false);
     change(fields[3], "6200");
     change(fields[4], "91");
+    change(form.querySelector('input[type="url"]'), "https://example.com/updated-bean");
+    change(form.querySelectorAll('input[type="number"]')[6], "250");
 
     await submit(form);
 
@@ -72,6 +74,16 @@ describe("BeanMaster", () => {
       note: "Updated note",
       visibleInRecipes: false,
       costPerKg: 6200,
+      roasterName: "",
+      origin: "",
+      processMethod: "",
+      defaultRoastLevel: "",
+      roastedAt: "",
+      purchasedAt: "",
+      purchasePlace: "",
+      purchaseUrl: "https://example.com/updated-bean",
+      packageWeightGram: 250,
+      purchasePrice: 0,
       profile: { ...fixtureBeans[0].profile, acidity: 91 },
     });
     expect(document.querySelector(".master-dialog")).toBeNull();
@@ -88,6 +100,23 @@ describe("BeanMaster", () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(document.querySelector(".master-dialog")).toBeNull();
     expect(document.querySelector(".master-table-row h3").textContent).toBe(fixtureBeans[0].name);
+  });
+
+  test("rejects purchase URLs without an HTTP scheme", async () => {
+    const onAdd = vi.fn(async () => true);
+    renderBeanMaster({ onAdd });
+
+    click(buttonByText("Add"));
+    const form = document.querySelector(".master-dialog-form");
+    change(form.querySelector("input"), "New Bean");
+    change(form.querySelector('input[type="url"]'), "shop.example.com/bean");
+
+    await submit(form);
+
+    expect(onAdd).not.toHaveBeenCalled();
+    expect(document.querySelector(".master-card-error").textContent).toBe(
+      "購入先URLは http:// または https:// から入力してください。",
+    );
   });
 
   test("calls add dialog submit and delete callbacks", async () => {
@@ -108,6 +137,16 @@ describe("BeanMaster", () => {
       note: "New note",
       visibleInRecipes: true,
       costPerKg: 1200,
+      roasterName: "",
+      origin: "",
+      processMethod: "",
+      defaultRoastLevel: "",
+      roastedAt: "",
+      purchasedAt: "",
+      purchasePlace: "",
+      purchaseUrl: "",
+      packageWeightGram: 0,
+      purchasePrice: 0,
       profile: {
         acidity: 50,
         sweetness: 50,
