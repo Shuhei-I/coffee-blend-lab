@@ -205,13 +205,15 @@ describe("supabaseRecipeRepository", () => {
         ],
         recipe_version_beans: [],
       },
-      deleteData: [{ id: versionId }],
     });
 
     await createSupabaseRecipeRepository({ client }).deleteRecipeVersion({ seriesId, versionId });
 
     expect(client.queryCalls.recipe_versions[0].eq).toHaveBeenCalledWith("series_id", seriesId);
-    expect(client.deleteQuery.eq).toHaveBeenCalledWith("id", versionId);
+    expect(client.rpc).toHaveBeenCalledWith("delete_recipe_version", {
+      p_series_id: seriesId,
+      p_version_id: versionId,
+    });
   });
 
   test("rejects delete for missing, final, and failed version deletes", async () => {
@@ -231,16 +233,7 @@ describe("supabaseRecipeRepository", () => {
       createSupabaseRecipeRepository({
         client: createClient({
           tableData: { recipe_versions: [versionRow({ id: versionId }), versionRow({ id: "other-version" })] },
-          deleteData: [],
-        }),
-      }).deleteRecipeVersion({ seriesId, versionId }),
-    ).rejects.toThrow("Recipe version was not found");
-
-    await expect(
-      createSupabaseRecipeRepository({
-        client: createClient({
-          tableData: { recipe_versions: [versionRow({ id: versionId }), versionRow({ id: "other-version" })] },
-          deleteError: new Error("delete failed"),
+          rpcError: new Error("delete failed"),
         }),
       }).deleteRecipeVersion({ seriesId, versionId }),
     ).rejects.toThrow("delete failed");
@@ -295,6 +288,7 @@ function createQuery({ table, tableData, tableErrors, mutationData, mutationErro
     update: vi.fn(() => query),
     delete: vi.fn(() => deleteQuery),
     eq: vi.fn(() => query),
+    is: vi.fn(() => query),
     single: vi.fn(async () => ({ data: mutationData, error: mutationError })),
     then(resolve) {
       return Promise.resolve({ data: tableData[table] || [], error: tableErrors[table] || null }).then(resolve);
