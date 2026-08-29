@@ -12,8 +12,12 @@ export function createSupabaseProfileRepository({ client } = {}) {
 
   async function getOwnProfile() {
     const supabase = await getClient();
-    await getAuthenticatedUserId(supabase);
-    const { data, error } = await supabase.from("profiles").select(PROFILE_COLUMNS).maybeSingle();
+    const userId = await getAuthenticatedUserId(supabase);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(PROFILE_COLUMNS)
+      .eq("user_id", userId)
+      .maybeSingle();
 
     if (error) throw error;
     return data ? mapProfileRow(data) : null;
