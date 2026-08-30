@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { roastLevelOptions } from "../domain/coffee/roast.js";
+import { RecipeComparisonReferenceSelect, RecipeComparisonSummary } from "./RecipeComparison.jsx";
 
 export function BlendBuilder({
   beans,
@@ -10,6 +11,11 @@ export function BlendBuilder({
   onRatioChange,
   onRoastLevelChange = () => {},
   onNormalize,
+  recipeSeries = [],
+  comparisonReferenceVersionId = "",
+  comparison = null,
+  onComparisonReferenceChange = () => {},
+  onOpenComparison = () => {},
 }) {
   const [expandedBeanId, setExpandedBeanId] = useState("");
   const [showBeanPicker, setShowBeanPicker] = useState(false);
@@ -54,6 +60,12 @@ export function BlendBuilder({
           <h2 id="builderTitle">配合</h2>
         </div>
       </div>
+      <RecipeComparisonReferenceSelect
+        recipeSeries={recipeSeries}
+        value={comparisonReferenceVersionId}
+        onChange={onComparisonReferenceChange}
+      />
+      <RecipeComparisonSummary comparison={comparison} section="blend" onOpen={onOpenComparison} />
       <div className="bean-list">
         {beans.length === 0 ? (
           <p className="empty-state">今回のブレンドに使う豆を追加してください。</p>

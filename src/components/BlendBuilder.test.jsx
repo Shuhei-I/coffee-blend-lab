@@ -191,6 +191,41 @@ describe("BlendBuilder", () => {
     expect(document.querySelectorAll(".bean-item")).toHaveLength(1);
     expect(document.querySelector(".ratio-output").textContent).toBe("100%");
   });
+
+  test("allows selecting a saved recipe as the comparison reference", () => {
+    const onComparisonReferenceChange = vi.fn();
+    renderBlendBuilder({
+      recipeSeries: [{
+        id: "series-1",
+        name: "Morning Blend",
+        versions: [{ id: "recipe-2", version: 2 }],
+      }],
+      onComparisonReferenceChange,
+    });
+
+    const select = document.querySelector("#comparisonReference");
+    expect(select).not.toBeNull();
+    expect(select.options[1].textContent).toBe("v2");
+    change(select, "recipe-2");
+
+    expect(onComparisonReferenceChange).toHaveBeenCalledWith("recipe-2");
+  });
+
+  test("shows a compact comparison summary without changing blend controls", () => {
+    const onOpenComparison = vi.fn();
+    renderBlendBuilder({
+      comparison: {
+        referenceLabel: "Morning Blend v2",
+        blendChangeCount: 1,
+        brewChangeCount: 2,
+      },
+      onOpenComparison,
+    });
+
+    expect(document.querySelector(".comparison-summary").textContent).toContain("配合の変更：1件");
+    click(buttonByText("詳細比較"));
+    expect(onOpenComparison).toHaveBeenCalledWith("blend");
+  });
 });
 
 function renderBlendBuilder(overrides = {}) {

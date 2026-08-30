@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { RecipeComparisonSummary } from "./RecipeComparison.jsx";
 
 export function Dosing({
   doseGram,
@@ -18,6 +19,8 @@ export function Dosing({
   onGrindSizeChange,
   onBrewTemperatureChange,
   onMethodChange,
+  comparison = null,
+  onOpenComparison = () => {},
 }) {
   const [doseInputValue, setDoseInputValue] = useState(String(doseGram));
 
@@ -52,6 +55,7 @@ export function Dosing({
           <h2 id="dosingTitle">g指定と抽出量</h2>
         </div>
       </div>
+      <RecipeComparisonSummary comparison={comparison} section="brew" onOpen={onOpenComparison} />
       <div className="control-grid">
         <label>
           コーヒー粉量 g

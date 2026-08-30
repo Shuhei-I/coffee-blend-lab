@@ -143,6 +143,23 @@ describe("Dosing", () => {
     expect(document.querySelector(".brew-schedule")).toBeNull();
     expect(document.querySelectorAll(".dose-line")).toHaveLength(5);
   });
+
+  test("shows extraction comparison summary separately from the brew schedule", () => {
+    const onOpenComparison = vi.fn();
+    renderDosing({
+      comparison: {
+        referenceLabel: "Morning Blend v2",
+        blendChangeCount: 1,
+        brewChangeCount: 2,
+      },
+      onOpenComparison,
+    });
+
+    expect(document.querySelector(".comparison-summary").textContent).toContain("抽出条件の変更：2件");
+    expect(document.querySelector(".brew-stopwatch-panel")).toBeNull();
+    click(buttonByText("詳細比較"));
+    expect(onOpenComparison).toHaveBeenCalledWith("brew");
+  });
 });
 
 function renderDosing(overrides = {}) {
@@ -206,4 +223,14 @@ function summaryLines() {
     line.querySelector("span").textContent,
     line.querySelector("strong").textContent,
   ]);
+}
+
+function click(element) {
+  act(() => {
+    element.click();
+  });
+}
+
+function buttonByText(text) {
+  return [...document.querySelectorAll("button")].find((button) => button.textContent === text);
 }
