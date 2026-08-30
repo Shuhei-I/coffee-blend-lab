@@ -11,6 +11,11 @@ import {
   getPourTotal,
 } from "./domain/coffee/calculations.js";
 import { createRecipeVersionData, resolvePersistedBrewMethodId, validateRecipeSaveInput } from "./domain/coffee/recipeSeries.js";
+import {
+  buildRecipeComparisonDraft,
+  compareRecipeDraftToVersion,
+  resolveComparisonReferenceVersionId,
+} from "./domain/coffee/recipeComparison.js";
 import { buildRecipeEditorState } from "./domain/coffee/recipeLoad.js";
 import { buildRecipeExportFile } from "./domain/recipe/recipeExport.js";
 import { getInitialAppPage } from "./domain/discover/navigation.js";
@@ -34,6 +39,7 @@ import { ProfilePanel } from "./components/ProfilePanel.jsx";
 import { ProfileSettingsPanel } from "./components/ProfileSettingsPanel.jsx";
 import { PublicShell } from "./components/PublicShell.jsx";
 import { RecipeLibrary } from "./components/RecipeLibrary.jsx";
+import { RecipeComparisonDialog } from "./components/RecipeComparison.jsx";
 import { RecipeNamePanel } from "./components/RecipeNamePanel.jsx";
 import { RecordSaveAction } from "./components/RecordSaveAction.jsx";
 import { SensoryPanel } from "./components/SensoryPanel.jsx";
@@ -75,6 +81,8 @@ function beansWithRatios(beans, ratios, roastLevels) {
 function App({ authUser, authError, onSignOut }) {
   const [activePage, setActivePage] = useState(() => getInitialAppPage(window.location.search));
   const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
+  const [comparisonReferenceVersionId, setComparisonReferenceVersionId] = useState("");
+  const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
   const editor = useRecipeEditor();
   const profileState = useProfile();
   const {
@@ -170,6 +178,28 @@ function App({ authUser, authError, onSignOut }) {
     [brewMethods, savedRecipeBrewMethod],
   );
   const selectedBrewMethod = brewMethodOptions.find((method) => method.id === selectedBrewMethodId) || brewMethods[0];
+  const comparisonReference = useMemo(
+    () => recipeSeries
+      .filter((series) => series.status !== "archived")
+      .flatMap((series) => (series.versions || []).map((version) => ({ ...version, seriesName: series.name })))
+      .find((version) => version.id === comparisonReferenceVersionId) || null,
+    [recipeSeries, comparisonReferenceVersionId],
+  );
+  const comparisonDraft = useMemo(
+    () => buildRecipeComparisonDraft({
+      blendBeans,
+      doseGram,
+      brewRatio,
+      grindSize,
+      brewTemperatureC,
+      brewMethod: selectedBrewMethod,
+    }),
+    [blendBeans, doseGram, brewRatio, grindSize, brewTemperatureC, selectedBrewMethod],
+  );
+  const comparison = useMemo(
+    () => compareRecipeDraftToVersion({ draft: comparisonDraft, reference: comparisonReference }),
+    [comparisonDraft, comparisonReference],
+  );
   const pourTotal = useMemo(() => getPourTotal(selectedBrewMethod), [selectedBrewMethod]);
   const brewSchedule = useMemo(
     () => calculatePourSchedule(selectedBrewMethod, targetBrewGram),
@@ -315,6 +345,8 @@ function App({ authUser, authError, onSignOut }) {
   function resetRecipeInput() {
     resetEditor(beans);
     setSelectedBrewMethodId(brewMethods[0]?.id || getDefaultSelectedBrewMethodId());
+    setComparisonReferenceVersionId("");
+    setComparisonDialogOpen(false);
   }
 
   function resetWorkflowInput() {
@@ -331,6 +363,8 @@ function App({ authUser, authError, onSignOut }) {
     }
     replaceEditorState(loadedRecipe.editorState);
     setRecipeSaveMessage("");
+    setComparisonReferenceVersionId(resolveComparisonReferenceVersionId({ recipe, series }));
+    setComparisonDialogOpen(false);
   }
 
   async function archiveRecipeSeries(seriesId) {
@@ -399,6 +433,11 @@ function App({ authUser, authError, onSignOut }) {
               onRatioChange={updateRatio}
               onRoastLevelChange={updateRoastLevel}
               onNormalize={() => normalizeRatios(blendBeans, total)}
+              recipeSeries={recipeSeries}
+              comparisonReferenceVersionId={comparisonReferenceVersionId}
+              comparison={comparison}
+              onComparisonReferenceChange={setComparisonReferenceVersionId}
+              onOpenComparison={() => setComparisonDialogOpen(true)}
             />
             <ProfilePanel profile={profile} total={total} />
             <WorkflowPageActions onReset={resetWorkflowInput} onNext={() => setActivePage("brew")} />
@@ -424,6 +463,8 @@ function App({ authUser, authError, onSignOut }) {
               onGrindSizeChange={setGrindSize}
               onBrewTemperatureChange={setBrewTemperatureC}
               onMethodChange={changeSelectedBrewMethod}
+              comparison={comparison}
+              onOpenComparison={() => setComparisonDialogOpen(true)}
             />
             <BrewStopwatch />
             <WorkflowPageActions onReset={resetWorkflowInput} onNext={() => setActivePage("record")} />
@@ -496,6 +537,9 @@ function App({ authUser, authError, onSignOut }) {
             />
             <AccountPanel email={authUser?.email} onOpenLegalPage={setActivePage} onSignOut={onSignOut} />
           </>
+        )}
+        {comparisonDialogOpen && comparison && (
+          <RecipeComparisonDialog comparison={comparison} onClose={() => setComparisonDialogOpen(false)} />
         )}
       </main>
     </>

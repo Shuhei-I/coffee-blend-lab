@@ -1917,6 +1917,151 @@ canvas {
   line-height: 1.5;
 }
 
+.comparison-reference-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.comparison-reference-row label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.comparison-reference-row select {
+  min-width: 0;
+}
+
+.comparison-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.comparison-summary-copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.comparison-summary-copy span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.comparison-summary-copy .comparison-summary-label {
+  color: var(--teal);
+}
+
+.comparison-summary-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+}
+
+.comparison-detail-button {
+  flex: 0 0 auto;
+  min-height: 34px;
+}
+
+.recipe-comparison-dialog {
+  width: min(760px, 100%);
+}
+
+.comparison-dialog-reference {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.comparison-section {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.comparison-section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.comparison-section-heading h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.comparison-section-heading span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.comparison-no-change {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.comparison-table-wrap {
+  overflow-x: auto;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.comparison-table thead th {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.comparison-table tbody th {
+  min-width: 150px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.comparison-table tbody tr[data-change="increase"] td:last-child {
+  color: var(--teal);
+  font-weight: 900;
+}
+
+.comparison-table tbody tr[data-change="decrease"] td:last-child {
+  color: var(--coral);
+  font-weight: 900;
+}
+
+.comparison-table tbody tr[data-change="changed"] td:last-child {
+  color: var(--gold);
+  font-weight: 900;
+}
+
 .empty-state {
   margin: 0;
   color: var(--muted);
@@ -2545,6 +2690,29 @@ canvas {
 
   .normalize-button {
     width: 100%;
+  }
+
+  .comparison-reference-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .comparison-reference-row select {
+    width: 100%;
+  }
+
+  .comparison-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .comparison-detail-button {
+    width: 100%;
+  }
+
+  .recipe-comparison-dialog {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
   }
 
   .page-action-row {
