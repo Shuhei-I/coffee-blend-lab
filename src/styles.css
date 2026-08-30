@@ -232,6 +232,12 @@ textarea {
   font-weight: 700;
 }
 
+.workspace-retry-button {
+  justify-self: start;
+  min-height: 34px;
+  margin-top: 4px;
+}
+
 .panel {
   padding: 22px;
   border: 1px solid var(--line);

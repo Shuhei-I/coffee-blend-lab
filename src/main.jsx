@@ -129,6 +129,7 @@ function App({ authUser, authError, onSignOut }) {
     selectedBrewMethodId,
     loading,
     loadError,
+    retryLoad,
     saveError,
     masterSaveStatus,
     setSelectedBrewMethodId,
@@ -426,7 +427,7 @@ function App({ authUser, authError, onSignOut }) {
       </nav>
 
       <main className={`workspace ${activePage !== "blend" ? "single-page" : ""}`}>
-        <WorkspaceStatus loading={loading} loadError={loadError} saveError={saveError} />
+        <WorkspaceStatus loading={loading} loadError={loadError} saveError={saveError} onRetry={retryLoad} />
         {isLegalPage(activePage) && <LegalPage page={activePage} onBack={() => setActivePage("manage")} />}
         {activePage === "blend" && (
           <>

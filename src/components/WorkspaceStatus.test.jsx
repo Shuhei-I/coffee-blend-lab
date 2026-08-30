@@ -57,6 +57,14 @@ describe("WorkspaceStatus", () => {
     expect(document.body.textContent).toContain("データを読み込めませんでした。");
     expect(document.body.textContent).toContain("保存できませんでした。");
   });
+
+  test("offers retry only for load errors", () => {
+    const onRetry = () => {};
+    renderWorkspaceStatus({ loadError: new Error("load failed"), saveError: new Error("save failed"), onRetry });
+
+    expect(buttonByText("再試行")).not.toBeNull();
+    expect(document.querySelectorAll(".workspace-retry-button")).toHaveLength(1);
+  });
 });
 
 function renderWorkspaceStatus(overrides = {}) {
@@ -64,6 +72,7 @@ function renderWorkspaceStatus(overrides = {}) {
     loading: false,
     loadError: null,
     saveError: null,
+    onRetry: null,
     ...overrides,
   };
 
@@ -73,4 +82,8 @@ function renderWorkspaceStatus(overrides = {}) {
   });
 
   return props;
+}
+
+function buttonByText(text) {
+  return [...document.querySelectorAll("button")].find((button) => button.textContent === text);
 }

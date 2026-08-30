@@ -58,6 +58,7 @@ export function useCoffeeData({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [saveError, setSaveError] = useState(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [masterSaveStatus, setMasterSaveStatus] = useState({ beans: "saved", brewMethods: "saved" });
   const savedBeansSnapshot = useRef(serializeMaster(defaultState.beans));
   const savedBrewMethodsSnapshot = useRef(serializeMaster(defaultState.brewMethods));
@@ -70,6 +71,7 @@ export function useCoffeeData({
 
     async function loadState() {
       setLoading(true);
+      setLoadError(null);
       try {
         setMasterSaveStatus({ beans: "saved", brewMethods: "saved" });
         setSaveError(null);
@@ -139,7 +141,11 @@ export function useCoffeeData({
     return () => {
       cancelled = true;
     };
-  }, [defaultState.beans, defaultState.brewMethods]);
+  }, [defaultState.beans, defaultState.brewMethods, loadAttempt]);
+
+  const retryLoad = useCallback(() => {
+    setLoadAttempt((current) => current + 1);
+  }, []);
 
   const saveBeansMaster = useCallback(async () => {
     setMasterSaveStatus((current) => ({ ...current, beans: "saving" }));
@@ -428,6 +434,7 @@ export function useCoffeeData({
     selectedBrewMethodId,
     loading,
     loadError,
+    retryLoad,
     saveError,
     masterSaveStatus,
     beansDirty,

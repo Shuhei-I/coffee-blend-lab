@@ -1,6 +1,6 @@
 import React from "react";
 
-export function WorkspaceStatus({ loading, loadError, saveError }) {
+export function WorkspaceStatus({ loading, loadError, saveError, onRetry = null }) {
   const loadErrorMessage = toStatusMessage(loadError);
   const saveErrorMessage = toStatusMessage(saveError);
 
@@ -17,11 +17,13 @@ export function WorkspaceStatus({ loading, loadError, saveError }) {
         <div className="workspace-status-item" data-status="error" role="alert">
           <strong>データを読み込めませんでした。</strong>
           <span>{loadErrorMessage}</span>
+          {onRetry && <button className="ghost-button workspace-retry-button" type="button" onClick={onRetry}>再試行</button>}
         </div>
       )}
       {loadError && !loadErrorMessage && (
         <div className="workspace-status-item" data-status="error" role="alert">
           データを読み込めませんでした。
+          {onRetry && <button className="ghost-button workspace-retry-button" type="button" onClick={onRetry}>再試行</button>}
         </div>
       )}
       {saveErrorMessage && (
