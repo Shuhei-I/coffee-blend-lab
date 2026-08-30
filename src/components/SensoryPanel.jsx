@@ -7,7 +7,7 @@ const sensoryFields = [
   ["balance", "バランス"],
 ];
 
-export function SensoryPanel({ sensory, memo, onSensoryChange, onMemoChange }) {
+export function SensoryPanel({ sensory, memo, changeNote = "", onSensoryChange, onMemoChange, onChangeNote = () => {} }) {
   return (
     <section className="panel sensory-panel" aria-labelledby="sensoryTitle">
       <div className="section-heading">
@@ -16,6 +16,17 @@ export function SensoryPanel({ sensory, memo, onSensoryChange, onMemoChange }) {
           <h2 id="sensoryTitle">試飲の記録</h2>
         </div>
       </div>
+      <label className="change-note-field">
+        このバージョンで変更したこと
+        <textarea
+          rows="3"
+          maxLength="240"
+          placeholder="例：ブラジルを40%から50%に増やした"
+          value={changeNote}
+          onChange={(event) => onChangeNote(event.target.value)}
+        />
+        <span className="change-note-count">{changeNote.length} / 240</span>
+      </label>
       <div className="sensory-grid">
         {sensoryFields.map(([key, label]) => (
           <label key={key}>

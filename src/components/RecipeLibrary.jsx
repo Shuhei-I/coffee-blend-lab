@@ -141,7 +141,8 @@ export function RecipeLibrary({
                                 </span>
                               )}
                             </div>
-                            <span>{recipe.memo || "試飲メモなし"}</span>
+                            <span className="version-change-note"><b>変更</b>{recipe.changeNote || "変更メモなし"}</span>
+                            <span className="version-tasting-note"><b>試飲</b>{recipe.memo || "試飲メモなし"}</span>
                             <span className="version-detail-summary"><b>配合</b>{summarizeRecipe(recipe, beans)}</span>
                             {getRecipeBrewMethod(recipe, brewMethods) && (
                               <span className="version-detail-summary">

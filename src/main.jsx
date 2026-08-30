@@ -485,7 +485,14 @@ function App({ authUser, authError, onSignOut }) {
               onNameChange={setBlendName}
               onBlendGoalChange={setBlendGoal}
             />
-            <SensoryPanel sensory={sensory} memo={memo} onSensoryChange={setSensory} onMemoChange={setMemo} />
+            <SensoryPanel
+              sensory={sensory}
+              memo={memo}
+              changeNote={changeNote}
+              onSensoryChange={setSensory}
+              onMemoChange={setMemo}
+              onChangeNote={setChangeNote}
+            />
             <RecordSaveAction
               disabled={!recipeSaveValidation.valid}
               disabledReason={recipeSaveValidation.reason}
