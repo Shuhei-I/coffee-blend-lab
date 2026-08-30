@@ -170,6 +170,19 @@ describe("recipeMapper", () => {
       }).brewMethodId,
     ).toBe(brewMethodId);
   });
+
+  test("does not reattach snapshot-only beans when saving a recipe", () => {
+    const payload = toSavePayload({
+      name: "Snapshot Bean Blend",
+      ratios: [{ id: "deleted-bean", isSnapshotOnly: true, value: 100, beanSnapshot: { id: "deleted-bean", name: "Deleted Bean" } }],
+    });
+
+    expect(payload.beans[0]).toMatchObject({
+      beanId: null,
+      ratio: 100,
+      beanSnapshot: { id: "deleted-bean", name: "Deleted Bean" },
+    });
+  });
 });
 
 function seriesRow(overrides = {}) {

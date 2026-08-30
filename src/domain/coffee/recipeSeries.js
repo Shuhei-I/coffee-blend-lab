@@ -170,6 +170,7 @@ export function createRecipeVersionData({
         value: bean.ratio,
         roastLevel: bean.roastLevel || "",
         beanSnapshot: snapshotBean(bean),
+        ...(bean.isSnapshotOnly ? { isSnapshotOnly: true } : {}),
       })),
     doseGram,
     brewRatio,

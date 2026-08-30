@@ -45,6 +45,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, brazil: 0, guatemala: 0 });
     expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", brazil: "", guatemala: "" });
     expect(rendered.current.selectedBlendBeanIds).toEqual([]);
+    expect(rendered.current.snapshotOnlyBeans).toEqual([]);
   });
 
   test("keeps existing setter contracts", () => {
@@ -198,6 +199,7 @@ describe("useRecipeEditor", () => {
         blendRatios: { old: 100 },
         blendRoastLevels: { old: "french" },
         selectedBlendBeanIds: ["old"],
+        snapshotOnlyBeans: [{ id: "old", isSnapshotOnly: true }],
       });
       rendered.current.resetEditor(fixtureBeans);
     });
@@ -216,6 +218,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.blendRatios).toEqual({ ethiopia: 0, brazil: 0, guatemala: 0 });
     expect(rendered.current.blendRoastLevels).toEqual({ ethiopia: "", brazil: "", guatemala: "" });
     expect(rendered.current.selectedBlendBeanIds).toEqual([]);
+    expect(rendered.current.snapshotOnlyBeans).toEqual([]);
   });
 
   test("replaces editor state exactly without interpreting RecipeSeries", () => {
@@ -235,6 +238,7 @@ describe("useRecipeEditor", () => {
       blendRatios: { ethiopia: 70, brazil: 30 },
       blendRoastLevels: { ethiopia: "city", brazil: "medium" },
       selectedBlendBeanIds: ["ethiopia", "brazil"],
+      snapshotOnlyBeans: [{ id: "deleted-bean", isSnapshotOnly: true }],
     };
 
     act(() => {
@@ -255,6 +259,7 @@ describe("useRecipeEditor", () => {
     expect(rendered.current.blendRatios).toBe(nextState.blendRatios);
     expect(rendered.current.blendRoastLevels).toBe(nextState.blendRoastLevels);
     expect(rendered.current.selectedBlendBeanIds).toBe(nextState.selectedBlendBeanIds);
+    expect(rendered.current.snapshotOnlyBeans).toBe(nextState.snapshotOnlyBeans);
   });
 
   test("supports explicit bean ratio replacement for bean add, delete, and replacement flows", () => {
@@ -287,6 +292,7 @@ describe("useRecipeEditor", () => {
     });
     expect(rendered.current.blendRatios).toEqual({ replacement: 0 });
     expect(rendered.current.blendRoastLevels).toEqual({ replacement: "" });
+    expect(rendered.current.snapshotOnlyBeans).toEqual([]);
 
     act(() => {
       rendered.current.replaceBlendRatiosForBeans([]);

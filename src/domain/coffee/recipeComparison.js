@@ -46,8 +46,8 @@ export function compareRecipeDraftToVersion({ draft, reference } = {}) {
 }
 
 function compareBlendRatios(currentRatios = [], referenceRatios = []) {
-  const currentById = new Map(currentRatios.map((ratio) => [ratio.id, ratio]));
-  const referenceById = new Map((referenceRatios || []).map((ratio) => [ratio.id, ratio]));
+  const currentById = new Map(currentRatios.map((ratio, index) => [getComparisonRatioId(ratio, index), ratio]));
+  const referenceById = new Map((referenceRatios || []).map((ratio, index) => [getComparisonRatioId(ratio, index), ratio]));
   const ids = [...new Set([...referenceById.keys(), ...currentById.keys()])];
   const changes = [];
 
@@ -83,6 +83,10 @@ function compareBlendRatios(currentRatios = [], referenceRatios = []) {
   });
 
   return changes;
+}
+
+function getComparisonRatioId(ratio, index) {
+  return ratio.id || ratio.beanSnapshot?.id || `snapshot-bean-${index}`;
 }
 
 function compareBrewFields(current, reference) {

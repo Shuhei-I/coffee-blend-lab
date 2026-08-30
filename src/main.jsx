@@ -111,6 +111,7 @@ function App({ authUser, authError, onSignOut }) {
     blendRoastLevels,
     setBlendRoastLevels,
     selectedBlendBeanIds,
+    snapshotOnlyBeans,
     updateRatio,
     updateRoastLevel,
     selectBlendBean,
@@ -154,9 +155,14 @@ function App({ authUser, authError, onSignOut }) {
   const publicationState = useDiscoverPublishing({ versionIds: recipeVersionIds });
 
   const recipeBeanIds = useMemo(() => new Set(selectedBlendBeanIds), [selectedBlendBeanIds]);
+  const masterBeanIds = useMemo(() => new Set(beans.map((bean) => bean.id)), [beans]);
+  const editorBeans = useMemo(
+    () => [...beans, ...snapshotOnlyBeans.filter((bean) => !masterBeanIds.has(bean.id))],
+    [beans, masterBeanIds, snapshotOnlyBeans],
+  );
   const recipeBeans = useMemo(
-    () => beans.filter((bean) => recipeBeanIds.has(bean.id) || Number(blendRatios[bean.id]) > 0),
-    [beans, blendRatios, recipeBeanIds],
+    () => editorBeans.filter((bean) => recipeBeanIds.has(bean.id) || Number(blendRatios[bean.id]) > 0),
+    [editorBeans, blendRatios, recipeBeanIds],
   );
   const blendBeans = useMemo(
     () => beansWithRatios(recipeBeans, blendRatios, blendRoastLevels),

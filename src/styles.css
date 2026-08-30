@@ -1199,6 +1199,12 @@ button:disabled {
   font-weight: 800;
 }
 
+.snapshot-only-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .bean-note {
   margin: 0;
   color: var(--muted);
@@ -1757,6 +1763,12 @@ canvas {
   border-color: var(--line);
   color: var(--muted);
   background: #f4f0e9;
+}
+
+.status-pill[data-status="snapshot"] {
+  border-color: #c9d9dc;
+  color: #3b6570;
+  background: #f1f8f9;
 }
 
 .recipe-series-head span,
