@@ -1199,6 +1199,12 @@ button:disabled {
   font-weight: 800;
 }
 
+.snapshot-only-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .bean-note {
   margin: 0;
   color: var(--muted);
@@ -1447,6 +1453,7 @@ input[type="range"] {
 
 .control-grid label,
 .sensory-grid label,
+.change-note-field,
 .memo-field,
 .master-row label,
 .brew-master-row label {
@@ -1609,6 +1616,23 @@ canvas {
   margin-top: 14px;
 }
 
+.change-note-field {
+  margin-bottom: 14px;
+}
+
+.change-note-count {
+  justify-self: end;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.version-change-note b,
+.version-tasting-note b {
+  margin-right: 8px;
+  color: #5d4f3f;
+}
+
 .recipe-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1757,6 +1781,12 @@ canvas {
   border-color: var(--line);
   color: var(--muted);
   background: #f4f0e9;
+}
+
+.status-pill[data-status="snapshot"] {
+  border-color: #c9d9dc;
+  color: #3b6570;
+  background: #f1f8f9;
 }
 
 .recipe-series-head span,

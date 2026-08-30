@@ -226,6 +226,17 @@ describe("BlendBuilder", () => {
     click(buttonByText("詳細比較"));
     expect(onOpenComparison).toHaveBeenCalledWith("blend");
   });
+
+  test("labels snapshot-only beans without presenting them as hidden master beans", () => {
+    renderBlendBuilder({
+      beans: [{ id: "deleted-bean", name: "Deleted Bean", note: "保存時", color: "#123456", ratio: 100, isSnapshotOnly: true }],
+      total: 100,
+    });
+
+    expect(document.querySelector('[data-status="snapshot"]').textContent).toBe("保存時点");
+    expect(document.querySelector('[data-status="hidden"]')).toBeNull();
+    expect(document.querySelector(".snapshot-only-note").textContent).toBe("一部の豆は保存時点の情報で表示しています。");
+  });
 });
 
 function renderBlendBuilder(overrides = {}) {

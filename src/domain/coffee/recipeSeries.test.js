@@ -299,6 +299,28 @@ describe("recipe series compatibility", () => {
     ]);
   });
 
+  test("retains the snapshot-only marker when saving a recipe with a deleted bean", () => {
+    const { recipe } = createRecipeVersionData({
+      recipeSeries: [],
+      editingRecipeSource: null,
+      blendName: "Snapshot Blend",
+      changeNote: "",
+      blendBeans: [{ ...fixtureBeans[0], ratio: 100, isSnapshotOnly: true }],
+      doseGram: 20,
+      brewRatio: 16,
+      targetBrewGram: 320,
+      blendCost: 0,
+      selectedBrewMethod: null,
+      sensory: legacyRecipeFixture.sensory,
+      memo: "",
+      now: "2026-05-22T10:30:00.000Z",
+      seriesIdSeed: 1800000000150,
+      versionIdSeed: 1800000000151,
+    });
+
+    expect(recipe.ratios[0]).toMatchObject({ id: "ethiopia", value: 100, isSnapshotOnly: true });
+  });
+
   test("can persist a recipe without a brew method FK while keeping the brew method snapshot", () => {
     const deletedSnapshotMethod = {
       ...fixtureBrewMethod,

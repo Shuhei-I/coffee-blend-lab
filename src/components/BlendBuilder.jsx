@@ -66,6 +66,9 @@ export function BlendBuilder({
         onChange={onComparisonReferenceChange}
       />
       <RecipeComparisonSummary comparison={comparison} section="blend" onOpen={onOpenComparison} />
+      {beans.some((bean) => bean.isSnapshotOnly) && (
+        <p className="snapshot-only-note">一部の豆は保存時点の情報で表示しています。</p>
+      )}
       <div className="bean-list">
         {beans.length === 0 ? (
           <p className="empty-state">今回のブレンドに使う豆を追加してください。</p>
@@ -76,7 +79,11 @@ export function BlendBuilder({
               <div>
                 <p className="bean-name">
                   {bean.name}
-                  {bean.visibleInRecipes === false && <span className="status-pill" data-status="hidden">非表示中</span>}
+                  {bean.isSnapshotOnly ? (
+                    <span className="status-pill" data-status="snapshot">保存時点</span>
+                  ) : bean.visibleInRecipes === false ? (
+                    <span className="status-pill" data-status="hidden">非表示中</span>
+                  ) : null}
                 </p>
                 <p className="bean-note" title={bean.note}>{bean.note}</p>
                 <p className="bean-meta">{roastLevelLabel(bean.roastLevel)}</p>

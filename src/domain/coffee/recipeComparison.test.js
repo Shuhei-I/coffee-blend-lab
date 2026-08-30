@@ -105,4 +105,19 @@ describe("recipeComparison", () => {
     expect(comparison.totalChangeCount).toBe(0);
     expect(compareRecipeDraftToVersion()).toBeNull();
   });
+
+  test("matches a snapshot-only bean with its saved snapshot id", () => {
+    const comparison = compareRecipeDraftToVersion({
+      draft: buildRecipeComparisonDraft({
+        blendBeans: [{ id: "deleted-bean", name: "Deleted Bean", ratio: 70, roastLevel: "city" }],
+      }),
+      reference: {
+        name: "Snapshot Blend",
+        version: 1,
+        ratios: [{ id: null, value: 70, roastLevel: "city", beanSnapshot: { id: "deleted-bean", name: "Deleted Bean" } }],
+      },
+    });
+
+    expect(comparison.blendChanges).toEqual([]);
+  });
 });

@@ -102,7 +102,7 @@ describe("SensoryPanel", () => {
   test("renders memo and calls memo callback with raw value", () => {
     const onMemoChange = vi.fn();
     renderSensoryPanel({ onMemoChange });
-    const textarea = document.querySelector("textarea");
+    const textarea = document.querySelector(".memo-field textarea");
 
     expect(textarea.value).toBe("More aroma, less bitterness");
     change(textarea, "  Updated memo  ");
@@ -110,9 +110,23 @@ describe("SensoryPanel", () => {
     expect(onMemoChange).toHaveBeenCalledWith("  Updated memo  ");
   });
 
+  test("renders change note separately from tasting memo", () => {
+    const onChangeNote = vi.fn();
+    renderSensoryPanel({ changeNote: "ブラジルを増やした", onChangeNote });
+    const textarea = document.querySelector(".change-note-field textarea");
+
+    expect(textarea.value).toBe("ブラジルを増やした");
+    expect(textarea.getAttribute("maxLength")).toBe("240");
+    expect(textarea.getAttribute("placeholder")).toBe("例：ブラジルを40%から50%に増やした");
+    expect(document.querySelector(".change-note-count").textContent).toBe("9 / 240");
+
+    change(textarea, "配合を調整した");
+    expect(onChangeNote).toHaveBeenCalledWith("配合を調整した");
+  });
+
   test("keeps empty memo and placeholder", () => {
     renderSensoryPanel({ memo: "" });
-    const textarea = document.querySelector("textarea");
+    const textarea = document.querySelector(".memo-field textarea");
 
     expect(textarea.value).toBe("");
     expect(textarea.getAttribute("rows")).toBe("4");
@@ -128,7 +142,7 @@ describe("SensoryPanel", () => {
     });
 
     expect(document.querySelectorAll(".sensory-grid label")).toHaveLength(4);
-    expect(document.querySelector("textarea").value).toBe("Props memo");
+    expect(document.querySelector(".memo-field textarea").value).toBe("Props memo");
   });
 });
 
@@ -136,8 +150,10 @@ function renderSensoryPanel(overrides = {}) {
   const props = {
     sensory: { fragrance: 7, flavor: 7.5, aftertaste: 6, balance: 8 },
     memo: "More aroma, less bitterness",
+    changeNote: "ブラジルを増やした",
     onSensoryChange: vi.fn(),
     onMemoChange: vi.fn(),
+    onChangeNote: vi.fn(),
     ...overrides,
   };
 

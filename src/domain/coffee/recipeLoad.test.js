@@ -4,6 +4,7 @@ import {
   buildBlendRatiosFromRecipe,
   buildBlendRoastLevelsFromRecipe,
   buildRecipeEditorState,
+  buildSnapshotOnlyBeansFromRecipe,
   buildSelectedBlendBeanIdsFromRecipe,
 } from "./recipeLoad.js";
 import {
@@ -128,6 +129,56 @@ describe("recipe loading editor state", () => {
 
     expect(buildSelectedBlendBeanIdsFromRecipe(recipe, fixtureBeans)).toEqual(["ethiopia"]);
     expect(buildSelectedBlendBeanIdsFromRecipe(recipe, [])).toEqual([]);
+  });
+
+  test("restores deleted beans from recipe snapshots for editor use", () => {
+    const recipe = {
+      ...legacyRecipeFixture,
+      ratios: [
+        {
+          id: null,
+          value: 70,
+          roastLevel: "city",
+          beanSnapshot: {
+            id: "deleted-bean",
+            name: "Deleted Bean",
+            note: "保存時のメモ",
+            color: "#123456",
+            profile: { acidity: 60 },
+            origin: "Ethiopia",
+          },
+        },
+        { id: "brazil", value: 30, roastLevel: "medium", beanSnapshot: { name: "Brazil" } },
+      ],
+    };
+
+    const result = buildRecipeEditorState({
+      recipe,
+      series: currentRecipeSeriesFixture,
+      beans: fixtureBeans,
+      brewMethods: [fixtureBrewMethod],
+    });
+
+    expect(result.editorState.snapshotOnlyBeans).toEqual([
+      expect.objectContaining({
+        id: "deleted-bean",
+        name: "Deleted Bean",
+        note: "保存時のメモ",
+        color: "#123456",
+        origin: "Ethiopia",
+        isSnapshotOnly: true,
+      }),
+    ]);
+    expect(result.editorState.blendRatios).toMatchObject({ "deleted-bean": 70, brazil: 30 });
+    expect(result.editorState.blendRoastLevels).toMatchObject({ "deleted-bean": "city" });
+    expect(result.editorState.selectedBlendBeanIds).toContain("deleted-bean");
+    expect(buildSnapshotOnlyBeansFromRecipe(recipe, fixtureBeans)[0].profile).toEqual({
+      acidity: 60,
+      sweetness: 50,
+      bitterness: 50,
+      body: 50,
+      aroma: 50,
+    });
   });
 
   test("returns no selected brew method when saved and current brew methods are unavailable", () => {

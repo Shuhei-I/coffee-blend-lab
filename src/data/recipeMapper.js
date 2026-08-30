@@ -76,7 +76,7 @@ export function toSavePayload(recipeInput) {
     sensory: recipeInput.sensory ?? {},
     savedAt: recipeInput.savedAt ?? null,
     beans: ratios.map((ratio, index) => ({
-      beanId: ratio.beanId ?? ratio.id ?? null,
+      beanId: ratio.isSnapshotOnly ? null : (ratio.beanId ?? ratio.id ?? null),
       ratio: ratio.ratio ?? ratio.value,
       roastLevel: ratio.roastLevel ?? "",
       beanSnapshot: ratio.beanSnapshot ?? {},
