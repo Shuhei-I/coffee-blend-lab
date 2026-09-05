@@ -36,6 +36,7 @@ describe("RecordSaveAction", () => {
 
     expect(document.querySelector('[role="dialog"] h3').textContent).toBe("レシピを登録しました");
     expect(document.querySelector(".recipe-save-success-name").textContent).toBe("Morning Blend v3");
+    expect(document.querySelector(".dialog-close-button")).toBeNull();
     expect(buttonByText("公開する").className).toBe("primary-button");
     click(buttonByText("履歴を見る"));
     expect(onViewHistory).toHaveBeenCalledTimes(1);
@@ -63,7 +64,6 @@ function renderAction(overrides = {}) {
         onSave={vi.fn()}
         onPublish={vi.fn()}
         onViewHistory={vi.fn()}
-        onCloseSuccess={vi.fn()}
         {...overrides}
       />,
     );

@@ -79,11 +79,11 @@ export function BrewStopwatch() {
         {displayTime}
       </div>
       <div className="brew-stopwatch-actions">
-        <button className="primary-button" type="button" disabled={status === "countdown" || status === "running"} onClick={start}>
-          Start
-        </button>
         <button className="ghost-button" type="button" disabled={status === "idle"} onClick={reset}>
           Reset
+        </button>
+        <button className="primary-button" type="button" disabled={status === "countdown" || status === "running"} onClick={start}>
+          Start
         </button>
       </div>
     </section>

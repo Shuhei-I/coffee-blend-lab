@@ -194,7 +194,7 @@ function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopied
                 disabled={copyStatus === "saving" || copyStatus === "saved"}
                 onClick={copyBrewMethod}
               >
-                {copyStatus === "saving" ? "追加中..." : copyStatus === "saved" ? "追加済み" : "自分の淹れ方に追加"}
+                {copyStatus === "saving" ? "保存中..." : copyStatus === "saved" ? "保存済み" : "淹れ方を保存"}
               </button>
               {copyStatus === "saved" && <p role="status">淹れ方マスタに追加しました。</p>}
               {copyStatus === "error" && <p className="inline-warning" role="alert">追加できませんでした。もう一度お試しください。</p>}
@@ -229,7 +229,7 @@ function DiscoverPostArticle({ post, onCopyBrewMethod, onCopyBlend, onOpenCopied
             />
           ) : (
             <button className="primary-button" type="button" disabled={blendCopyStatus === "saving"} onClick={copyBlend}>
-              {blendCopyStatus === "saving" ? "追加中..." : "自分のブレンドに追加"}
+              {blendCopyStatus === "saving" ? "追加中..." : "ブレンドを履歴に追加"}
             </button>
           )}
           {blendCopyStatus === "error" && <p className="inline-warning" role="alert">追加できませんでした。もう一度お試しください。</p>}
@@ -334,7 +334,7 @@ function DiscoverEngagement({ interactions, onLogin }) {
       )}
 
       {!interactions.isAuthenticated && onLogin && !interactions.loading ? (
-        <button className="primary-button" type="button" onClick={onLogin}>ログインしてコメント</button>
+        <button className="primary-button discover-comment-login-button" type="button" onClick={onLogin}>ログインしてコメント</button>
       ) : interactions.isAuthenticated && !interactions.loading ? (
         <form className="discover-comment-form" onSubmit={submitComment}>
           <textarea

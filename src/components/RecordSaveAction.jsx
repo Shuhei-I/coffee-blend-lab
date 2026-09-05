@@ -8,7 +8,6 @@ export function RecordSaveAction({
   onSave,
   onPublish,
   onViewHistory,
-  onCloseSuccess,
 }) {
   return (
     <div className="record-save-action">
@@ -23,7 +22,6 @@ export function RecordSaveAction({
           recipe={savedRecipe}
           onPublish={onPublish}
           onViewHistory={onViewHistory}
-          onClose={onCloseSuccess}
         />
       )}
     </div>
