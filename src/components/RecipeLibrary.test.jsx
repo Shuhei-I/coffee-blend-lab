@@ -98,6 +98,18 @@ describe("RecipeLibrary", () => {
     expect(onLoaded).toHaveBeenCalledTimes(2);
   });
 
+  test("opens publication settings for a requested saved version", () => {
+    const onPublicationRequestHandled = vi.fn();
+    renderRecipeLibrary({
+      publicationRequest: { versionId: "recipe-1700000001000", requestId: 1 },
+      onPublicationRequestHandled,
+    });
+
+    expect(document.querySelector(".publication-dialog")).toBeTruthy();
+    expect(document.querySelector("#publicationContent").value).toBe("");
+    expect(onPublicationRequestHandled).toHaveBeenCalledTimes(1);
+  });
+
   test("calls archive, restore, and version delete callbacks while hiding exports", () => {
     const onArchive = vi.fn();
     const onRestore = vi.fn();
@@ -245,6 +257,8 @@ function renderRecipeLibrary(overrides = {}) {
     onRestore: vi.fn(),
     onDeleteVersion: vi.fn(),
     onSavePublication: vi.fn(async (input) => input),
+    publicationRequest: null,
+    onPublicationRequestHandled: vi.fn(),
     onExport: vi.fn(),
     onLoaded: vi.fn(),
     ...overrides,

@@ -80,7 +80,8 @@ function beansWithRatios(beans, ratios, roastLevels) {
 
 function App({ authUser, authError, onSignOut }) {
   const [activePage, setActivePage] = useState(() => getInitialAppPage(window.location.search));
-  const [recipeSaveMessage, setRecipeSaveMessage] = useState("");
+  const [recipeSaveCompletion, setRecipeSaveCompletion] = useState(null);
+  const [publicationRequest, setPublicationRequest] = useState(null);
   const [comparisonReferenceVersionId, setComparisonReferenceVersionId] = useState("");
   const [comparisonDialogOpen, setComparisonDialogOpen] = useState(false);
   const editor = useRecipeEditor();
@@ -112,6 +113,7 @@ function App({ authUser, authError, onSignOut }) {
     setBlendRoastLevels,
     selectedBlendBeanIds,
     snapshotOnlyBeans,
+    setEditingRecipeSource,
     updateRatio,
     updateRoastLevel,
     selectBlendBean,
@@ -345,8 +347,14 @@ function App({ authUser, authError, onSignOut }) {
       (editingRecipeSource?.seriesId && updatedRecipeSeries.find((series) => series.id === editingRecipeSource.seriesId)) ||
       updatedRecipeSeries[0];
     const savedRecipe = savedSeries?.versions[0];
-    setRecipeSaveMessage(`「${savedRecipe?.name || blendName.trim()} v${savedRecipe?.version || ""}」を履歴に保存しました。`);
-    resetRecipeInput();
+    if (!savedSeries || !savedRecipe) return;
+    setEditingRecipeSource({ seriesId: savedSeries.id, versionId: savedRecipe.id });
+    setComparisonReferenceVersionId(savedRecipe.id);
+    setRecipeSaveCompletion({
+      id: savedRecipe.id,
+      name: savedRecipe.name || blendName.trim(),
+      version: savedRecipe.version,
+    });
   }
 
   function resetRecipeInput() {
@@ -354,12 +362,13 @@ function App({ authUser, authError, onSignOut }) {
     setSelectedBrewMethodId(brewMethods[0]?.id || getDefaultSelectedBrewMethodId());
     setComparisonReferenceVersionId("");
     setComparisonDialogOpen(false);
+    setRecipeSaveCompletion(null);
+    setPublicationRequest(null);
   }
 
   function resetWorkflowInput() {
     if (!window.confirm("現在の入力をリセットしますか？")) return;
     resetRecipeInput();
-    setRecipeSaveMessage("");
     setActivePage("blend");
   }
 
@@ -369,7 +378,8 @@ function App({ authUser, authError, onSignOut }) {
       setSelectedBrewMethodId(loadedRecipe.selectedBrewMethodId);
     }
     replaceEditorState(loadedRecipe.editorState);
-    setRecipeSaveMessage("");
+    setRecipeSaveCompletion(null);
+    setPublicationRequest(null);
     setComparisonReferenceVersionId(resolveComparisonReferenceVersionId({ recipe, series }));
     setComparisonDialogOpen(false);
   }
@@ -497,12 +507,19 @@ function App({ authUser, authError, onSignOut }) {
             <RecordSaveAction
               disabled={!recipeSaveValidation.valid}
               disabledReason={recipeSaveValidation.reason}
-              saveMessage={recipeSaveMessage}
+              savedRecipe={recipeSaveCompletion}
               onSave={saveRecipe}
-              onViewHistory={() => {
-                setRecipeSaveMessage("");
+              onPublish={() => {
+                if (!recipeSaveCompletion?.id) return;
+                setRecipeSaveCompletion(null);
+                setPublicationRequest({ versionId: recipeSaveCompletion.id, requestId: Date.now() });
                 setActivePage("history");
               }}
+              onViewHistory={() => {
+                setRecipeSaveCompletion(null);
+                setActivePage("history");
+              }}
+              onCloseSuccess={() => setRecipeSaveCompletion(null)}
             />
           </>
         )}
@@ -516,6 +533,8 @@ function App({ authUser, authError, onSignOut }) {
             publicationLoadError={publicationState.loadError}
             publicationSaveError={publicationState.saveError}
             publishingVersionId={publicationState.savingVersionId}
+            publicationRequest={publicationRequest}
+            onPublicationRequestHandled={() => setPublicationRequest(null)}
             onLoad={loadRecipe}
             onArchive={archiveRecipeSeries}
             onRestore={restoreRecipeSeries}
