@@ -137,6 +137,34 @@ describe("useCoffeeData", () => {
     expect(rendered.current.recipeSeries).toEqual([currentRecipeSeriesFixture]);
   });
 
+  test("retries a failed Supabase load and replaces the error after success", async () => {
+    const error = new Error("temporary load failure");
+    const beanRepository = createBeanRepository({
+      getBeans: vi.fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce([{ id: "retried-bean" }]),
+    });
+    const rendered = await renderHook(createRepository(), {
+      beanRepository,
+      brewMethodRepository: createBrewMethodRepository({ brewMethods: [{ id: "method" }] }),
+    });
+
+    expect(rendered.current.loadError).toBe(error);
+    expect(rendered.current.beans).toEqual([]);
+
+    await act(async () => {
+      rendered.current.retryLoad();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(beanRepository.getBeans).toHaveBeenCalledTimes(2);
+    expect(rendered.current.loadError).toBeNull();
+    expect(rendered.current.beans).toEqual([{ id: "retried-bean" }]);
+  });
+
   test("uses existing default values when no persisted data is available", async () => {
     const repository = createRepository();
     const rendered = await renderHook(repository);

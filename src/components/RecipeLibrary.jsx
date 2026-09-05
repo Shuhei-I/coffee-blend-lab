@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getPourTotal } from "../domain/coffee/calculations.js";
 import { getLatestVersion, getRecipeBean, getRecipeBrewMethod } from "../domain/coffee/recipeSeries.js";
 
@@ -11,6 +11,8 @@ export function RecipeLibrary({
   publicationLoadError = null,
   publicationSaveError = null,
   publishingVersionId = null,
+  publicationRequest = null,
+  onPublicationRequestHandled = () => {},
   onLoad,
   onArchive,
   onRestore,
@@ -24,6 +26,19 @@ export function RecipeLibrary({
   const [publicationTarget, setPublicationTarget] = useState(null);
   const [publicationNotice, setPublicationNotice] = useState("");
   const visibleSeries = recipeSeries.filter((series) => showArchived || series.status !== "archived");
+
+  useEffect(() => {
+    if (!publicationRequest?.versionId || publicationLoading || publicationLoadError) return;
+
+    const target = recipeSeries
+      .flatMap((series) => (series.versions || []).map((recipe) => ({ recipe, series })))
+      .find(({ recipe }) => recipe.id === publicationRequest.versionId);
+    if (!target) return;
+
+    setPublicationNotice("");
+    setPublicationTarget(target);
+    onPublicationRequestHandled();
+  }, [publicationLoadError, publicationLoading, publicationRequest, recipeSeries, onPublicationRequestHandled]);
 
   function handleLoad(recipe, series) {
     onLoad(recipe, series);

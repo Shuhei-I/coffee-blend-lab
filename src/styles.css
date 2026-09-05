@@ -232,6 +232,12 @@ textarea {
   font-weight: 700;
 }
 
+.workspace-retry-button {
+  justify-self: start;
+  min-height: 34px;
+  margin-top: 4px;
+}
+
 .panel {
   padding: 22px;
   border: 1px solid var(--line);
@@ -2247,6 +2253,31 @@ canvas {
 .dialog-heading h3 {
   margin: 0;
   font-size: 1.28rem;
+}
+
+.dialog-close-button {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  background: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.recipe-save-success-dialog {
+  width: min(440px, 100%);
+}
+
+.recipe-save-success-name {
+  margin: 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 900;
 }
 
 .master-form-card {
