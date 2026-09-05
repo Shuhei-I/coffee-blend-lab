@@ -77,7 +77,7 @@ describe("DiscoverPage", () => {
     await renderPage(repository, { onCopyBrewMethod });
     await clickAsync(buttonByLabel("「Summer Blend v3」の詳細を見る"));
 
-    await clickAsync(buttonByText("自分の淹れ方に追加"));
+    await clickAsync(buttonByText("淹れ方を保存"));
 
     expect(onCopyBrewMethod).toHaveBeenCalledWith(postFixture().blend.brew.method);
   });
@@ -89,7 +89,7 @@ describe("DiscoverPage", () => {
     const onOpenCopiedBlend = vi.fn();
     await renderPage(repository, { onCopyBlend, onOpenCopiedBlend });
     await clickAsync(buttonByLabel("「Summer Blend v3」の詳細を見る"));
-    await clickAsync(buttonByText("自分のブレンドに追加"));
+    await clickAsync(buttonByText("ブレンドを履歴に追加"));
 
     click(buttonByText("編集を始める"));
 

@@ -38,6 +38,15 @@ describe("BrewStopwatch", () => {
     expect(buttonByText("Reset").disabled).toBe(true);
   });
 
+  test("places reset before start in the action row", () => {
+    renderBrewStopwatch();
+
+    expect([...document.querySelectorAll(".brew-stopwatch-actions button")].map((button) => button.textContent)).toEqual([
+      "Reset",
+      "Start",
+    ]);
+  });
+
   test("counts down before starting measurement", () => {
     renderBrewStopwatch();
 

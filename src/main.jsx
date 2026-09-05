@@ -511,15 +511,15 @@ function App({ authUser, authError, onSignOut }) {
               onSave={saveRecipe}
               onPublish={() => {
                 if (!recipeSaveCompletion?.id) return;
-                setRecipeSaveCompletion(null);
-                setPublicationRequest({ versionId: recipeSaveCompletion.id, requestId: Date.now() });
+                const versionId = recipeSaveCompletion.id;
+                resetRecipeInput();
+                setPublicationRequest({ versionId, requestId: Date.now() });
                 setActivePage("history");
               }}
               onViewHistory={() => {
-                setRecipeSaveCompletion(null);
+                resetRecipeInput();
                 setActivePage("history");
               }}
-              onCloseSuccess={() => setRecipeSaveCompletion(null)}
             />
           </>
         )}

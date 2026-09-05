@@ -6,9 +6,9 @@ export function RecipeComparisonReferenceSelect({ recipeSeries = [], value = "",
 
   return (
     <div className="comparison-reference-row">
-      <label htmlFor="comparisonReference">過去のレシピを参照</label>
+      <label htmlFor="comparisonReference">比較対象</label>
       <select id="comparisonReference" value={value} onChange={(event) => onChange(event.target.value)}>
-        <option value="">参照するレシピを選択</option>
+        <option value="">比較するレシピを選択</option>
         {recipeSeries.filter((series) => series.status !== "archived").map((series) => (
           <optgroup label={series.name} key={series.id}>
             {(series.versions || []).map((version) => (

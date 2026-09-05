@@ -1,6 +1,6 @@
 import React from "react";
 
-export function RecipeSaveSuccessDialog({ recipe, onPublish, onViewHistory, onClose }) {
+export function RecipeSaveSuccessDialog({ recipe, onPublish, onViewHistory }) {
   return (
     <div className="dialog-backdrop">
       <div className="master-dialog recipe-save-success-dialog" role="dialog" aria-modal="true" aria-labelledby="recipeSaveSuccessTitle">
@@ -10,7 +10,6 @@ export function RecipeSaveSuccessDialog({ recipe, onPublish, onViewHistory, onCl
               <p className="eyebrow">保存完了</p>
               <h3 id="recipeSaveSuccessTitle">レシピを登録しました</h3>
             </div>
-            <button className="dialog-close-button" type="button" aria-label="閉じる" title="閉じる" onClick={onClose}>×</button>
           </div>
           <p className="recipe-save-success-name">{recipe.name} v{recipe.version}</p>
           <div className="button-row dialog-actions">

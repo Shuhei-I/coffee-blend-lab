@@ -108,28 +108,28 @@ describe("DiscoverPostDetail", () => {
     const onCopyBrewMethod = vi.fn(async () => ({ id: "copied-method" }));
     await renderDetail({ repository: createRepository([postFixture()]), onCopyBrewMethod });
 
-    await clickAsync(buttonByText("自分の淹れ方に追加"));
+    await clickAsync(buttonByText("淹れ方を保存"));
 
     expect(onCopyBrewMethod).toHaveBeenCalledWith(postFixture().blend.brew.method);
     expect(document.body.textContent).toContain("淹れ方マスタに追加しました");
-    expect(buttonByText("追加済み").disabled).toBe(true);
+    expect(buttonByText("保存済み").disabled).toBe(true);
   });
 
   test("shows a retryable message when copying a brew method fails", async () => {
     const onCopyBrewMethod = vi.fn(async () => null);
     await renderDetail({ repository: createRepository([postFixture()]), onCopyBrewMethod });
 
-    await clickAsync(buttonByText("自分の淹れ方に追加"));
+    await clickAsync(buttonByText("淹れ方を保存"));
 
     expect(document.querySelector('[role="alert"]').textContent).toContain("追加できませんでした");
-    expect(buttonByText("自分の淹れ方に追加").disabled).toBe(false);
+    expect(buttonByText("淹れ方を保存").disabled).toBe(false);
   });
 
   test("sends anonymous users to login before copying a brew method", async () => {
     const onLogin = vi.fn();
     await renderDetail({ repository: createRepository([postFixture()]), onLogin });
 
-    click(buttonByText("自分の淹れ方に追加"));
+    click(buttonByText("淹れ方を保存"));
 
     expect(onLogin).toHaveBeenCalledTimes(1);
   });
@@ -148,7 +148,7 @@ describe("DiscoverPostDetail", () => {
       onOpenCopiedBlend,
     });
 
-    await clickAsync(buttonByText("自分のブレンドに追加"));
+    await clickAsync(buttonByText("ブレンドを履歴に追加"));
 
     expect(onCopyBlend).toHaveBeenCalledWith(postFixture().postId);
     expect(document.body.textContent).toContain("「Summer Blend（コピー）」を履歴に追加しました。");
@@ -160,10 +160,10 @@ describe("DiscoverPostDetail", () => {
     const onCopyBlend = vi.fn(async () => null);
     await renderDetail({ repository: createRepository([postFixture()]), onCopyBlend });
 
-    await clickAsync(buttonByText("自分のブレンドに追加"));
+    await clickAsync(buttonByText("ブレンドを履歴に追加"));
 
     expect(document.querySelector(".discover-detail-actions [role=\"alert\"]").textContent).toContain("追加できませんでした");
-    expect(buttonByText("自分のブレンドに追加").disabled).toBe(false);
+    expect(buttonByText("ブレンドを履歴に追加").disabled).toBe(false);
   });
   test("renders engagement and sends an authenticated like action", async () => {
     const interactionRepository = {

@@ -859,17 +859,26 @@ textarea {
 .discover-like-button {
   min-width: 66px;
   padding: 6px 10px;
-  border: 1px solid var(--line);
+  border: 1px solid #d7b8ad;
   border-radius: 8px;
   color: var(--muted);
   background: #fff;
   font-weight: 800;
+  transition: border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.discover-like-button:hover:not(:disabled),
+.discover-like-button:focus-visible {
+  border-color: var(--coral);
+  color: var(--coral);
+  box-shadow: 0 0 0 1px var(--coral);
 }
 
 .discover-like-button.is-liked {
   border-color: var(--coral);
   color: var(--coral);
   background: #fff8f5;
+  box-shadow: 0 0 0 1px var(--coral);
 }
 
 .discover-comment-count {
@@ -937,7 +946,11 @@ textarea {
 }
 
 .discover-comment-form .primary-button {
-  justify-self: start;
+  justify-self: end;
+}
+
+.discover-comment-login-button {
+  justify-self: end;
 }
 
 .discover-comment-actions {
@@ -1091,13 +1104,16 @@ textarea {
   flex-wrap: wrap;
   gap: 10px 14px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .discover-brew-copy-action p {
+  flex-basis: 100%;
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 700;
+  text-align: right;
 }
 
 .discover-brew-copy-action .inline-warning {
@@ -1288,7 +1304,7 @@ button:disabled {
 }
 
 .add-blend-bean-button {
-  justify-self: start;
+  justify-self: end;
 }
 
 .bean-picker-panel {
@@ -1554,6 +1570,18 @@ input[type="range"] {
   display: grid;
   grid-template-columns: repeat(2, auto);
   gap: 8px;
+}
+
+.brew-stopwatch-actions .primary-button {
+  border-color: #b9d8c5;
+  color: #27684b;
+  background: #eef8f1;
+}
+
+.brew-stopwatch-actions .primary-button:hover:not(:disabled),
+.brew-stopwatch-actions .primary-button:focus-visible {
+  border-color: #8fbea2;
+  background: #dff1e5;
 }
 
 .profile-grid {
@@ -2253,18 +2281,6 @@ canvas {
 .dialog-heading h3 {
   margin: 0;
   font-size: 1.28rem;
-}
-
-.dialog-close-button {
-  width: 36px;
-  min-height: 36px;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--muted);
-  background: #fff;
-  font-size: 1.4rem;
-  line-height: 1;
 }
 
 .recipe-save-success-dialog {

@@ -36,6 +36,8 @@ describe("RecipeComparison", () => {
     />);
 
     expect(document.querySelector("#comparisonReference").value).toBe("v2");
+    expect(document.querySelector("label[for=\"comparisonReference\"]").textContent).toBe("比較対象");
+    expect(document.querySelector("#comparisonReference option").textContent).toBe("比較するレシピを選択");
     expect(document.querySelector("optgroup").label).toBe("Morning Blend");
     expect(document.querySelectorAll("optgroup")).toHaveLength(1);
     expect(document.body.textContent).not.toContain("Archived Blend");
